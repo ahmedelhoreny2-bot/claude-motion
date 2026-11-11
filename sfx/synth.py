@@ -371,3 +371,55 @@ def hit():
         s = math.sin(ph) * math.exp(-tt / 0.12) + 0.8 * hp_prev * math.exp(-tt / 0.018)
         out.append(math.tanh(1.8 * s))
     return out
+
+
+# ---------------------------------------------------------------- lab equipment
+
+
+def centrifuge(dur, spin=1.0):
+    """Lab centrifuge / analyzer running: a soft motor whir with a slow rotation flutter; a calm machine bed."""
+    n = int(dur * SR)
+    out = []
+    ph = ph2 = 0.0
+    air = bandnoise(n, lambda k: 900 + 200 * math.sin(k / SR * 2.0), q=1.6)
+    for k in range(n):
+        tt = k / SR
+        ramp = min(1.0, tt / 1.5) * spin
+        f = 140 + 80 * ramp
+        ph += 2 * math.pi * f / SR
+        ph2 += 2 * math.pi * (f * 2.01) / SR
+        flutter = 0.8 + 0.2 * math.sin(2 * math.pi * 7.5 * tt)
+        s = 0.5 * math.sin(ph) + 0.25 * math.sin(ph2) + 0.5 * air[k]
+        out.append(s * flutter * ramp * min(1, (n - k) / (0.3 * SR)))
+    return out
+
+
+def beep(freq=1046.5, dur=0.12):
+    """Soft analyzer / monitor beep: a clean sine with a quick fade; a device confirming a step."""
+    n = int(dur * SR)
+    return [math.sin(2 * math.pi * freq * k / SR) * min(1, k / 96) * math.exp(-k / (0.05 * SR)) for k in range(n)]
+
+
+def servo(dur=0.35, f0=900, f1=1500):
+    """Robotic arm / sample tray moving: a short gliding motor whine."""
+    n = int(dur * SR)
+    out = []
+    ph = 0.0
+    for k in range(n):
+        x = k / n
+        f = f0 + (f1 - f0) * x
+        ph += 2 * math.pi * f / SR
+        s = math.sin(ph) + 0.3 * math.sin(3 * ph)
+        out.append(0.4 * s * math.sin(math.pi * x) ** 0.5)
+    return out
+
+
+def pipette():
+    """Pipette click: a tiny plastic snap with a hollow body; sampling, a precise action."""
+    n = int(0.08 * SR)
+    out = []
+    for k in range(n):
+        tt = k / SR
+        s = random.uniform(-1, 1) * math.exp(-tt / 0.003) + 0.6 * math.sin(2 * math.pi * 2600 * tt) * math.exp(-tt / 0.012)
+        out.append(s * 0.7)
+    return out

@@ -53,10 +53,10 @@ def main():
     dur = tl["duration"]
     graph = ";".join(parts) + ";" + "".join(labels) + (
         f"amix=inputs={len(CUTS)}:normalize=0,apad=whole_dur={dur},atrim=0:{dur},"
-        "highpass=f=80,acompressor=threshold=-20dB:ratio=3:attack=5:release=120,volume=1.6[vo];"
+        "highpass=f=80,acompressor=threshold=-20dB:ratio=3:attack=5:release=120,equalizer=f=3000:t=q:w=1:g=3,volume=1.9[vo];"
         "[vo]asplit=2[vo1][vo2];"
-        "[2:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.75[bed];"
-        "[bed][vo1]sidechaincompress=threshold=0.04:ratio=4:attack=15:release=250[ducked];"
+        "[2:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.45[bed];"
+        "[bed][vo1]sidechaincompress=threshold=0.02:ratio=8:attack=10:release=300[ducked];"
         f"[ducked][vo2]amix=inputs=2:normalize=0,afade=t=out:st={dur - 1.3}:d=1.3,loudnorm=I=-14:TP=-3:LRA=11,alimiter=limit=0.7:level=false[out]"
     )
     out = ROOT / "public/asema/mix.wav"
