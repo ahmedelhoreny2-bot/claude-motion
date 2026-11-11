@@ -19,10 +19,12 @@ const svg = (f) => readFileSync(join(dir, f), 'utf8');
 await shoot(svg('facebook-cover.svg'), 1640, 720, 'facebook-cover.png');
 await shoot(svg('facebook-profile.svg'), 1080, 1080, 'facebook-profile.png');
 await shoot(svg('facebook-profile-plain.svg'), 1080, 1080, 'facebook-profile-plain.png');
+await shoot(svg('facebook-profile-name.svg'), 1080, 1080, 'facebook-profile-name.png');
+await shoot(svg('facebook-profile-name-plain.svg'), 1080, 1080, 'facebook-profile-name-plain.png');
 
 // preview: desktop (820x312 band) and mobile (640x360 block) with the profile circle on each side
 const img = (f) => `data:image/png;base64,${readFileSync(join(dir, f)).toString('base64')}`;
-const cov = img('facebook-cover.png'), pro = img('facebook-profile.png');
+const cov = img('facebook-cover.png'), pro = img('facebook-profile-name.png');
 const frame = (w, h, label, side, d, drop) => `
   <div style="margin:0 0 70px">
     <div style="font:600 15px system-ui;color:#555;margin-bottom:8px">${label}</div>
@@ -36,6 +38,9 @@ await shoot(`<div style="padding:30px;background:#F0F2F5;font-family:system-ui">
   <div style="display:flex;gap:40px">
     ${frame(360, 203, 'موبايل · عربي', 'right', 120, 50)}
     ${frame(360, 203, 'Mobile · English', 'left', 120, 50)}
-  </div></div>`, 880, 1180, 'preview.png');
+  </div>
+  <div style="font:600 15px system-ui;color:#555;margin:0 0 10px">أحجام صغيرة (تعليقات · بوستات · ماسنجر)</div>
+  <div style="display:flex;gap:24px;align-items:end">${[170, 96, 60, 40].map((d) => `<img src="${pro}" style="width:${d}px;height:${d}px;border-radius:50%;box-shadow:0 0 0 1px #ddd">`).join('')}</div>
+  </div>`, 880, 1420, 'preview.png');
 await browser.close();
 console.log('social PNGs →', dir);

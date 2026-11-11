@@ -89,9 +89,43 @@ def profile(ring):
     return svg(S, S, "".join(body))
 
 
+def profile_named(ring):
+    """Mark + Arabic name, sized for a circle crop and legible at small sizes."""
+    S, c = 1080, 540
+    R = 474 if ring else 505  # usable radius inside the ring / circle
+    body = [f'<rect width="{S}" height="{S}" fill="{WHITE}"/>']
+    if ring:
+        body.append(f'<circle cx="540" cy="540" r="510" fill="none" stroke="{BURGUNDY}" stroke-width="26"/>')
+        body.append(f'<circle cx="540" cy="540" r="488" fill="none" stroke="{ORANGE}" stroke-width="14"/>')
+    name, sub = "معمل العاصمة", "للتحاليل الطبية"
+    k = R / 430
+    nsz, ssz = 102 * k, 56 * k
+    nw = CAIRO_XB.width(name, nsz, rtl=True)
+    sw = CAIRO_B.width(sub, ssz, rtl=True)
+    ms = 320 * k / MARK_W
+    mh = MARK_H * ms
+    gap1, gap2 = 22 * k, 6 * k
+    name_h, sub_h = nsz * 1.0, ssz * 1.05
+    total = mh + gap1 + name_h + gap2 + sub_h
+    top = c - total / 2 - 10 * k
+    body.append(mark(BLUE, RED, c - MARK_W * ms / 2 + 6 * k, top, ms))
+    nb = top + mh + gap1 + nsz * 0.82
+    body.append(f'<path fill="{RED}" d="{CAIRO_XB.path(name, nsz, c - nw / 2, nb, rtl=True)}"/>')
+    sb = nb + gap2 + ssz * 1.1
+    body.append(f'<path fill="{BLUE}" d="{CAIRO_B.path(sub, ssz, c - sw / 2, sb, rtl=True)}"/>')
+    # every text corner must sit inside the usable circle
+    import math
+    for w, y in ((nw, nb - nsz * 0.75), (nw, nb + nsz * 0.25), (sw, sb + ssz * 0.35)):
+        d = math.hypot(w / 2, y - c)
+        assert d < R, (w, y, d, R)
+    return svg(S, S, "".join(body))
+
+
 if __name__ == "__main__":
     OUT.mkdir(exist_ok=True)
     (OUT / "facebook-cover.svg").write_text(cover())
     (OUT / "facebook-profile.svg").write_text(profile(ring=True))
     (OUT / "facebook-profile-plain.svg").write_text(profile(ring=False))
+    (OUT / "facebook-profile-name.svg").write_text(profile_named(ring=True))
+    (OUT / "facebook-profile-name-plain.svg").write_text(profile_named(ring=False))
     print("wrote", OUT)

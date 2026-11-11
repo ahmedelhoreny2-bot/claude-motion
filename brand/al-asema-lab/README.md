@@ -38,6 +38,8 @@ Cover elements: the burgundy + gold double ring (photo frame), the burgundy pill
 
 | File | Use |
 |---|---|
+| `social/facebook-profile-name.png` | **main profile picture**: mark + lab name inside a thin double ring, circle-safe |
+| `social/facebook-profile-name-plain.png` | same without the ring |
 | `social/facebook-profile.png` | profile picture, 1080x1080, mark inside the cover's double ring, circle-safe |
 | `social/facebook-profile-plain.png` | same without the ring |
 | `social/facebook-cover.png` | cover, 1640x720: fits desktop (820x312) and mobile (640x360); content stays clear of the profile circle in Arabic and English layouts |
