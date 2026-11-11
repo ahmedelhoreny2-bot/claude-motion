@@ -371,7 +371,7 @@ const S6: React.FC<{t: number; f: number}> = ({t, f}) => {
     <AbsoluteFill>
       <Bg kind="lav" t={t} />
       <Glow x={540} y={900} r={600} color="#C9BFEA" op={0.5} />
-      <Ring cx={540} cy={930} r={480} sw={48} k={prog(t, s.all, s.all + 0.9, easeInOut)} />
+      <Ring cx={540} cy={1010} r={420} sw={44} k={prog(t, s.all, s.all + 0.9, easeInOut)} />
       <Svg>
         <rect x={210} y={1000} width={780} height={60} rx={20} fill={L.burgundy} />
         <rect x={210} y={1150} width={780} height={60} rx={20} fill={L.burgundy} />
@@ -393,7 +393,7 @@ const S6: React.FC<{t: number; f: number}> = ({t, f}) => {
       {TESTS.map(([name, col], i) => {
         const k = sp(f, s.tubes[i] + 0.05, POP, TFPS);
         const row = i < 3 ? 0 : 1;
-        const x = [800, 540, 280][i % 3];
+        const x = [[820, 590, 360], [870, 640, 300]][row][i % 3];
         return <Pop key={name} k={k} x={x} y={360 + row * 130}><Pill text={name} bg={col} fg={col === L.orange ? L.ink : L.white} size={56} /></Pop>;
       })}
       <Pop k={all} x={540} y={680} rot={-3}><Pill text="كل تحاليلك في مكان واحد" bg={L.white} fg={L.blue} size={58} /></Pop>
@@ -549,7 +549,8 @@ const S9: React.FC<{t: number; f: number}> = ({t, f}) => {
       </Pop>
       <div style={{position: 'absolute', left: 0, right: 0, top: 1380, textAlign: 'center', opacity: contact, transform: `translateY(${(1 - contact) * 20}px)`}}>
         <div style={{fontFamily: EN, fontWeight: 700, fontSize: 52, color: L.blue}}>01096534354 · 01019289733</div>
-        <div style={{fontFamily: AR, fontWeight: 600, fontSize: 31, color: L.gray, direction: 'rtl', marginTop: 8}}>ميت غمر · برج دهب · شارع الجيش · ناصية شارع أبوسنة · أعلى التوحيد والنور</div>
+        <div style={{fontFamily: AR, fontWeight: 600, fontSize: 32, color: L.gray, direction: 'rtl', marginTop: 8}}>ميت غمر · برج دهب · شارع الجيش · ناصية شارع أبوسنة</div>
+        <div style={{fontFamily: AR, fontWeight: 600, fontSize: 32, color: L.gray, direction: 'rtl'}}>أعلى التوحيد والنور · الدور الأول</div>
       </div>
     </AbsoluteFill>
   );
