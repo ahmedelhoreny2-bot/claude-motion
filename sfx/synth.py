@@ -191,3 +191,183 @@ def pad(duration, chords, volume=None, detune=0.6, tremolo=0.23, xfade=0.35):
             left[i] += sl * v
             right[i] += sr * v
     return left, right
+
+
+# ---------------------------------------------------------------- natural / organic textures
+
+
+def heartbeat(lub=1.0, dub=0.6):
+    """Heartbeat lub-dub: a rhythmic spine for medical pieces; place one per beat of the grid."""
+    n = int(0.62 * SR)
+    out = [0.0] * n
+    for start, f0, f1, g in ((0.0, 72, 44, lub), (0.17, 88, 52, dub)):
+        ph = 0.0
+        lp = 0.0
+        i0 = int(start * SR)
+        for k in range(int(0.3 * SR)):
+            tt = k / SR
+            f = f1 + (f0 - f1) * math.exp(-tt / 0.03)
+            ph += 2 * math.pi * f / SR
+            lp += 0.03 * (random.uniform(-1, 1) - lp)
+            env = (1 - math.exp(-tt / 0.004)) * math.exp(-tt / 0.075)
+            if i0 + k < n:
+                out[i0 + k] += g * env * (math.sin(ph) + 2.2 * lp)
+    return [math.tanh(1.4 * v) for v in out]
+
+
+def roomtone(dur):
+    """Quiet lab air: a soft, slowly breathing low noise bed that keeps a piece from ever sounding silent."""
+    n = int(dur * SR)
+    low = bandnoise(n, lambda k: 260 + 90 * math.sin(k / SR * 0.37), q=0.5)
+    air = bandnoise(n, lambda k: 5200 + 900 * math.sin(k / SR * 0.21 + 1), q=0.4)
+    return [0.9 * low[k] * (0.75 + 0.25 * math.sin(k / SR * 0.5)) + 0.12 * air[k] for k in range(n)]
+
+
+def water(dur, seed=3):
+    """Running water / a stream pouring into a glass, with droplets on top."""
+    rng = random.Random(seed)
+    n = int(dur * SR)
+    walk = [1800.0]
+    for _ in range(n // 480):
+        walk.append(min(3600, max(900, walk[-1] + rng.uniform(-260, 260))))
+    body = bandnoise(n, lambda k: walk[min(k // 480, len(walk) - 1)], q=1.4)
+    out = [0.8 * body[k] * (0.7 + 0.3 * math.sin(k / SR * 9 + math.sin(k / SR * 3.1))) for k in range(n)]
+    t = 0.0
+    while t < dur - 0.06:
+        t += rng.uniform(0.03, 0.11)
+        f0 = rng.uniform(700, 1500)
+        i0 = int(t * SR)
+        for k in range(int(0.045 * SR)):
+            if i0 + k >= n:
+                break
+            tt = k / SR
+            out[i0 + k] += 0.35 * math.sin(2 * math.pi * f0 * (1 + 9 * tt) * tt) * math.exp(-tt / 0.012)
+    fin = int(0.08 * SR)
+    for k in range(min(fin, n)):
+        out[k] *= k / fin
+        out[n - 1 - k] *= k / fin
+    return out
+
+
+def bubbles(dur, rate=14, seed=5):
+    """Liquid bubbling: random small rising blips, for anything fluid, blood, a flask."""
+    rng = random.Random(seed)
+    n = int(dur * SR)
+    out = [0.0] * n
+    t = 0.0
+    while t < dur - 0.05:
+        t += rng.expovariate(rate)
+        f0 = rng.uniform(380, 1100)
+        g = rng.uniform(0.3, 1.0)
+        i0 = int(t * SR)
+        m = int(rng.uniform(0.025, 0.06) * SR)
+        ph = 0.0
+        for k in range(m):
+            if i0 + k >= n:
+                break
+            tt = k / SR
+            ph += 2 * math.pi * f0 * (1 + 14 * tt) / SR
+            out[i0 + k] += g * math.sin(ph) * math.sin(math.pi * k / m)
+    return out
+
+
+def creak(dur=0.75, f_start=55, f_end=95, seed=7):
+    """Rusty hinge squeak: stick-slip pulses through metal resonances; for creaking joints or doors."""
+    rng = random.Random(seed)
+    n = int(dur * SR)
+    exc = [0.0] * n
+    t = 0.0
+    while t < dur:
+        x = t / dur
+        f = f_start + (f_end - f_start) * x + 10 * math.sin(x * 19)
+        t += (1 / f) * rng.uniform(0.85, 1.15)
+        i = int(t * SR)
+        if i < n:
+            exc[i] = rng.uniform(0.6, 1.0)
+    out = [0.0] * n
+    for fr, decay, g in ((1350, 0.004, 1.0), (2450, 0.003, 0.6), (3900, 0.002, 0.35)):
+        r = math.exp(-1 / (decay * SR))
+        w = 2 * math.pi * fr / SR
+        y1 = y2 = 0.0
+        a1, a2 = 2 * r * math.cos(w), -r * r
+        for k in range(n):
+            y = exc[k] + a1 * y1 + a2 * y2
+            y2, y1 = y1, y
+            out[k] += g * y * 0.05
+    for k in range(n):
+        x = k / n
+        out[k] *= math.sin(math.pi * x) ** 0.6
+    return out
+
+
+def drip():
+    """A single liquid drop / plop: oil from a can, a sample into a tube."""
+    n = int(0.22 * SR)
+    out = []
+    ph = 0.0
+    for k in range(n):
+        tt = k / SR
+        f = 320 + 1500 * (1 - math.exp(-tt / 0.03))
+        ph += 2 * math.pi * f / SR
+        out.append(math.sin(ph) * math.exp(-tt / 0.045) * (1 - math.exp(-tt / 0.002)))
+    return out
+
+
+def hum(dur, f0=55, rise=1.0):
+    """Electric charge hum: harmonics of mains with a gentle buzz; rise >1 sweeps the pitch up as it charges."""
+    n = int(dur * SR)
+    out = []
+    ph = 0.0
+    for k in range(n):
+        x = k / n
+        f = f0 * (1 + (rise - 1) * x)
+        ph += 2 * math.pi * f / SR
+        s = math.sin(ph) + 0.5 * math.sin(2 * ph) + 0.33 * math.sin(3 * ph) + 0.2 * math.sin(5 * ph)
+        out.append(math.tanh(1.8 * s) * 0.5 * min(1, x * 12) * min(1, (1 - x) * 12))
+    return out
+
+
+def crackle(dur, rate=40, seed=9):
+    """Fire crackle: sparse sharp snaps over a low warm rumble; heat, sun, burning."""
+    rng = random.Random(seed)
+    n = int(dur * SR)
+    rumble = bandnoise(n, lambda k: 180, q=0.5)
+    out = [0.5 * v for v in rumble]
+    t = 0.0
+    while t < dur:
+        t += rng.expovariate(rate)
+        i0 = int(t * SR)
+        g = rng.uniform(0.2, 1.0)
+        for k in range(int(0.004 * SR)):
+            if i0 + k < n:
+                out[i0 + k] += g * rng.uniform(-1, 1) * math.exp(-k / (0.0008 * SR))
+    for k in range(n):
+        x = k / n
+        out[k] *= min(1, x * 8) * min(1, (1 - x) * 8)
+    return out
+
+
+def wind(dur):
+    """Cold wind: a resonant noise band slowly sweeping and swelling."""
+    n = int(dur * SR)
+    body = bandnoise(n, lambda k: 650 + 380 * math.sin(k / SR * 1.7) + 200 * math.sin(k / SR * 4.3), q=2.2)
+    return [body[k] * math.sin(math.pi * k / n) ** 1.2 * 0.8 for k in range(n)]
+
+
+def hit():
+    """Punchy slam for a word or object landing hard: low thump plus a short bright snap."""
+    n = int(0.45 * SR)
+    out = []
+    ph = 0.0
+    hp_prev = 0.0
+    x_prev = 0.0
+    for k in range(n):
+        tt = k / SR
+        f = 48 + 90 * math.exp(-tt / 0.025)
+        ph += 2 * math.pi * f / SR
+        x = random.uniform(-1, 1)
+        hp_prev = 0.9 * (hp_prev + x - x_prev)
+        x_prev = x
+        s = math.sin(ph) * math.exp(-tt / 0.12) + 0.8 * hp_prev * math.exp(-tt / 0.018)
+        out.append(math.tanh(1.8 * s))
+    return out

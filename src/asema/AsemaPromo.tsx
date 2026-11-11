@@ -18,7 +18,15 @@ const EN = '"Montserrat", sans-serif';
 const POP = {damping: 10, stiffness: 220, mass: 0.7};
 const HEAVY = {damping: 17, stiffness: 180, mass: 0.9};
 const LAND = Easing.bezier(0.55, 0, 0.2, 1.12);
-const WIPE = 0.6;
+const WIPE = 0.45;
+const BEAT = 60 / T.bpm;
+/** Heartbeat on the beat grid: 1 on the "lub", ~0.6 on the "dub", decaying between. */
+const pulseAt = (t: number) => {
+  const ph = ((t % BEAT) + BEAT) % BEAT;
+  const lub = Math.exp(-ph / 0.08);
+  const dub = ph > 0.17 ? 0.6 * Math.exp(-(ph - 0.17) / 0.08) : 0;
+  return lub + dub;
+};
 const asset = (f: string) => staticFile(`asema/${f}`);
 
 const MARK = {
@@ -55,7 +63,7 @@ const Words: React.FC<{text: string; t: number; t0: number; size: number; color:
 }) => (
   <span style={{fontSize: size, color, fontWeight: weight}}>
     {text.split(' ').map((w, i) => {
-      const k = prog(t, t0 + i * stagger, t0 + i * stagger + 0.75, easeOut);
+      const k = prog(t, t0 + i * stagger, t0 + i * stagger + 0.5, easeOut);
       const out = exit === undefined ? 0 : prog(t, exit + i * 0.04, exit + i * 0.04 + 0.4, easeIn);
       return (
         <React.Fragment key={i}>
@@ -135,14 +143,42 @@ const Scene: React.FC<{t: number; enter: number; next: number; ox: number; oy: n
   if (t < enter - 0.02 || t > next + WIPE + 0.05) return null;
   const k = first ? 1 : prog(t, enter, enter + WIPE, easeInOut);
   const push = 1 + 0.06 * prog(t, next, next + WIPE, easeIn);
+  // camera: a slow constant push-in through the scene, plus a heartbeat pulse
+  const drift = 1 + 0.045 * Math.min(1, Math.max(0, (t - enter) / Math.max(1, next + WIPE - enter)));
+  const beatK = 1 + 0.007 * pulseAt(t);
   return (
     <AbsoluteFill style={{clipPath: k >= 1 ? undefined : `circle(${k * 2300}px at ${ox}px ${oy}px)`}}>
-      <AbsoluteFill style={{transform: `scale(${push})`}}>{children}</AbsoluteFill>
+      <AbsoluteFill style={{transform: `scale(${push * drift * beatK})`}}>{children}</AbsoluteFill>
     </AbsoluteFill>
   );
 };
 
 // ---------------------------------------------------------------- scenes
+/** Heart-monitor trace drawn left to right, one spike per beat, a bright head on the leading edge. */
+const Ecg: React.FC<{t: number; y: number}> = ({t, y}) => {
+  const speed = PW / (BEAT * 3);
+  const pts: string[] = [];
+  for (let x = 0; x <= PW + 40; x += 6) {
+    const bt = (x / speed) % BEAT;
+    const u = bt / BEAT;
+    let v = 0;
+    if (u > 0.1 && u < 0.14) v = -18;
+    else if (u >= 0.14 && u < 0.18) v = 120 * Math.sin(((u - 0.14) / 0.04) * Math.PI);
+    else if (u >= 0.18 && u < 0.24) v = -70 * Math.sin(((u - 0.18) / 0.06) * Math.PI);
+    else if (u > 0.36 && u < 0.48) v = 16 * Math.sin(((u - 0.36) / 0.12) * Math.PI);
+    pts.push(`${x},${y - v}`);
+  }
+  const head = Math.min(PW + 40, t * speed);
+  return (
+    <svg width={PW} height={PH} style={{position: 'absolute', inset: 0}}>
+      <defs><clipPath id="ecgclip"><rect x={0} y={0} width={head} height={PH} /></clipPath>
+        <linearGradient id="ecgfade" x1="0" x2="1"><stop offset="0" stopColor={L.red} stopOpacity={0.15} /><stop offset="1" stopColor={L.red} stopOpacity={1} /></linearGradient></defs>
+      <polyline points={pts.join(' ')} fill="none" stroke="url(#ecgfade)" strokeWidth={9} strokeLinejoin="round" strokeLinecap="round" clipPath="url(#ecgclip)" />
+      <circle cx={head} cy={y} r={14 + 8 * pulseAt(t)} fill={L.red} opacity={head < PW ? 0.9 : 0} />
+    </svg>
+  );
+};
+
 const S1: React.FC<{t: number; f: number}> = ({t, f}) => {
   const s = T.s1;
   const k1 = sp(f, s.w1 - 0.25, POP, PFPS);
@@ -162,6 +198,7 @@ const S1: React.FC<{t: number; f: number}> = ({t, f}) => {
         </g>
       </svg>
       <Line y={1180}><span style={{fontSize: 150, color: L.blue, ...slam(k3)}}>إنت سامعه؟</span></Line>
+      <Ecg t={t} y={1560} />
     </AbsoluteFill>
   );
 };
@@ -474,6 +511,8 @@ export const AsemaPromo: React.FC = () => {
       <Scene t={t} enter={T.s7.enter} next={T.s8.enter} ox={580} oy={1100}><S7 t={t} f={f} /></Scene>
       <Scene t={t} enter={T.s8.enter} next={T.duration + 5} ox={540} oy={960}><S8 t={t} f={f} /></Scene>
       <LogoTab t={t} />
+      <AbsoluteFill style={{pointerEvents: 'none', mixBlendMode: 'soft-light', opacity: 0.22 * pulseAt(t),
+        background: 'radial-gradient(circle at 50% 55%, #FFFFFF 0%, rgba(255,255,255,0) 65%)'}} />
       <Grain frame={f} opacity={0.05} />
     </AbsoluteFill>
   );
