@@ -1,6 +1,8 @@
 # برومبتات صور العروض (ChatGPT / أي مولّد صور)
 
-اكتب البرومبت بالإنجليزي زي ما هو. اطلب الصورة **مربعة 1:1**. احفظها باسم `liver.png` أو `kidney.png`
+> **مقاسات فيسبوك الثابتة:** البوست 1080×1350 (4:5)، والستوري 1080×1920 (9:16). اطلب الصورة من ChatGPT دايمًا **portrait 4:5**.
+
+اكتب البرومبت بالإنجليزي زي ما هو. اطلب الصورة **طولية 4:5** (portrait 4:5). احفظها باسم `liver.png` أو `kidney.png`
 وابعتها، وهتتحط جوه الحلقة العنابي والبرتقالي في القالب.
 
 قواعد ثابتة في كل البرومبتات: خلفية فاتحة، العنصر في النص، **من غير أي كلام أو لوجو**،
@@ -14,7 +16,7 @@ crimson red and deep burgundy tones with subtle gold-orange rim light. Centered,
 about 70% of a square frame, soft shadow underneath. Clean bright white-to-very-light-gray studio
 background with faint, out-of-focus royal blue molecular structures (ball-and-stick) in the
 background. Soft studio lighting, high detail, clinical and trustworthy mood, modern healthcare
-advertising style. Square 1:1. No text, no letters, no labels, no logos, no watermark.
+advertising style. Portrait 4:5. No text, no letters, no labels, no logos, no watermark.
 ```
 
 ## الكلى · `kidney.png`
@@ -25,7 +27,7 @@ accurate, rendered in deep crimson and burgundy with fine royal blue blood vesse
 gold-orange rim light. Centered, floating, filling about 70% of a square frame, soft shadow
 underneath. Clean bright white-to-very-light-gray studio background with faint, out-of-focus
 royal blue molecular structures in the background. Soft studio lighting, high detail, clinical and
-trustworthy mood, modern healthcare advertising style. Square 1:1. No text, no letters, no labels,
+trustworthy mood, modern healthcare advertising style. Portrait 4:5. No text, no letters, no labels,
 no logos, no watermark.
 ```
 
@@ -35,7 +37,7 @@ no logos, no watermark.
 Professional healthcare advertising photo: a smiling Egyptian woman in her 40s gently placing her
 hand on her right side (liver area), soft natural light, bright clean white background, warm and
 reassuring mood, subtle crimson and royal blue accents in clothing. Centered portrait composition
-for a circular crop, head and torso visible. Square 1:1. No text, no logos, no watermark.
+for a circular crop, head and torso visible. Portrait 4:5. No text, no logos, no watermark.
 ```
 (للكلى: بدّل "right side (liver area)" بـ "lower back (kidney area)".)
 

@@ -34,6 +34,18 @@ each in `color` (on white), `on-blue`, `on-burgundy`, `mono-black`, `mono-white`
 
 Cover elements: the burgundy + gold double ring (photo frame), the burgundy pill bar, the blue title bar, the light molecule pattern.
 
+## Facebook sizes (standard for every design)
+
+| Use | Size | Notes |
+|---|---|---|
+| Feed post (default) | **1080 x 1350** (4:5) | biggest space in the mobile feed, shown whole on mobile and desktop |
+| Story / Reel cover | 1080 x 1920 (9:16) | keep text out of the top 250 px and bottom 250 px |
+| Page cover | 1640 x 720 | content clear of the profile circle |
+| Profile picture | 1080 x 1080 | circle-safe |
+
+Every feed post is delivered at 1080 x 1350 with a 1080 x 1920 story version.
+Image prompts for generated scenes always ask for a 4:5 portrait.
+
 ## Facebook
 
 | File | Use |
