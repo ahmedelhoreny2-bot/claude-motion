@@ -8,15 +8,15 @@ import T from './timeline.json';
 export const PW = 1080;
 export const PH = 1920;
 export const PFPS = T.fps;
-const L = {
+export const L = {
   white: '#FFFFFF', red: '#E0262B', burgundy: '#9B1D32', orange: '#F2A11F', blue: '#33389A',
   blueHi: '#4650C4', navy: '#1F236B', wine: '#5C0E1D', ink: '#1A1A1A', gray: '#5F5F66',
   blush: '#F6EEF1', sky: '#E6ECF8', cold: '#7FB0FF',
 };
-const AR = '"Cairo", sans-serif';
-const EN = '"Montserrat", sans-serif';
-const POP = {damping: 10, stiffness: 220, mass: 0.7};
-const HEAVY = {damping: 17, stiffness: 180, mass: 0.9};
+export const AR = '"Cairo", sans-serif';
+export const EN = '"Montserrat", sans-serif';
+export const POP = {damping: 10, stiffness: 220, mass: 0.7};
+export const HEAVY = {damping: 17, stiffness: 180, mass: 0.9};
 const LAND = Easing.bezier(0.55, 0, 0.2, 1.12);
 const WIPE = 0.45;
 const BEAT = 60 / T.bpm;
@@ -27,15 +27,15 @@ const pulseAt = (t: number) => {
   const dub = ph > 0.17 ? 0.6 * Math.exp(-(ph - 0.17) / 0.08) : 0;
   return lub + dub;
 };
-const asset = (f: string) => staticFile(`asema/${f}`);
+export const asset = (f: string) => staticFile(`asema/${f}`);
 
-const MARK = {
+export const MARK = {
   arm: 'M330,140 C420,160 474,240 470,330 C466,410 420,452 352,452 C250,454 110,446 4,442 C110,398 220,382 338,404 C392,410 432,372 434,322 C436,262 398,214 330,190 Z',
   stripe: 'M18,458 C160,456 340,466 520,490 L514,518 C350,490 180,470 18,458 Z',
   bubbles: [[48, 198, 25], [56, 250, 7], [100, 248, 14], [85, 292, 9], [118, 282, 6], [116, 325, 9]],
 };
 
-const useAsemaFonts = () => {
+export const useAsemaFonts = () => {
   const [handle] = useState(() => delayRender('asema-fonts'));
   useEffect(() => {
     const list: [string, string, string][] = [
@@ -51,14 +51,14 @@ const useAsemaFonts = () => {
 const arDigits = (n: number) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 
 // ---------------------------------------------------------------- building blocks
-const Line: React.FC<{y: number; children: React.ReactNode; style?: React.CSSProperties}> = ({y, children, style}) => (
+export const Line: React.FC<{y: number; children: React.ReactNode; style?: React.CSSProperties}> = ({y, children, style}) => (
   <div style={{position: 'absolute', left: 60, right: 60, top: y, direction: 'rtl', textAlign: 'center', fontFamily: AR, fontWeight: 800, lineHeight: 1.15, whiteSpace: 'nowrap', ...style}}>
     {children}
   </div>
 );
 
 /** Words masked in one by one (RTL order), optional masked exit. */
-const Words: React.FC<{text: string; t: number; t0: number; size: number; color: string; stagger?: number; exit?: number; weight?: number}> = ({
+export const Words: React.FC<{text: string; t: number; t0: number; size: number; color: string; stagger?: number; exit?: number; weight?: number}> = ({
   text, t, t0, size, color, stagger = 0.09, exit, weight = 800,
 }) => (
   <span style={{fontSize: size, color, fontWeight: weight}}>
@@ -75,7 +75,7 @@ const Words: React.FC<{text: string; t: number; t0: number; size: number; color:
   </span>
 );
 
-const Molecules: React.FC<{color: string; op: number; t: number; seed?: number}> = ({color, op, t, seed = 0}) => {
+export const Molecules: React.FC<{color: string; op: number; t: number; seed?: number}> = ({color, op, t, seed = 0}) => {
   const spots = [[140, 520, 1.3], [940, 640, 1], [110, 1420, 0.9], [960, 1500, 1.2], [560, 220, 0.7], [320, 1060, 0.6], [860, 1150, 0.7]];
   return (
     <svg width={PW} height={PH} style={{position: 'absolute', inset: 0}}>
@@ -89,11 +89,11 @@ const Molecules: React.FC<{color: string; op: number; t: number; seed?: number}>
   );
 };
 
-const Glow: React.FC<{x: number; y: number; r: number; color: string; op?: number}> = ({x, y, r, color, op = 0.5}) => (
+export const Glow: React.FC<{x: number; y: number; r: number; color: string; op?: number}> = ({x, y, r, color, op = 0.5}) => (
   <div style={{position: 'absolute', left: x - r, top: y - r, width: 2 * r, height: 2 * r, borderRadius: '50%', background: `radial-gradient(circle, ${color} 0%, transparent 70%)`, opacity: op}} />
 );
 
-const Bg: React.FC<{kind: 'light' | 'blue' | 'wine' | 'sky' | 'lav'; t: number; seed?: number}> = ({kind, t, seed}) => {
+export const Bg: React.FC<{kind: 'light' | 'blue' | 'wine' | 'sky' | 'lav'; t: number; seed?: number}> = ({kind, t, seed}) => {
   const bg = {
     light: `linear-gradient(170deg, ${L.white} 0%, ${L.blush} 100%)`,
     sky: `linear-gradient(170deg, ${L.white} 0%, ${L.sky} 100%)`,
@@ -110,7 +110,7 @@ const Bg: React.FC<{kind: 'light' | 'blue' | 'wine' | 'sky' | 'lav'; t: number; 
 };
 
 /** The cover's double ring, drawn on by k. */
-const Ring: React.FC<{cx: number; cy: number; r: number; sw: number; k: number; outer?: string; inner?: string}> = ({cx, cy, r, sw, k, outer = L.burgundy, inner = L.orange}) => {
+export const Ring: React.FC<{cx: number; cy: number; r: number; sw: number; k: number; outer?: string; inner?: string}> = ({cx, cy, r, sw, k, outer = L.burgundy, inner = L.orange}) => {
   const c1 = 2 * Math.PI * r;
   const r2 = r - sw * 0.85;
   const c2 = 2 * Math.PI * r2;
@@ -128,7 +128,7 @@ const Cut: React.FC<{src: string; cx: number; cy: number; w: number; style?: Rea
   <Img src={asset(src)} style={{position: 'absolute', left: cx - w / 2, top: cy, width: w, transform: 'translateY(-50%)', filter: `drop-shadow(0 30px 34px rgba(0,0,0,${shadow}))`, ...style}} />
 );
 
-const Chip: React.FC<{text: string; k: number; latin?: boolean; dark?: boolean; size?: number}> = ({text, k, latin, dark, size = 30}) => (
+export const Chip: React.FC<{text: string; k: number; latin?: boolean; dark?: boolean; size?: number}> = ({text, k, latin, dark, size = 30}) => (
   <span style={{
     display: 'inline-block', margin: '0 7px', padding: `${size * 0.22}px ${size * 0.8}px`, borderRadius: 999,
     fontFamily: latin ? EN : AR, fontWeight: 700, fontSize: size, letterSpacing: latin ? '0.03em' : 0,
