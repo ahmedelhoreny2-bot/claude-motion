@@ -4,14 +4,13 @@
 
 export const LAB = {
   white: '#FFFFFF',
-  red: '#E01E26',
-  redDeep: '#A3141B',
-  redSoft: '#FCE4E5',
-  black: '#141414',
-  blackSoft: '#26262B',
-  gray: '#F2F2F3',
-  grayText: '#5F5F66',
-  line: 'rgba(20,20,20,0.10)',
+  red: '#E0262B',
+  burgundy: '#9B1D32',
+  orange: '#F2A11F',
+  blue: '#33389A',
+  black: '#1A1A1A',
+  molecule: '#E6E6EC',
+  line: 'rgba(26,26,26,0.10)',
 };
 
 export const LAB_FONT = {
@@ -20,7 +19,7 @@ export const LAB_FONT = {
 };
 
 // The mark in its native grid (viewBox below). Animate in layers:
-// stripe wipes in, swoosh/arm draws, tube drops onto the ring, bubbles pop.
+// stripe wipes in (red), swoosh/arm draws (blue), tube drops onto the ring, bubbles pop (red).
 export const LAB_MARK = {
   viewBox: '-2 -14 524 530',
   arm: 'M330,140 C420,160 474,240 470,330 C466,410 420,452 352,452 C250,454 110,446 4,442 C110,398 220,382 338,404 C392,410 432,372 434,322 C436,262 398,214 330,190 Z',

@@ -12,23 +12,25 @@ Open `guide.html` in a browser for the full guide (Arabic): concept, logo versio
 | `brand.ts` | Palette, fonts and the mark's paths for Remotion videos |
 | `fonts/` | Cairo and Montserrat (Google Fonts, SIL OFL) |
 
-The mark is the lab's existing logo (microscope, swoosh, red stripe, sample bubbles) redrawn as clean vectors in red, black and white.
+Everything follows the lab's printed cover: the logo is the existing one (blue microscope, swoosh,
+red stripe, red bubbles) redrawn as clean vectors in its own colours, and the palette is sampled from the cover.
 
 Logo variants: `mark-*` (symbol only), `logo-stacked-*` (main, like the original), `logo-horizontal-*` (signs, headers, result sheets),
-each in `color` (on white), `on-black`, `on-red`, `mono-black`, `mono-white`; plus `app-icon` (red), `avatar` (white), `tagline`.
+each in `color` (on white), `on-blue`, `on-burgundy`, `mono-black`, `mono-white`; plus `app-icon`, `avatar`, `tagline` (burgundy pill).
 
-## Core colours
+## Core colours (from the cover)
 
 | Name | HEX | Use |
 |---|---|---|
-| Clean White · أبيض | `#FFFFFF` | dominant background, ~60% |
-| Asema Red · أحمر العاصمة | `#E01E26` | brand colour: name, bubbles, stripe, headlines, offers, ~22% |
-| Lab Black · أسود المعمل | `#141414` | microscope, text, dark sections, ~13% |
-| Lab Gray · رمادي فاتح | `#F2F2F3` | cards and panels, ~5% |
-| Deep Red · أحمر غامق | `#A3141B` | gradients, pressed states |
-| Text Gray · رمادي النص | `#5F5F66` | secondary text |
+| Paper White · أبيض | `#FFFFFF` | dominant background, ~55% |
+| Asema Red · أحمر العاصمة | `#E0262B` | the name, bubbles, red stripe, ~14% |
+| Royal Blue · أزرق ملكي | `#33389A` | support: microscope, English line, title bar, ~10% |
+| Burgundy · عنابي | `#9B1D32` | outer ring, pill bars, ~8% |
+| Gold Orange · برتقالي ذهبي | `#F2A11F` | inner ring, highlights, ~6% |
+| Ink Black · أسود | `#1A1A1A` | text, phone numbers, ~5% |
+| Molecule Gray · رمادي الجزيئات | `#E6E6EC` | molecule pattern, light panels |
 
-No navy, purple or blue anywhere.
+Cover elements: the burgundy + gold double ring (photo frame), the burgundy pill bar, the blue title bar, the light molecule pattern.
 
 ## Rebuild
 

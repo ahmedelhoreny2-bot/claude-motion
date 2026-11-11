@@ -20,13 +20,13 @@ OUT = ROOT / "logo" / "svg"
 PAL = json.loads((ROOT / "palette.json").read_text())
 COL = {c["id"]: c["hex"] for c in PAL["core"]}
 
-RED, BLACK, GRAY = COL["red"], COL["black"], COL["gray"]
-DEEP, WHITE = COL["deepred"], "#FFFFFF"
+RED, BURGUNDY, ORANGE = COL["red"], COL["burgundy"], COL["orange"]
+BLUE, BLACK, WHITE = COL["blue"], COL["black"], "#FFFFFF"
 
 
 # ---------------------------------------------------------------- the mark
-# The lab's existing logo, redrawn as clean vectors: a microscope whose arm sweeps
-# into a swoosh, a red stripe under it, and red sample bubbles.
+# The lab's existing logo, redrawn as clean vectors in its printed colours: a blue
+# microscope whose arm sweeps into a swoosh, a red stripe under it, red sample bubbles.
 # Native grid: MARK_W x MARK_H; mark() places it at (tx, ty) scaled by s.
 MARK_W, MARK_H = 524, 530
 BUBBLES = [(48, 198, 25), (56, 250, 7), (100, 248, 14), (85, 292, 9), (118, 282, 6), (116, 325, 9)]
@@ -47,7 +47,7 @@ STRIPE = "M18,458 C160,456 340,466 520,490 L514,518 C350,490 180,470 18,458 Z"
 
 
 def mark(k, r, tx=0, ty=0, s=1.0):
-    """k = microscope + swoosh colour, r = stripe + bubbles colour."""
+    """k = microscope + swoosh colour (blue), r = stripe + bubbles colour (red)."""
     bub = "".join(f'<circle cx="{x}" cy="{y}" r="{rr}"/>' for x, y, rr in BUBBLES)
     return (
         f'<g transform="translate({tx:.2f},{ty:.2f}) scale({s:.4f}) translate(-2,14)">'
@@ -118,13 +118,13 @@ def svg(w, h, body, bg=None):
 # ---------------------------------------------------------------- variants
 # key: (microscope, red parts, text colours (name, sub, EN first word, EN rest), background)
 SCHEMES = {
-    "color": (BLACK, RED, (RED, BLACK, RED, BLACK), None),
-    "on-black": (WHITE, RED, (WHITE, "#D4D4D8", RED, WHITE), BLACK),
-    "on-red": (WHITE, WHITE, (WHITE, WHITE, WHITE, WHITE), RED),
+    "color": (BLUE, RED, (RED, BLUE, RED, BLUE), None),
+    "on-blue": (WHITE, ORANGE, (WHITE, "#D9DAF2", ORANGE, WHITE), BLUE),
+    "on-burgundy": (WHITE, ORANGE, (WHITE, "#F5D9DE", ORANGE, WHITE), BURGUNDY),
     "mono-black": (BLACK, BLACK, (BLACK, BLACK, BLACK, BLACK), None),
     "mono-white": (WHITE, WHITE, (WHITE, WHITE, WHITE, WHITE), None),
 }
-EN_A, EN_B = "AL ", "ASEMA LAB"
+EN_A, EN_B = "A", "L ASEMA LAB"
 TRACK = 0.32
 
 
@@ -191,17 +191,17 @@ def build():
         )
         files.append((f"logo-stacked-{key}.svg", svg(W2, H2, body2, bg)))
 
-    # app icon: red rounded square, white mark. avatar: white, colour mark (crops to a circle)
+    # app icon: white rounded square, colour mark. avatar: white, colour mark (crops to a circle)
     s = 640 / MARK_W
     files.append(("app-icon.svg", svg(1024, 1024,
-        f'<rect width="1024" height="1024" rx="224" fill="{RED}"/>'
-        + mark(WHITE, WHITE, (1024 - MARK_W * s) / 2, (1024 - MARK_H * s) / 2, s))))
+        f'<rect width="1024" height="1024" rx="224" fill="{WHITE}"/>'
+        + mark(BLUE, RED, (1024 - MARK_W * s) / 2, (1024 - MARK_H * s) / 2, s))))
     files.append(("avatar.svg", svg(1024, 1024,
-        mark(BLACK, RED, (1024 - MARK_W * s) / 2, (1024 - MARK_H * s) / 2, s), WHITE)))
+        mark(BLUE, RED, (1024 - MARK_W * s) / 2, (1024 - MARK_H * s) / 2, s), WHITE)))
 
     tw = CAIRO_B.width(TAG_AR, 56, rtl=True)
     files.append(("tagline.svg", svg(int(tw + 80), 110,
-        f'<path fill="{RED}" d="{CAIRO_B.path(TAG_AR, 56, 40, 72, rtl=True)}"/>')))
+        f'<rect width="{int(tw + 80)}" height="110" rx="55" fill="{BURGUNDY}"/><path fill="{WHITE}" d="{CAIRO_B.path(TAG_AR, 56, 40, 72, rtl=True)}"/>')))
 
     for name, content in files:
         (OUT / name).write_text(content)

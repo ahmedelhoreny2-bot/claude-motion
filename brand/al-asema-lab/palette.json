@@ -1,13 +1,14 @@
 {
   "brand": "Al Asema Lab — معمل العاصمة للتحاليل الطبية",
+  "source": "Colours taken from the lab's printed cover, corrected for room light",
   "core": [
     {
       "id": "white",
       "name_ar": "أبيض",
-      "name_en": "Clean White",
+      "name_en": "Paper White",
       "hex": "#FFFFFF",
-      "role": "Dominant. Backgrounds and clean space.",
-      "share": 60,
+      "role": "Dominant background, like the cover.",
+      "share": 55,
       "rgb": [
         255,
         255,
@@ -24,172 +25,201 @@
       "id": "red",
       "name_ar": "أحمر العاصمة",
       "name_en": "Asema Red",
-      "hex": "#E01E26",
-      "role": "Brand colour. Name, bubbles, stripe, headlines, offers, buttons.",
-      "share": 22,
+      "hex": "#E0262B",
+      "role": "The name, bubbles, red stripe, headlines.",
+      "share": 14,
       "rgb": [
         224,
-        30,
-        38
+        38,
+        43
       ],
       "cmyk": [
         0,
-        87,
         83,
+        81,
         12
       ]
     },
     {
-      "id": "black",
-      "name_ar": "أسود المعمل",
-      "name_en": "Lab Black",
-      "hex": "#141414",
-      "role": "Microscope, body text, dark sections and video backgrounds.",
-      "share": 13,
+      "id": "burgundy",
+      "name_ar": "عنابي",
+      "name_en": "Burgundy",
+      "hex": "#9B1D32",
+      "role": "Outer ring, pill bars (دقة · سرعة · جودة), section bars.",
+      "share": 8,
       "rgb": [
-        20,
-        20,
-        20
+        155,
+        29,
+        50
       ],
       "cmyk": [
         0,
-        0,
-        0,
-        92
+        81,
+        68,
+        39
       ]
     },
     {
-      "id": "gray",
-      "name_ar": "رمادي فاتح",
-      "name_en": "Lab Gray",
-      "hex": "#F2F2F3",
-      "role": "Cards, panels, light separation on white.",
-      "share": 5,
+      "id": "orange",
+      "name_ar": "برتقالي ذهبي",
+      "name_en": "Gold Orange",
+      "hex": "#F2A11F",
+      "role": "Inner ring, highlights, icons, small accents.",
+      "share": 6,
       "rgb": [
         242,
-        242,
-        243
+        161,
+        31
       ],
       "cmyk": [
         0,
-        0,
-        0,
+        33,
+        87,
         5
       ]
     },
     {
-      "id": "deepred",
-      "name_ar": "أحمر غامق",
-      "name_en": "Deep Red",
-      "hex": "#A3141B",
-      "role": "Shadows, gradients, pressed buttons, red on red.",
-      "share": 0,
+      "id": "blue",
+      "name_ar": "أزرق ملكي",
+      "name_en": "Royal Blue",
+      "hex": "#33389A",
+      "role": "Support: microscope, English line, the blue title bar.",
+      "share": 10,
       "rgb": [
-        163,
-        20,
-        27
+        51,
+        56,
+        154
       ],
       "cmyk": [
+        67,
+        64,
         0,
-        88,
-        83,
-        36
+        40
       ]
     },
     {
-      "id": "graytext",
-      "name_ar": "رمادي النص",
-      "name_en": "Text Gray",
-      "hex": "#5F5F66",
-      "role": "Secondary text, captions, small notes.",
-      "share": 0,
+      "id": "black",
+      "name_ar": "أسود",
+      "name_en": "Ink Black",
+      "hex": "#1A1A1A",
+      "role": "Body text, phone numbers, addresses.",
+      "share": 5,
       "rgb": [
-        95,
-        95,
-        102
+        26,
+        26,
+        26
       ],
       "cmyk": [
-        7,
-        7,
         0,
-        60
+        0,
+        0,
+        90
+      ]
+    },
+    {
+      "id": "gray",
+      "name_ar": "رمادي الجزيئات",
+      "name_en": "Molecule Gray",
+      "hex": "#E6E6EC",
+      "role": "Molecule pattern and light panels.",
+      "share": 2,
+      "rgb": [
+        230,
+        230,
+        236
+      ],
+      "cmyk": [
+        3,
+        3,
+        0,
+        7
       ]
     }
   ],
   "scales": {
     "red": {
-      "50": "#FDEFF0",
-      "100": "#FADDDE",
-      "200": "#F5B7BA",
-      "300": "#EF8A8E",
-      "400": "#E7545A",
-      "500": "#E01E26",
-      "700": "#A4161C",
-      "900": "#700F13"
+      "50": "#FDF0F0",
+      "100": "#FADEDF",
+      "200": "#F5BABB",
+      "300": "#EF8E91",
+      "400": "#E75A5E",
+      "500": "#E0262B",
+      "700": "#A81C20",
+      "900": "#701316"
     },
-    "gray": {
-      "50": "#FAFAFA",
-      "100": "#F2F2F3",
-      "200": "#E2E2E5",
-      "300": "#C7C7CC",
-      "400": "#9A9AA1",
-      "500": "#5F5F66",
-      "700": "#2E2E33",
-      "900": "#141414"
+    "orange": {
+      "50": "#FEF8EF",
+      "100": "#FDF1DD",
+      "200": "#FBE1B7",
+      "300": "#F8CE8B",
+      "400": "#F5B855",
+      "500": "#F2A11F",
+      "700": "#B67917",
+      "900": "#795010"
+    },
+    "blue": {
+      "50": "#F1F1F8",
+      "100": "#E0E1F0",
+      "200": "#BEBFDF",
+      "300": "#9598CA",
+      "400": "#6468B2",
+      "500": "#33389A",
+      "700": "#262A74",
+      "900": "#1A1C4D"
     }
   },
   "gradients": [
     {
-      "id": "asema",
-      "css": "linear-gradient(135deg, #E01E26 0%, #A3141B 100%)",
-      "use": "Offers, covers, video openers"
+      "id": "ring",
+      "css": "burgundy outer ring + gold-orange inner ring",
+      "use": "Photo frames, cover arcs (the flyer's signature)"
     },
     {
-      "id": "night",
-      "css": "linear-gradient(160deg, #26262B 0%, #141414 100%)",
-      "use": "Dark video backgrounds, sparingly"
+      "id": "stripe",
+      "css": "linear-gradient(90deg, #33389A 0%, #33389A 48%, #FFFFFF 48%, #FFFFFF 54%, #E0262B 54%)",
+      "use": "Thin brand stripe, like the logo swoosh"
     }
   ],
   "contrast": [
     {
       "fg": "#FFFFFF",
-      "bg": "#E01E26",
-      "ratio": 4.79
-    },
-    {
-      "fg": "#E01E26",
-      "bg": "#FFFFFF",
-      "ratio": 4.79
-    },
-    {
-      "fg": "#141414",
-      "bg": "#FFFFFF",
-      "ratio": 18.42
+      "bg": "#E0262B",
+      "ratio": 4.69
     },
     {
       "fg": "#FFFFFF",
-      "bg": "#141414",
-      "ratio": 18.42
-    },
-    {
-      "fg": "#5F5F66",
-      "bg": "#FFFFFF",
-      "ratio": 6.33
-    },
-    {
-      "fg": "#141414",
-      "bg": "#F2F2F3",
-      "ratio": 16.47
-    },
-    {
-      "fg": "#E01E26",
-      "bg": "#141414",
-      "ratio": 3.85
+      "bg": "#9B1D32",
+      "ratio": 8.03
     },
     {
       "fg": "#FFFFFF",
-      "bg": "#A3141B",
-      "ratio": 7.86
+      "bg": "#33389A",
+      "ratio": 9.66
+    },
+    {
+      "fg": "#E0262B",
+      "bg": "#FFFFFF",
+      "ratio": 4.69
+    },
+    {
+      "fg": "#1A1A1A",
+      "bg": "#FFFFFF",
+      "ratio": 17.4
+    },
+    {
+      "fg": "#1A1A1A",
+      "bg": "#F2A11F",
+      "ratio": 8.2
+    },
+    {
+      "fg": "#FFFFFF",
+      "bg": "#F2A11F",
+      "ratio": 2.12
+    },
+    {
+      "fg": "#F2A11F",
+      "bg": "#33389A",
+      "ratio": 4.55
     }
   ],
   "fonts": {
