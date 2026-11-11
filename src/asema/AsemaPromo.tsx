@@ -85,10 +85,11 @@ const Glow: React.FC<{x: number; y: number; r: number; color: string; op?: numbe
   <div style={{position: 'absolute', left: x - r, top: y - r, width: 2 * r, height: 2 * r, borderRadius: '50%', background: `radial-gradient(circle, ${color} 0%, transparent 70%)`, opacity: op}} />
 );
 
-const Bg: React.FC<{kind: 'light' | 'blue' | 'wine' | 'sky'; t: number; seed?: number}> = ({kind, t, seed}) => {
+const Bg: React.FC<{kind: 'light' | 'blue' | 'wine' | 'sky' | 'lav'; t: number; seed?: number}> = ({kind, t, seed}) => {
   const bg = {
     light: `linear-gradient(170deg, ${L.white} 0%, ${L.blush} 100%)`,
     sky: `linear-gradient(170deg, ${L.white} 0%, ${L.sky} 100%)`,
+    lav: `linear-gradient(170deg, ${L.white} 0%, #EFEAF7 100%)`,
     blue: `linear-gradient(165deg, ${L.blueHi} 0%, ${L.blue} 55%, ${L.navy} 100%)`,
     wine: `linear-gradient(165deg, #B3263F 0%, ${L.burgundy} 50%, ${L.wine} 100%)`,
   }[kind];
@@ -285,6 +286,9 @@ const S5: React.FC<{t: number; f: number}> = ({t, f}) => {
         style={{transform: `translateY(-50%) rotate(${-8 - (1 - ck) * 20}deg)`}} />
       <Line y={320}><Words text="عايش في بلد الشمس.." t={t} t0={s.t1} size={86} color={L.white} /></Line>
       <Line y={470}><Words text="وناقصك فيتامين د؟" t={t} t0={s.t2} size={104} color={L.orange} /></Line>
+      <div style={{position: 'absolute', left: 40, right: 40, top: 1380, textAlign: 'center', direction: 'rtl'}}>
+        {['تعب مستمر', 'وجع عضم وعضلات', 'ضعف عام'].map((x, i) => <Chip key={x} text={x} dark k={sp(f, s.chips + i * 0.15, POP, PFPS)} size={40} />)}
+      </div>
     </AbsoluteFill>
   );
 };
@@ -303,6 +307,53 @@ const S6: React.FC<{t: number; f: number}> = ({t, f}) => {
       <Line y={455}><Words text="صورة الدم الكاملة بتطمنك عليه" t={t} t0={s.t2} size={52} color={L.blue} stagger={0.06} /></Line>
       <div style={{position: 'absolute', left: 40, right: 40, top: 560, textAlign: 'center', direction: 'rtl'}}>
         {['الأنيميا', 'الالتهابات', 'الصفايح', 'المناعة'].map((x, i) => <Chip key={x} text={x} k={sp(f, s.labels[0] + i * 0.12, POP, PFPS)} size={34} />)}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+const S9: React.FC<{t: number; f: number}> = ({t, f}) => {
+  const s = T.s9;
+  const k = sp(f, s.subject, HEAVY, PFPS);
+  const sq = sp(f, s.squeak, POP, PFPS);
+  const shake = t > s.squeak && t < s.squeak + 0.6 ? Math.sin(t * 90) * 6 * (1 - (t - s.squeak) / 0.6) : 0;
+  const tests = ['سرعة الترسيب', 'معامل الالتهاب', 'الروماتويد', 'الحمى الروماتيزمية', 'الكالسيوم', 'فيتامين د'];
+  return (
+    <AbsoluteFill>
+      <Bg kind="light" t={t} seed={1} />
+      <Glow x={470} y={1000} r={560} color="#FFFFFF" op={0.9} />
+      <Ring cx={470} cy={1000} r={420} sw={54} k={prog(t, s.enter + 0.15, s.enter + 1.15, easeInOut)} />
+      <Cut src="joints-hinge.png" cx={600 + (1 - k) * 300} cy={1010} w={860} shadow={0.2}
+        style={{transform: `translateY(-50%) rotate(${shake * 0.3}deg)`, opacity: Math.min(1, k * 1.6)}} />
+      <div style={{position: 'absolute', left: 30, top: 760, width: 420, textAlign: 'center', fontFamily: AR, fontWeight: 800, fontSize: 110, color: L.orange,
+        WebkitTextStroke: `14px ${L.white}`, paintOrder: 'stroke', transform: `rotate(-12deg) scale(${sq}) translateX(${shake}px)`, opacity: Math.min(1, sq * 1.5)}}>زيييق!</div>
+      <Line y={250}><Words text="مفاصلك" t={t} t0={s.t1} size={130} color={L.ink} /> <Words text="بتزيّق؟" t={t} t0={s.t1 + 0.15} size={130} color={L.red} /></Line>
+      <Line y={430}><Words text="قبل ما تزيتها.. اعرف السبب" t={t} t0={s.t2} size={58} color={L.blue} stagger={0.07} /></Line>
+      <div style={{position: 'absolute', left: 40, right: 40, top: 1480, textAlign: 'center', direction: 'rtl', lineHeight: 2.2}}>
+        {tests.map((x, i) => <Chip key={x} text={x} k={sp(f, s.tests + i * 0.15, POP, PFPS)} size={38} />)}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+const S10: React.FC<{t: number; f: number}> = ({t, f}) => {
+  const s = T.s10;
+  const k = sp(f, s.subject, HEAVY, PFPS);
+  const st = sp(f, s.sticker, {damping: 8, stiffness: 200, mass: 0.7}, PFPS);
+  const zoom = 1 + 0.05 * prog(t, s.subject, s.exit + 0.6, (x) => x);
+  return (
+    <AbsoluteFill>
+      <Bg kind="lav" t={t} seed={2} />
+      <Glow x={600} y={1080} r={620} color="#C9BFEA" op={0.55} />
+      <Ring cx={1180} cy={980} r={380} sw={54} k={prog(t, s.enter + 0.15, s.enter + 1.15, easeInOut)} />
+      <Cut src="kidney-beans.png" cx={580} cy={1100} w={880} shadow={0.2}
+        style={{transform: `translateY(-50%) translateY(${(1 - k) * 220}px) scale(${zoom})`, opacity: Math.min(1, k * 1.6)}} />
+      <Line y={240}><Words text="مش فاصوليا.." t={t} t0={s.t1} size={120} color={L.red} /></Line>
+      <Line y={400}><Words text="دي كليتك!" t={t} t0={s.t2} size={160} color={L.blue} /></Line>
+      <div style={{position: 'absolute', left: 70, top: 1440, width: 300, height: 300, borderRadius: '50%', background: L.orange,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: AR, fontWeight: 800, fontSize: 50, lineHeight: 1.15,
+        color: L.ink, transform: `rotate(-10deg) scale(${st})`, boxShadow: '0 16px 34px rgba(0,0,0,0.2)', direction: 'rtl'}}>
+        <span>الكلى</span><span>بتشتغل</span><span>في صمت</span>
       </div>
     </AbsoluteFill>
   );
@@ -416,9 +467,11 @@ export const AsemaPromo: React.FC = () => {
       <Scene t={t} enter={T.s2.enter} next={T.s3.enter} ox={540} oy={1260}><S2 t={t} f={f} /></Scene>
       <Scene t={t} enter={T.s3.enter} next={T.s4.enter} ox={780} oy={700}><S3 t={t} f={f} /></Scene>
       <Scene t={t} enter={T.s4.enter} next={T.s5.enter} ox={1080} oy={960}><S4 t={t} f={f} /></Scene>
-      <Scene t={t} enter={T.s5.enter} next={T.s6.enter} ox={540} oy={1060}><S5 t={t} f={f} /></Scene>
-      <Scene t={t} enter={T.s6.enter} next={T.s7.enter} ox={540} oy={1060}><S6 t={t} f={f} /></Scene>
-      <Scene t={t} enter={T.s7.enter} next={T.s8.enter} ox={540} oy={1170}><S7 t={t} f={f} /></Scene>
+      <Scene t={t} enter={T.s5.enter} next={T.s9.enter} ox={540} oy={1060}><S5 t={t} f={f} /></Scene>
+      <Scene t={t} enter={T.s9.enter} next={T.s6.enter} ox={540} oy={1060}><S9 t={t} f={f} /></Scene>
+      <Scene t={t} enter={T.s6.enter} next={T.s10.enter} ox={470} oy={1000}><S6 t={t} f={f} /></Scene>
+      <Scene t={t} enter={T.s10.enter} next={T.s7.enter} ox={540} oy={1170}><S10 t={t} f={f} /></Scene>
+      <Scene t={t} enter={T.s7.enter} next={T.s8.enter} ox={580} oy={1100}><S7 t={t} f={f} /></Scene>
       <Scene t={t} enter={T.s8.enter} next={T.duration + 5} ox={540} oy={960}><S8 t={t} f={f} /></Scene>
       <LogoTab t={t} />
       <Grain frame={f} opacity={0.05} />

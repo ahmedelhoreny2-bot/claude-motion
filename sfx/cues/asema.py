@@ -17,7 +17,7 @@ UP = [783.99, 880.0, 987.77, 1174.66, 1318.51, 1567.98]
 
 
 def score(mix, tl):
-    s1, s2, s3, s4, s5, s6, s7, s8 = (tl[k] for k in ("s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"))
+    s1, s2, s3, s4, s5, s6, s7, s8, s9, s10 = (tl[k] for k in ("s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"))
     dur = tl["duration"]
     put = mix.put
 
@@ -33,7 +33,7 @@ def score(mix, tl):
     put(s1["w2"] + 0.25, scratch(0.6), 0.07)
 
     # transitions: an iris whoosh into every scene
-    for s in (s2, s3, s4, s5, s6, s7):
+    for s in (s2, s3, s4, s5, s9, s6, s10, s7):
         put(s["enter"] - 0.05, whoosh(0.6, 300, 3200, peak=0.55), 0.17)
 
     # scene 2: ring draws, liver drops, charge fills to 15%, badge, chips
@@ -66,11 +66,26 @@ def score(mix, tl):
     # scene 5: capsule slides in under the sun
     put(s5["capsule"], whoosh(0.95, 2600, 400, peak=0.35), 0.16, 0.6)
     put(s5["capsule"] + 0.9, chime([587.33, 783.99, 987.77], dur=1.6, tau=0.55), 0.1)
+    for i in range(3):
+        put(s5["chips"] + i * 0.15, pop(900 + i * 150, 480 + i * 70), 0.15, -0.4 + i * 0.4)
+
+    # scene 9: joints, the squeak, six tests
+    put(s9["subject"], whoosh(0.6, 2600, 600, peak=0.35), 0.12, 0.5)
+    put(s9["squeak"], riser(0.5, 1800, 2600), 0.06, -0.5)
+    put(s9["squeak"], pop(1400, 900, dur=0.3), 0.2, -0.5)
+    for i in range(6):
+        put(s9["tests"] + i * 0.15, pop(800 + i * 110, 420 + i * 60), 0.13, -0.5 + i * 0.2)
 
     # scene 6: the drop opens out, labels pop
     put(s6["drop"], whoosh(0.8, 300, 1800, peak=0.6), 0.14)
     for i in range(4):
         put(s6["labels"][0] + i * 0.12, pop(1000 + i * 150, 520 + i * 70), 0.16, -0.45 + i * 0.3)
+
+    # scene 10: kidney beans pun, sticker slaps on
+    put(s10["subject"], whoosh(0.6, 400, 2200, peak=0.5), 0.12)
+    put(s10["t2"] + 0.1, blip(UP[3], dur=0.4, tau=0.12), 0.18)
+    put(s10["sticker"], click(600), 0.22, -0.6)
+    put(s10["sticker"] + 0.02, pop(700, 260, dur=0.22), 0.24, -0.6)
 
     # scene 7: the three promises slam, build to the logo
     for i, w in enumerate(s7["w"]):
