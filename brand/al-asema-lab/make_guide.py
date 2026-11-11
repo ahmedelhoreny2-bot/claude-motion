@@ -18,7 +18,7 @@ def inline(name, cls=""):
 
 
 def swatch(c):
-    dark = c["id"] in ("indigo", "crimson", "ink", "teal")
+    dark = c["id"] in ("red", "black", "deepred", "graytext")
     fg = "#fff" if dark else "#0D1030"
     border = "" if dark else "border:1px solid var(--line);"
     rgb = ", ".join(map(str, c["rgb"]))
@@ -31,7 +31,7 @@ def swatch(c):
 
 def scale_row(cid, label):
     cells = "".join(
-        f'<div style="background:{h};color:{"#fff" if k in ("500","700","900") or (k=="400" and cid!="teal") else "#0D1030"}"><span>{k}</span><code>{h}</code></div>'
+        f'<div style="background:{h};color:{"#fff" if k in ("500","700","900") or (k=="400" and cid=="red") else "#141414"}"><span>{k}</span><code>{h}</code></div>'
         for k, h in pal["scales"][cid].items()
     )
     return f'<div class="scale"><h4>{label}</h4><div class="cells">{cells}</div></div>'
@@ -51,9 +51,7 @@ html = (ROOT / "guide.src.html").read_text()
 html = html.replace("{{swatches}}", "".join(swatch(c) for c in pal["core"]))
 html = html.replace(
     "{{scales}}",
-    scale_row("indigo", "أزرق العاصمة")
-    + scale_row("crimson", "أحمر العيّنة")
-    + scale_row("teal", "أخضر النتيجة"),
+    scale_row("red", "أحمر العاصمة") + scale_row("gray", "الرمادي والأسود"),
 )
 html = html.replace("{{ratio}}", ratio).replace("{{contrast}}", contrast)
 html = re.sub(r"\{\{svg:([\w-]+)(?:\|([\w-]+))?\}\}", lambda m: inline(m[1], m[2] or ""), html)

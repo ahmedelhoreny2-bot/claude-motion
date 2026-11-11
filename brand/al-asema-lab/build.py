@@ -8,7 +8,6 @@ Text is shaped with HarfBuzz and converted to outlines, so the SVGs need no font
 installed and open the same in Illustrator, Figma, Canva or a browser.
 """
 import json
-import math
 from pathlib import Path
 
 import uharfbuzz as hb
@@ -21,50 +20,41 @@ OUT = ROOT / "logo" / "svg"
 PAL = json.loads((ROOT / "palette.json").read_text())
 COL = {c["id"]: c["hex"] for c in PAL["core"]}
 
-INDIGO, CRIMSON, TEAL = COL["indigo"], COL["crimson"], COL["teal"]
-INK, PAPER, WHITE = COL["ink"], COL["mist"], "#FFFFFF"
+RED, BLACK, GRAY = COL["red"], COL["black"], COL["gray"]
+DEEP, WHITE = COL["deepred"], "#FFFFFF"
 
 
 # ---------------------------------------------------------------- the mark
-# Grid: 200 x 200. A pointed arch (the gate of the capital) holding a sample drop.
-# The drop's tip repeats the arch's apex, so the two shapes rhyme.
-ARCH_W = 21  # stroke width of the arch
+# The lab's existing logo, redrawn as clean vectors: a microscope whose arm sweeps
+# into a swoosh, a red stripe under it, and red sample bubbles.
+# Native grid: MARK_W x MARK_H; mark() places it at (tx, ty) scaled by s.
+MARK_W, MARK_H = 524, 530
+BUBBLES = [(48, 198, 25), (56, 250, 7), (100, 248, 14), (85, 292, 9), (118, 282, 6), (116, 325, 9)]
+TUBE = (
+    '<rect x="-46" y="-180" width="92" height="24" rx="9"/>'
+    '<rect x="-25" y="-160" width="50" height="40" rx="4"/>'
+    '<rect x="-36" y="-124" width="72" height="196" rx="8"/>'
+    '<path d="M-30,68 L30,68 L22,108 Q0,118 -22,108 Z"/>'
+    '<path fill-rule="evenodd" d="M58,-20 m-52,0 a52,52 0 1,0 104,0 a52,52 0 1,0 -104,0 Z '
+    'M58,-20 m-28,0 a28,28 0 1,1 56,0 a28,28 0 1,1 -56,0 Z"/>'
+)
+ARM = (
+    "M330,140 C420,160 474,240 470,330 C466,410 420,452 352,452 "
+    "C250,454 110,446 4,442 C110,398 220,382 338,404 C392,410 432,372 434,322 "
+    "C436,262 398,214 330,190 Z"
+)
+STRIPE = "M18,458 C160,456 340,466 520,490 L514,518 C350,490 180,470 18,458 Z"
 
 
-def arch_path():
-    return "M40,178 L40,104 A72,72 0 0 1 100,33 A72,72 0 0 1 160,104 L160,178"
-
-
-def drop_path(cx=100, tip=74, cy=139, r=30):
-    d = cy - tip
-    a = math.asin(r / d)  # half-angle at the tip
-    tx = r * math.cos(a)
-    ty = cy - r * math.sin(a)
-    # tangent points left/right, then the big arc around the bottom
+def mark(k, r, tx=0, ty=0, s=1.0):
+    """k = microscope + swoosh colour, r = stripe + bubbles colour."""
+    bub = "".join(f'<circle cx="{x}" cy="{y}" r="{rr}"/>' for x, y, rr in BUBBLES)
     return (
-        f"M{cx},{tip} L{cx + tx:.2f},{ty:.2f} "
-        f"A{r},{r} 0 1 1 {cx - tx:.2f},{ty:.2f} Z"
+        f'<g transform="translate({tx:.2f},{ty:.2f}) scale({s:.4f}) translate(-2,14)">'
+        f'<path fill="{k}" d="{ARM}"/>'
+        f'<g transform="translate(229,174) rotate(15)" fill="{k}">{TUBE}</g>'
+        f'<g fill="{r}"><path d="{STRIPE}"/>{bub}</g></g>'
     )
-
-
-def shine_path():
-    return "M86,140 A15,15 0 0 0 96,155"
-
-
-def mark(arch, drop, shine=None, tx=0, ty=0, s=1.0):
-    g = [f'<g transform="translate({tx:.2f},{ty:.2f}) scale({s:.4f})">']
-    g.append(
-        f'<path d="{arch_path()}" fill="none" stroke="{arch}" stroke-width="{ARCH_W}" '
-        'stroke-linecap="round" stroke-linejoin="round"/>'
-    )
-    g.append(f'<path d="{drop_path()}" fill="{drop}"/>')
-    if shine:
-        g.append(
-            f'<path d="{shine_path()}" fill="none" stroke="{shine}" stroke-width="5" '
-            'stroke-linecap="round" opacity="0.9"/>'
-        )
-    g.append("</g>")
-    return "".join(g)
 
 
 # ---------------------------------------------------------------- text → paths
@@ -125,106 +115,93 @@ def svg(w, h, body, bg=None):
     )
 
 
-def text_block(colors, cx_right, top, scale=1.0):
-    """Arabic name + subline + English line, right-aligned at cx_right.
-    Returns (svg, width, height)."""
-    name_sz, sub_sz, en_sz = 96 * scale, 50 * scale, 26 * scale
-    w1 = CAIRO_XB.width(NAME_AR, name_sz, rtl=True)
-    w2 = CAIRO_B.width(SUB_AR, sub_sz, rtl=True)
-    w3 = MONT.width(NAME_EN, en_sz, tracking=0.32)
-    width = max(w1, w2, w3)
-    b1 = top + 104 * scale
-    b2 = b1 + 70 * scale
-    b3 = b2 + 54 * scale
-    parts = [
-        f'<path fill="{colors[0]}" d="{CAIRO_XB.path(NAME_AR, name_sz, cx_right - w1, b1, rtl=True)}"/>',
-        f'<path fill="{colors[1]}" d="{CAIRO_B.path(SUB_AR, sub_sz, cx_right - w2, b2, rtl=True)}"/>',
-        f'<path fill="{colors[2]}" d="{MONT.path(NAME_EN, en_sz, cx_right - w3, b3, tracking=0.32)}"/>',
-    ]
-    return "".join(parts), width, b3 - top + 8 * scale
-
-
-def centered_block(colors, cx, top, scale=1.0):
-    name_sz, sub_sz, en_sz = 96 * scale, 50 * scale, 26 * scale
-    w1 = CAIRO_XB.width(NAME_AR, name_sz, rtl=True)
-    w2 = CAIRO_B.width(SUB_AR, sub_sz, rtl=True)
-    w3 = MONT.width(NAME_EN, en_sz, tracking=0.32)
-    b1 = top + 104 * scale
-    b2 = b1 + 70 * scale
-    b3 = b2 + 56 * scale
-    return (
-        f'<path fill="{colors[0]}" d="{CAIRO_XB.path(NAME_AR, name_sz, cx - w1 / 2, b1, rtl=True)}"/>'
-        f'<path fill="{colors[1]}" d="{CAIRO_B.path(SUB_AR, sub_sz, cx - w2 / 2, b2, rtl=True)}"/>'
-        f'<path fill="{colors[2]}" d="{MONT.path(NAME_EN, en_sz, cx - w3 / 2, b3, tracking=0.32)}"/>'
-    ), b3 - top + 8 * scale
-
-
 # ---------------------------------------------------------------- variants
-# (name, arch, drop, shine, text colors (name, sub, en), background)
+# key: (microscope, red parts, text colours (name, sub, EN first word, EN rest), background)
 SCHEMES = {
-    "color": (INDIGO, CRIMSON, WHITE, (INDIGO, INK, CRIMSON), None),
-    "reverse": (WHITE, CRIMSON, WHITE, (WHITE, "#C9CCF2", "#FF8A98"), INDIGO),
-    "mono-dark": (INK, INK, None, (INK, INK, INK), None),
-    "mono-white": (WHITE, WHITE, None, (WHITE, WHITE, WHITE), None),
+    "color": (BLACK, RED, (RED, BLACK, RED, BLACK), None),
+    "on-black": (WHITE, RED, (WHITE, "#D4D4D8", RED, WHITE), BLACK),
+    "on-red": (WHITE, WHITE, (WHITE, WHITE, WHITE, WHITE), RED),
+    "mono-black": (BLACK, BLACK, (BLACK, BLACK, BLACK, BLACK), None),
+    "mono-white": (WHITE, WHITE, (WHITE, WHITE, WHITE, WHITE), None),
 }
+EN_A, EN_B = "AL ", "ASEMA LAB"
+TRACK = 0.32
+
+
+def en_line(colors, x, baseline, size):
+    wa = MONT.width(EN_A, size, tracking=TRACK) + TRACK * size
+    return (
+        f'<path fill="{colors[2]}" d="{MONT.path(EN_A, size, x, baseline, tracking=TRACK)}"/>'
+        f'<path fill="{colors[3]}" d="{MONT.path(EN_B, size, x + wa, baseline, tracking=TRACK)}"/>'
+    )
+
+
+def en_width(size):
+    return MONT.width(EN_A + EN_B, size, tracking=TRACK)
+
+
+def lines(colors, anchor, top, align):
+    """Arabic name, subline, English line. align='right' (anchor = right edge) or 'center'."""
+    name_sz, sub_sz, en_sz = 100, 50, 26
+    w1 = CAIRO_XB.width(NAME_AR, name_sz, rtl=True)
+    w2 = CAIRO_B.width(SUB_AR, sub_sz, rtl=True)
+    w3 = en_width(en_sz)
+    b1, b2 = top + 108, top + 180
+    b3 = b2 + 56
+    x = (lambda w: anchor - w) if align == "right" else (lambda w: anchor - w / 2)
+    body = (
+        f'<path fill="{colors[0]}" d="{CAIRO_XB.path(NAME_AR, name_sz, x(w1), b1, rtl=True)}"/>'
+        f'<path fill="{colors[1]}" d="{CAIRO_B.path(SUB_AR, sub_sz, x(w2), b2, rtl=True)}"/>'
+        + en_line(colors, x(w3), b3, en_sz)
+    )
+    return body, max(w1, w2, w3), b3 - top + 8
 
 
 def build():
     OUT.mkdir(parents=True, exist_ok=True)
+    for old in OUT.glob("*.svg"):
+        old.unlink()
     files = []
 
-    for key, (arch, drop, shine, tcol, bg) in SCHEMES.items():
-        # mark only, 512 square, 12% safe padding
-        files.append((f"mark-{key}.svg", svg(512, 512, mark(arch, drop, shine, 56, 46, 2.0), bg)))
+    for key, (k, r, tcol, bg) in SCHEMES.items():
+        # mark only, square, ~9% padding
+        S = 1024
+        s = 0.82 * S / MARK_W
+        files.append((f"mark-{key}.svg", svg(S, S, mark(k, r, (S - MARK_W * s) / 2, (S - MARK_H * s) / 2, s), bg)))
 
-        # horizontal lockup, RTL: mark on the right, text to its left
-        pad, gap, mk = 64, 44, 1.5
-        txt, tw, th = text_block(tcol, 0, 0)
-        mark_w = 200 * mk
-        W = int(pad + tw + gap + mark_w + pad)
-        H = int(pad * 2 + max(th, 200 * mk))
-        ty = (H - th) / 2 - 6
+        # horizontal (RTL): mark on the right, text to its left
+        pad, gap, ms = 64, 48, 0.62
+        txt, tw, th = lines(tcol, 0, 0, "right")
+        mw, mh = MARK_W * ms, MARK_H * ms
+        W = int(pad + tw + gap + mw + pad)
+        H = int(pad * 2 + max(th, mh))
         body = (
-            f'<g transform="translate({pad + tw:.2f},{ty:.2f})">{txt}</g>'
-            + mark(arch, drop, shine, W - pad - mark_w, (H - 200 * mk) / 2, mk)
+            f'<g transform="translate({pad + tw:.2f},{(H - th) / 2 - 4:.2f})">{txt}</g>'
+            + mark(k, r, W - pad - mw, (H - mh) / 2, ms)
         )
         files.append((f"logo-horizontal-{key}.svg", svg(W, H, body, bg)))
 
-        # stacked lockup: mark above, centred text
-        W2 = 900
-        mk2 = 1.6
-        ctext, ch = centered_block(tcol, W2 / 2, 0)
-        H2 = int(70 + 200 * mk2 - 26 + ch + 70)
-        body2 = mark(arch, drop, shine, (W2 - 200 * mk2) / 2, 70, mk2) + (
-            f'<g transform="translate(0,{70 + 200 * mk2 - 26:.2f})">{ctext}</g>'
+        # stacked: mark above (like the original), centred text
+        W2, ms2 = 900, 0.9
+        mw2, mh2 = MARK_W * ms2, MARK_H * ms2
+        ctext, _, ch = lines(tcol, W2 / 2, 0, "center")
+        H2 = int(70 + mh2 + 10 + ch + 70)
+        body2 = mark(k, r, (W2 - mw2) / 2, 70, ms2) + (
+            f'<g transform="translate(0,{70 + mh2 + 10:.2f})">{ctext}</g>'
         )
         files.append((f"logo-stacked-{key}.svg", svg(W2, H2, body2, bg)))
 
-    # app / social avatar: indigo rounded square
-    icon = (
-        f'<rect width="1024" height="1024" rx="224" fill="{INDIGO}"/>'
-        + mark(WHITE, CRIMSON, WHITE, 152, 132, 3.6)
-    )
-    files.append(("app-icon.svg", svg(1024, 1024, icon)))
-    # circle avatar (Facebook / Instagram / WhatsApp crop to a circle)
-    avatar = (
-        f'<rect width="1024" height="1024" fill="{INDIGO}"/>'
-        + mark(WHITE, CRIMSON, WHITE, 192, 166, 3.2)
-    )
-    files.append(("avatar.svg", svg(1024, 1024, avatar)))
+    # app icon: red rounded square, white mark. avatar: white, colour mark (crops to a circle)
+    s = 640 / MARK_W
+    files.append(("app-icon.svg", svg(1024, 1024,
+        f'<rect width="1024" height="1024" rx="224" fill="{RED}"/>'
+        + mark(WHITE, WHITE, (1024 - MARK_W * s) / 2, (1024 - MARK_H * s) / 2, s))))
+    files.append(("avatar.svg", svg(1024, 1024,
+        mark(BLACK, RED, (1024 - MARK_W * s) / 2, (1024 - MARK_H * s) / 2, s), WHITE)))
 
-    # tagline lockup used at the end of videos and on print
     tw = CAIRO_B.width(TAG_AR, 56, rtl=True)
-    files.append(
-        (
-            "tagline.svg",
-            svg(
-                int(tw + 80),
-                110,
-                f'<path fill="{INDIGO}" d="{CAIRO_B.path(TAG_AR, 56, 40, 72, rtl=True)}"/>',
-            ),
-        )
-    )
+    files.append(("tagline.svg", svg(int(tw + 80), 110,
+        f'<path fill="{RED}" d="{CAIRO_B.path(TAG_AR, 56, 40, 72, rtl=True)}"/>')))
 
     for name, content in files:
         (OUT / name).write_text(content)

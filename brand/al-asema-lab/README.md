@@ -12,18 +12,23 @@ Open `guide.html` in a browser for the full guide (Arabic): concept, logo versio
 | `brand.ts` | Palette, fonts and the mark's paths for Remotion videos |
 | `fonts/` | Cairo and Montserrat (Google Fonts, SIL OFL) |
 
-Logo variants: `mark-*` (symbol only), `logo-horizontal-*` (main), `logo-stacked-*` (square posts, video),
-each in `color`, `reverse` (on indigo), `mono-dark`, `mono-white`; plus `app-icon`, `avatar`, `tagline`.
+The mark is the lab's existing logo (microscope, swoosh, red stripe, sample bubbles) redrawn as clean vectors in red, black and white.
+
+Logo variants: `mark-*` (symbol only), `logo-stacked-*` (main, like the original), `logo-horizontal-*` (signs, headers, result sheets),
+each in `color` (on white), `on-black`, `on-red`, `mono-black`, `mono-white`; plus `app-icon` (red), `avatar` (white), `tagline`.
 
 ## Core colours
 
-| | Name | HEX | Use |
-|---|---|---|---|
-| ■ | Capital Indigo · أزرق العاصمة | `#1F2470` | primary, ~55% |
-| ■ | Lab Mist · ضباب المعمل | `#EEF0FB` | light backgrounds, ~20% |
-| ■ | Sample Crimson · أحمر العيّنة | `#E1263C` | accent, one highlight per layout, ~10% |
-| ■ | Result Teal · أخضر النتيجة | `#0FA39A` | support: normal results, health, ~10% |
-| ■ | Ink · حبر | `#0D1030` | body text, ~5% |
+| Name | HEX | Use |
+|---|---|---|
+| Clean White · أبيض | `#FFFFFF` | dominant background, ~60% |
+| Asema Red · أحمر العاصمة | `#E01E26` | brand colour: name, bubbles, stripe, headlines, offers, ~22% |
+| Lab Black · أسود المعمل | `#141414` | microscope, text, dark sections, ~13% |
+| Lab Gray · رمادي فاتح | `#F2F2F3` | cards and panels, ~5% |
+| Deep Red · أحمر غامق | `#A3141B` | gradients, pressed states |
+| Text Gray · رمادي النص | `#5F5F66` | secondary text |
+
+No navy, purple or blue anywhere.
 
 ## Rebuild
 
