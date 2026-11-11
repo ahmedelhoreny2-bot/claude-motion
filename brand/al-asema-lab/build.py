@@ -8,6 +8,7 @@ Text is shaped with HarfBuzz and converted to outlines, so the SVGs need no font
 installed and open the same in Illustrator, Figma, Canva or a browser.
 """
 import json
+import re
 from pathlib import Path
 
 import uharfbuzz as hb
@@ -69,6 +70,8 @@ class Face:
         self.order = self.tt.getGlyphOrder()
 
     def shape(self, text, rtl=False, tracking=0):
+        if rtl:  # HarfBuzz has no bidi: keep digit runs (prices, numbers) left-to-right inside Arabic
+            text = re.sub(r"[0-9\u0660-\u0669][0-9\u0660-\u0669.,٫]*", lambda m: m[0][::-1], text)
         buf = hb.Buffer()
         buf.add_str(text)
         buf.guess_segment_properties()

@@ -44,6 +44,7 @@ Cover elements: the burgundy + gold double ring (photo frame), the burgundy pill
 | Profile picture | 1080 x 1080 | circle-safe |
 
 Every feed post is delivered at 1080 x 1350 with a 1080 x 1920 story version.
+Every post carries the logo, a short fact about its topic, and the footer: CTA, both phone numbers and the full address (make_creative.py).
 Image prompts for generated scenes always ask for a 4:5 portrait.
 
 ## Facebook
