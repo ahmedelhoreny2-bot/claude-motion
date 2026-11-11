@@ -303,7 +303,7 @@ const S6: React.FC<{t: number; f: number}> = ({t, f}) => {
       <Ring cx={540} cy={1150} r={470} sw={54} k={prog(t, s.drop, s.drop + 1.0, easeInOut)} />
       <Cut src="cbc-city.png" cx={540} cy={1170 + Math.sin(t * 1.7) * 6} w={760} shadow={0.22}
         style={{transform: `translateY(-50%) scale(${0.35 + 0.65 * dk})`, opacity: Math.min(1, dk * 2)}} />
-      <Line y={260}><Words text="جواك" t={t} t0={s.t1} size={124} color={L.ink} /><span style={{display: 'inline-block', width: '0.28em'}} /><Words text="جيش كامل" t={t} t0={s.t1 + 0.12} size={124} color={L.red} /></Line>
+      <Line y={260}><Words text="جواك" t={t} t0={s.t1} size={124} color={L.ink} /><span style={{display: 'inline-block', width: 34}} /><Words text="جيش كامل" t={t} t0={s.t1 + 0.12} size={124} color={L.red} /></Line>
       <Line y={455}><Words text="صورة الدم الكاملة بتطمنك عليه" t={t} t0={s.t2} size={52} color={L.blue} stagger={0.06} /></Line>
       <div style={{position: 'absolute', left: 40, right: 40, top: 560, textAlign: 'center', direction: 'rtl'}}>
         {['الأنيميا', 'الالتهابات', 'الصفايح', 'المناعة'].map((x, i) => <Chip key={x} text={x} k={sp(f, s.labels[0] + i * 0.12, POP, PFPS)} size={34} />)}
@@ -327,7 +327,7 @@ const S9: React.FC<{t: number; f: number}> = ({t, f}) => {
         style={{transform: `translateY(-50%) rotate(${shake * 0.3}deg)`, opacity: Math.min(1, k * 1.6)}} />
       <div style={{position: 'absolute', left: 20, top: 560, width: 440, textAlign: 'center', fontFamily: AR, fontWeight: 800, fontSize: 110, color: L.orange,
         WebkitTextStroke: `14px ${L.white}`, paintOrder: 'stroke', transform: `rotate(-12deg) scale(${sq}) translateX(${shake}px)`, opacity: Math.min(1, sq * 1.5)}}>زيييق!</div>
-      <Line y={250}><Words text="مفاصلك" t={t} t0={s.t1} size={130} color={L.ink} /><span style={{display: 'inline-block', width: '0.28em'}} /><Words text="بتزيّق؟" t={t} t0={s.t1 + 0.15} size={130} color={L.red} /></Line>
+      <Line y={250}><Words text="مفاصلك" t={t} t0={s.t1} size={130} color={L.ink} /><span style={{display: 'inline-block', width: 34}} /><Words text="بتزيّق؟" t={t} t0={s.t1 + 0.15} size={130} color={L.red} /></Line>
       <Line y={430}><Words text="قبل ما تزيتها.. اعرف السبب" t={t} t0={s.t2} size={58} color={L.blue} stagger={0.07} /></Line>
       <div style={{position: 'absolute', left: 40, right: 40, top: 1480, textAlign: 'center', direction: 'rtl', lineHeight: 2.2}}>
         {tests.map((x, i) => <Chip key={x} text={x} k={sp(f, s.tests + i * 0.15, POP, PFPS)} size={38} />)}
