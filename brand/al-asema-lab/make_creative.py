@@ -27,8 +27,13 @@ POSTS = {
         img="liver-hero.png",
         title="كبدك بطل..",
         sub="بس حتى الأبطال محتاجين كشف",
-        fact=["الكبد بيقوم بأكتر من ٥٠٠ وظيفة في جسمك،", "ومشاكله في الأول غالبًا بتكون من غير أعراض."],
         cta="احجز باقة الكبد",
+        # each card kind makes its own version of the post: fact / tests / offer
+        cards={
+            "fact": dict(lines=["الكبد بيقوم بأكتر من ٥٠٠ وظيفة في جسمك،", "ومشاكله في الأول غالبًا بتكون من غير أعراض."]),
+            "tests": dict(items=["ALT", "AST", "ALP", "GGT", "Bilirubin", "Albumin", "Total Protein"]),
+            "offer": dict(price="000", old="000", note="باقة الكبد كاملة: ٧ تحاليل"),
+        },
     ),
 }
 
@@ -58,28 +63,70 @@ def text_right(face, text, size, x_right, baseline, color, rtl=True, tracking=0)
     return f'<path fill="{color}" d="{face.path(text, size, x_right - w, baseline, rtl=rtl, tracking=tracking)}"/>', w
 
 
-def fact_card(lines, x_right, top, size=27):
-    """Small 'did you know' card: light panel, orange edge, label, short lines."""
-    widths = [CAIRO_B.width(t, size, rtl=True) for t in lines]
-    label = "معلومة"
-    lw = CAIRO_XB.width(label, size, rtl=True)
-    pad = 24
-    w = max(max(widths), lw + 40) + 2 * pad + 10
-    lh = size * 1.55
-    h = pad * 2 + lh * len(lines) + size * 1.1
-    x = x_right - w
-    out = [f'<rect x="{x:.1f}" y="{top}" width="{w:.1f}" height="{h:.1f}" rx="20" fill="#F6F6F9" fill-opacity="0.92"/>',
+def _panel(x_right, top, w, h, label, label_color):
+    out = [f'<rect x="{x_right - w:.1f}" y="{top}" width="{w:.1f}" height="{h:.1f}" rx="20" fill="#F6F6F9" fill-opacity="0.94"/>',
            f'<rect x="{x_right - 8:.1f}" y="{top}" width="8" height="{h:.1f}" rx="4" fill="{ORANGE}"/>']
+    return out
+
+
+def card(kind, c, x_right, top, size=24):
+    """The info card under the headline. kind: 'fact' | 'tests' | 'offer'."""
+    pad = 24
     xr = x_right - 10 - pad
+    label = {"fact": "معلومة", "tests": "التحاليل المطلوبة", "offer": "عرض خاص"}[kind]
+    lcol = {"fact": BURGUNDY, "tests": BURGUNDY, "offer": RED}[kind]
+    lw = CAIRO_XB.width(label, size, rtl=True)
+    body, inner_w = [], lw + 40
     y = top + pad + size * 0.9
-    p, _ = text_right(CAIRO_XB, label, size, xr, y, BURGUNDY)
+    if kind == "fact":
+        lh = size * 1.55
+        for t in c["lines"]:
+            y += lh
+            p, w = text_right(CAIRO_B, t, size, xr, y, INK)
+            body.append(p)
+            inner_w = max(inner_w, w)
+        bottom = y + pad * 0.7
+    elif kind == "tests":
+        maxw, csz, ch, gap = 900, size * 0.84, size * 1.7, 10
+        x, row_top = xr, y + size * 0.55
+        for it in c["items"]:
+            w = MONT.width(it, csz, tracking=0.02) + 34
+            if xr - (x - w) > maxw:
+                x, row_top = xr, row_top + ch + gap
+            body.append(f'<rect x="{x - w:.1f}" y="{row_top:.1f}" width="{w:.1f}" height="{ch:.1f}" rx="{ch / 2:.1f}" fill="{WHITE}" stroke="{BURGUNDY}" stroke-opacity="0.35" stroke-width="2"/>')
+            body.append(f'<path fill="{BLUE}" d="{MONT.path(it, csz, x - w + 17, row_top + ch / 2 + csz * 0.36, tracking=0.02)}"/>')
+            inner_w = max(inner_w, xr - (x - w))
+            x -= w + gap
+        bottom = row_top + ch + pad
+    else:  # offer
+        psz = size * 2.6
+        unit = "جنيه"
+        pw = MONT.width(c["price"], psz)
+        uw = CAIRO_XB.width(unit, size * 1.2, rtl=True)
+        py = y + psz * 0.95
+        body.append(f'<path fill="{RED}" d="{CAIRO_XB.path(unit, size * 1.2, xr - uw, py, rtl=True)}"/>')
+        body.append(f'<path fill="{RED}" d="{MONT.path(c["price"], psz, xr - uw - 14 - pw, py)}"/>')
+        rowr = xr - uw - 14 - pw - 30
+        if c.get("old"):
+            osz = size * 1.1
+            ow = MONT.width(c["old"], osz)
+            ox = rowr - ow
+            body.append(f'<path fill="{GRAY}" d="{MONT.path(c["old"], osz, ox, py - psz * 0.15)}"/>')
+            body.append(f'<line x1="{ox - 4:.1f}" y1="{py - psz * 0.15 - osz * 0.36:.1f}" x2="{ox + ow + 4:.1f}" y2="{py - psz * 0.15 - osz * 0.36:.1f}" stroke="{RED}" stroke-width="3"/>')
+            rowr = ox - 10
+        inner_w = max(inner_w, xr - rowr)
+        y = py + size * 1.5
+        p, w = text_right(CAIRO_B, c["note"], size, xr, y, INK)
+        body.append(p)
+        inner_w = max(inner_w, w)
+        bottom = y + pad * 0.7
+    w = inner_w + 2 * pad + 10
+    h = bottom - top
+    out = _panel(x_right, top, w, h, label, lcol)
+    p, _ = text_right(CAIRO_XB, label, size, xr, top + pad + size * 0.9, lcol)
     out.append(p)
-    out.append(f'<circle cx="{xr - lw - 16:.1f}" cy="{y - size * 0.3:.1f}" r="6" fill="{ORANGE}"/>')
-    for t in lines:
-        y += lh
-        p, _ = text_right(CAIRO_B, t, size, xr, y, INK)
-        out.append(p)
-    return "".join(out), h
+    out.append(f'<circle cx="{xr - lw - 16:.1f}" cy="{top + pad + size * 0.6:.1f}" r="6" fill="{ORANGE}"/>')
+    return "".join(out + body), h
 
 
 def footer(cta, W, y):
@@ -115,7 +162,7 @@ def ring(cx, cy, r, sw):
             f'<circle cx="{cx}" cy="{cy}" r="{r - sw * 0.82:.1f}" fill="none" stroke="{ORANGE}" stroke-width="{sw * 0.6:.1f}"/>')
 
 
-def feed(p):
+def feed(p, kind):
     W, H = 1080, 1350
     b = [f'<rect width="{W}" height="{H}" fill="{WHITE}"/>',
          molecule(90, 330, 0.7, hi=True), molecule(560, 70, 0.45), molecule(70, 760, 0.55), molecule(1015, 700, 0.5),
@@ -128,14 +175,14 @@ def feed(p):
     b.append(t)
     t, _ = text_right(CAIRO_XB, p["sub"], 48, xr, 322, BLUE)
     b.append(t)
-    card, _ = fact_card(p["fact"], xr, 348, size=24)
-    b.append(card)
+    c, _ = card(kind, p["cards"][kind], xr, 348, size=24)
+    b.append(c)
     b.append(footer(p["cta"], W, 1236))
     b.append(stripes(W, H))
     return svg(W, H, "".join(b))
 
 
-def story(p):
+def story(p, kind):
     W, H = 1080, 1920  # keep content out of the top ~250px and bottom ~250px (story UI)
     b = [f'<rect width="{W}" height="{H}" fill="{WHITE}"/>',
          molecule(110, 470, 0.8, hi=True), molecule(560, 200, 0.5), molecule(80, 1100, 0.6), molecule(1000, 1040, 0.55),
@@ -148,8 +195,8 @@ def story(p):
     b.append(t)
     t, _ = text_right(CAIRO_XB, p["sub"], 54, xr, 575, BLUE)
     b.append(t)
-    card, _ = fact_card(p["fact"], xr, 606, size=27)
-    b.append(card)
+    c, _ = card(kind, p["cards"][kind], xr, 606, size=27)
+    b.append(c)
     b.append(footer(p["cta"], W, 1620))
     b.append(stripes(W, H))
     return svg(W, H, "".join(b))
@@ -157,7 +204,12 @@ def story(p):
 
 if __name__ == "__main__":
     (OUT / "story").mkdir(parents=True, exist_ok=True)
+    for old in list(OUT.glob("*-creative-*.svg")) + list((OUT / "story").glob("*-creative-*.svg")):
+        old.unlink()
+    for old in list(OUT.glob("*-creative-*.png")) + list((OUT / "story").glob("*-creative-*.png")):
+        old.unlink()
     for key, p in POSTS.items():
-        (OUT / f"{key}.svg").write_text(feed(p))
-        (OUT / "story" / f"{key}-story.svg").write_text(story(p))
+        for kind in p["cards"]:
+            (OUT / f"{key}-{kind}.svg").write_text(feed(p, kind))
+            (OUT / "story" / f"{key}-{kind}-story.svg").write_text(story(p, kind))
     print("wrote", len(POSTS), "creative posts")
