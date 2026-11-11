@@ -1,5 +1,7 @@
 # Al Asema Lab: brand identity (معمل العاصمة للتحاليل الطبية)
 
+**Status: approved and locked (v1.0).** Colours, logo and lockups are final; new designs and videos build on them without changes.
+
 Open `guide.html` in a browser for the full guide (Arabic): concept, logo versions, colours, type, rules, examples, motion.
 
 ## Files
@@ -32,6 +34,15 @@ each in `color` (on white), `on-blue`, `on-burgundy`, `mono-black`, `mono-white`
 
 Cover elements: the burgundy + gold double ring (photo frame), the burgundy pill bar, the blue title bar, the light molecule pattern.
 
+## Facebook
+
+| File | Use |
+|---|---|
+| `social/facebook-profile.png` | profile picture, 1080x1080, mark inside the cover's double ring, circle-safe |
+| `social/facebook-profile-plain.png` | same without the ring |
+| `social/facebook-cover.png` | cover, 1640x720: fits desktop (820x312) and mobile (640x360); content stays clear of the profile circle in Arabic and English layouts |
+| `social/preview.png` | how both crop on desktop and mobile |
+
 ## Rebuild
 
 ```bash
@@ -39,4 +50,5 @@ pip install fonttools uharfbuzz
 python3 brand/al-asema-lab/build.py        # SVGs
 node brand/al-asema-lab/render-png.mjs 2   # PNGs (scale arg: 2 = 2x, 4 = print size)
 python3 brand/al-asema-lab/make_guide.py   # guide.html from guide.src.html
+python3 brand/al-asema-lab/make_social.py && node brand/al-asema-lab/render-social.mjs  # Facebook assets
 ```
