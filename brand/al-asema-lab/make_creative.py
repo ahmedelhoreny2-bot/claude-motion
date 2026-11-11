@@ -38,7 +38,7 @@ POSTS = {
 }
 
 
-def scene(path, W, top, scale, fade=90):
+def scene(path, W, top, scale, fade=90, dx=0):
     """Scene centred at `scale` of the width; off-white lifted to white, bottom faded, multiplied onto the page."""
     im = Image.open(path).convert("RGB")
     lut = [min(255, round(v * 255 / 238)) if v < 238 else 255 for v in range(256)]
@@ -48,7 +48,7 @@ def scene(path, W, top, scale, fade=90):
     data = base64.b64encode(buf.getvalue()).decode()
     w = W * scale
     h = w * im.height / im.width
-    x = (W - w) / 2
+    x = (W - w) / 2 + dx
     return (
         '<defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">'
         f'<stop offset="{1 - fade / h:.4f}" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>'
