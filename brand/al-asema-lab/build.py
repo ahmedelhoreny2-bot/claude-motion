@@ -70,8 +70,9 @@ class Face:
         self.order = self.tt.getGlyphOrder()
 
     def shape(self, text, rtl=False, tracking=0):
-        if rtl:  # HarfBuzz has no bidi: keep digit runs (prices, numbers) left-to-right inside Arabic
-            text = re.sub(r"[0-9\u0660-\u0669][0-9\u0660-\u0669.,٫]*", lambda m: m[0][::-1], text)
+        if rtl:  # HarfBuzz has no bidi: keep Latin and digit runs (TSH, B12, C-Peptide, ١٨٠) left-to-right inside Arabic
+            text = re.sub(r"[A-Za-z0-9\u0660-\u0669](?:[A-Za-z0-9\u0660-\u0669.,٫+\- ]*[A-Za-z0-9\u0660-\u0669])?",
+                          lambda m: m[0][::-1], text)
         buf = hb.Buffer()
         buf.add_str(text)
         buf.guess_segment_properties()
