@@ -57,7 +57,7 @@ def main():
         "[vo]asplit=2[vo1][vo2];"
         "[2:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.75[bed];"
         "[bed][vo1]sidechaincompress=threshold=0.04:ratio=4:attack=15:release=250[ducked];"
-        f"[ducked][vo2]amix=inputs=2:normalize=0,afade=t=out:st={dur - 1.3}:d=1.3,loudnorm=I=-14:TP=-1.5:LRA=11[out]"
+        f"[ducked][vo2]amix=inputs=2:normalize=0,afade=t=out:st={dur - 1.3}:d=1.3,loudnorm=I=-14:TP=-3:LRA=11,alimiter=limit=0.7:level=false[out]"
     )
     out = ROOT / "public/asema/mix.wav"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", graph, "-map", "[out]", "-ar", "48000", str(out)], check=True)
