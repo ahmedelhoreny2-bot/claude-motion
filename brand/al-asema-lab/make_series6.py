@@ -110,20 +110,17 @@ def kids():
     return svg(W, H, "".join(b))
 
 
-# 5 ---- hair: extreme macro; logo on the left (the helix fills the right), headline beside the helix
+# 5 ---- hair: overhead on marble; logo and headline in the empty top-left, the dish keeps its corner
 def hair():
-    b = [photo("q-hair.png"), logo_at(40), tag("باقة الشعر والبشرة", 640, 150, "right")]
-    p, _ = tr(CAIRO_XB, "شعرك بيقع؟", 110, 640, 330, RED)
+    b = [photo("q-hair.png"), logo_at(40), tag("باقة الشعر والبشرة", 690, 146, "right")]
+    p, _ = tr(CAIRO_XB, "شعرك بيقع؟", 104, 690, 292, RED)
     b.append(p)
-    p, _ = tr(CAIRO_XB, "الإجابة مش في الشامبو", 46, 640, 400, INK)
+    p, _ = tr(CAIRO_XB, "الإجابة مش في الشامبو", 42, 640, 350, INK)
     b.append(p)
-    c, _ = chips(["مخزون الحديد", "فيتامين د", "B12", "الزنك"], 0, 452, 20, latin=False,
-                 fill=WHITE, fop=0.97, stroke=RED, sop=0.35, color=BURGUNDY, x_right=640)
-    b.append(c)
-    c, _ = chips(["الغدة TSH", "صورة دم", "الهرمونات"], 0, 502, 20, latin=False,
-                 fill=WHITE, fop=0.97, stroke=RED, sop=0.35, color=BURGUNDY, x_right=640)
-    b.append(c)
-    b.append(starburst(930, 790, 88, "سعر", "خاص", rot=10))
+    for i, r in enumerate([["مخزون الحديد", "فيتامين د"], ["الغدة TSH", "B12", "الزنك"], ["صورة دم", "الهرمونات"]]):
+        c, _ = chips(r, 0, 410 + i * 50, 21, latin=False, fill=WHITE, fop=0.97, stroke=RED, sop=0.35, color=BURGUNDY, x_right=470)
+        b.append(c)
+    b.append(starburst(150, 1010, 90, "سعر", "خاص", rot=-12))
     b.append(footer("احجز باقة الشعر"))
     return svg(W, H, "".join(b))
 
