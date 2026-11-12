@@ -1,8 +1,8 @@
-"""Two showcase boards (8 posts each) for the «إبداع بيتحرك» portfolio page.
+"""Showcase boards for the «إبداع بيتحرك» portfolio page: four posts per board on a blackboard,
+each card floating over an LED strip that spills its color onto the board.
 
     python3 brand/al-asema-lab/showcase/build.py && node brand/al-asema-lab/showcase/shoot.mjs
 
-Board 1: a tilted 3D wall of posts. Board 2: a fan of cards with one hero post in front.
 LOGO: drop logo.png here and it replaces the text wordmark.
 """
 from pathlib import Path
@@ -10,100 +10,74 @@ from pathlib import Path
 HERE = Path(__file__).parent
 LOGO = HERE / "logo.png"
 
-BASE = """<!doctype html><html><head><meta charset="utf-8"><style>
+BOARDS = [  # (posts, kicker, title, accent word)
+    ([1, 2, 3, 4], "VOL.01", "باقة", "لكل حد"),
+    ([5, 6, 7, 8], "VOL.02", "جسمك", "بيتكلم"),
+    ([9, 10, 11, 12], "VOL.03", "كل تحليل", "ليه حكاية"),
+    ([13, 14, 15, 16], "VOL.04", "التفاصيل", "اللي بتفرق"),
+]
+LED = ["#ff3b3f", "#5a62ff", "#ffb22e", "#ff3b3f", "#5a62ff", "#ffb22e"]
+
+CSS = """
 @font-face{font-family:Cairo;src:url(Cairo-ExtraBold.ttf);font-weight:800}
-@font-face{font-family:Cairo;src:url(Cairo-Bold.ttf);font-weight:700}
 @font-face{font-family:Cairo;src:url(Cairo-SemiBold.ttf);font-weight:600}
-@font-face{font-family:Mont;src:url(Montserrat-Bold.ttf);font-weight:700}
 @font-face{font-family:Mont;src:url(Montserrat-SemiBold.ttf);font-weight:600}
-:root{--bg:#0d0e12;--ink:#f4f1ea;--mute:#8d8f99;--red:#E0262B;--gold:#F2A11F;--blue:#33389A}
+:root{--ink:#f2efe8;--mute:#8a8d93;--red:#E0262B;--gold:#F2A11F;--blue:#33389A}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:1080px;height:1350px;overflow:hidden;background:var(--bg)}
+html,body{width:1080px;height:1350px;overflow:hidden;background:#141618}
 body{position:relative;font-family:Cairo;color:var(--ink)}
-.glow{position:absolute;inset:0;background:
- radial-gradient(700px 520px at 50% 58%,rgba(51,56,154,.38),transparent 70%),
- radial-gradient(420px 320px at 85% 90%,rgba(224,38,43,.22),transparent 70%),
- radial-gradient(380px 300px at 10% 15%,rgba(242,161,31,.12),transparent 70%)}
-.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1.2px,transparent 1.3px);background-size:28px 28px;
- -webkit-mask-image:radial-gradient(circle at 50% 55%,#000 30%,transparent 75%)}
-.grain{position:absolute;inset:0;opacity:.07;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>")}
-.card{position:absolute;border-radius:14px;overflow:hidden;background:#fff;
- box-shadow:0 2px 0 rgba(255,255,255,.08) inset,0 30px 60px -10px rgba(0,0,0,.65),0 12px 24px rgba(0,0,0,.35)}
+/* blackboard: matte slate, wiped chalk haze, dust grain, a dark vignette */
+.board{position:absolute;inset:0;background:
+ radial-gradient(520px 260px at 22% 18%,rgba(255,255,255,.045),transparent 70%),
+ radial-gradient(640px 300px at 78% 46%,rgba(255,255,255,.035),transparent 70%),
+ radial-gradient(500px 240px at 30% 82%,rgba(255,255,255,.03),transparent 70%),
+ linear-gradient(170deg,#1b1e20,#121416 60%,#0e1011)}
+.dust{position:absolute;inset:0;opacity:.22;mix-blend-mode:screen;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.6 -0.95'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+.vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,transparent 45%,rgba(0,0,0,.55))}
+.frame{position:absolute;inset:18px;border:2px solid rgba(255,255,255,.06);border-radius:10px}
+.head{position:absolute;left:64px;right:64px;top:52px;display:flex;justify-content:space-between;align-items:center;direction:rtl}
+.mark{display:flex;align-items:center;gap:12px;font-weight:800;font-size:28px}
+.mark i{width:14px;height:14px;border-radius:50%;background:var(--gold);box-shadow:20px 0 0 var(--red),40px 0 0 #5a62ff;margin-left:40px}
+.mark img{height:60px}
+.title{font-weight:800;font-size:44px;line-height:1}
+.title b{color:var(--red)}
+.idx{font-family:Mont;font-weight:600;font-size:16px;color:var(--mute);letter-spacing:.32em;direction:ltr}
+.slot{position:absolute;width:380px;height:475px}
+.card{position:absolute;inset:0;border-radius:12px;overflow:hidden;z-index:2;
+ box-shadow:0 0 0 1px rgba(255,255,255,.12),0 24px 40px -12px rgba(0,0,0,.8)}
 .card img{display:block;width:100%;height:100%;object-fit:cover}
-.head{position:absolute;left:64px;right:64px;top:58px;display:flex;justify-content:space-between;align-items:flex-start;direction:rtl}
-.mark{display:flex;align-items:center;gap:12px;font-weight:800;font-size:30px;letter-spacing:0}
-.mark i{width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:22px 0 0 var(--red),44px 0 0 var(--blue)}
-.mark img{height:64px}
-.idx{font-family:Mont;font-weight:600;font-size:18px;color:var(--mute);letter-spacing:.3em;direction:ltr;padding-top:10px}
-.title{position:absolute;right:64px;left:64px;direction:rtl}
-.kicker{font-family:Mont;font-weight:600;font-size:17px;letter-spacing:.35em;color:var(--gold);direction:ltr;text-align:right}
-.h1{font-weight:800;font-size:64px;line-height:1.15;margin-top:4px}
-.h1 b{color:var(--red);font-weight:800}
-.sub{font-weight:600;font-size:24px;color:var(--mute);margin-top:4px}
-.foot{position:absolute;left:64px;right:64px;bottom:50px;display:flex;justify-content:space-between;align-items:center;direction:rtl;font-weight:600;font-size:20px;color:var(--mute)}
-.foot .tags{display:flex;gap:10px}
-.foot .tags span{border:1px solid rgba(255,255,255,.16);border-radius:40px;padding:4px 18px;color:var(--ink)}
-.foot .en{font-family:Mont;font-size:15px;letter-spacing:.3em;direction:ltr}
-</style></head><body><div class="glow"></div><div class="dots"></div>
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,var(--c) -40%,transparent 22%);opacity:.28;mix-blend-mode:screen}
+.spill{position:absolute;left:-60px;right:-60px;bottom:-150px;height:300px;z-index:1;
+ background:radial-gradient(ellipse 50% 42% at 50% 54%,var(--c),transparent 72%);opacity:.9;filter:blur(10px);mix-blend-mode:screen}
+.halo{position:absolute;left:6%;right:6%;top:30%;bottom:-30px;z-index:1;border-radius:40px;background:var(--c);filter:blur(50px);opacity:.6}
+.led{position:absolute;left:8%;right:8%;bottom:-26px;height:6px;border-radius:6px;z-index:3;
+ background:linear-gradient(90deg,transparent,#fff 12%,#fff 88%,transparent);
+ box-shadow:0 0 6px 1px var(--c),0 0 18px 4px var(--c),0 0 46px 10px var(--c)}
+.foot{position:absolute;left:64px;right:64px;bottom:44px;display:flex;justify-content:space-between;align-items:center;direction:rtl;font-weight:600;font-size:19px;color:var(--mute)}
+.en{font-family:Mont;font-size:14px;letter-spacing:.3em;direction:ltr}
 """
 
 
-def mark():
-    return '<img src="logo.png">' if LOGO.exists() else "<i></i><span style='margin-right:44px'>إبداع بيتحرك</span>"
+def board(posts, kicker, title, accent, n):
+    mark = '<img src="logo.png">' if LOGO.exists() else "<i></i><span>إبداع بيتحرك</span>"
+    W, H, GX, GY = 380, 475, 60, 66
+    x0 = (1080 - 2 * W - GX) / 2
+    slots = []
+    for i, k in enumerate(posts):
+        col, row = i % 2, i // 2
+        x = x0 + (1 - col) * (W + GX)            # first post top right, as Arabic reads
+        y = 170 + row * (H + GY) + (0 if col == 0 else 44)   # left column sits lower: a gentle stagger
+        c = LED[(i + n) % len(LED)]
+        slots.append(f'<div class="slot" style="left:{x}px;top:{y}px;--c:{c}"><div class="spill"></div><div class="halo"></div>'
+                     f'<div class="card"><img src="posts/p{k:02d}.png"></div><div class="led"></div></div>')
+    return (f'<!doctype html><html><head><meta charset="utf-8"><style>{CSS}</style></head><body>'
+            '<div class="board"></div><div class="dust"></div><div class="vig"></div><div class="frame"></div>'
+            f'<div class="head"><div class="mark">{mark}</div><div class="title">{title} <b>{accent}</b></div>'
+            f'<div class="idx">{kicker}</div></div>{"".join(slots)}'
+            '<div class="foot"><span>معمل العاصمة للتحاليل الطبية · سوشيال ميديا</span><span class="en">SOCIAL MEDIA DESIGN</span></div>'
+            '</body></html>')
 
 
-def head(n):
-    return f'<div class="head"><div class="mark">{mark()}</div><div class="idx">0{n} / 02</div></div>'
-
-
-def foot():
-    return ('<div class="foot"><div class="tags"><span>سوشيال ميديا</span><span>باقات التحاليل</span></div>'
-            '<div class="en">SOCIAL MEDIA DESIGN</div></div><div class="grain"></div></body></html>')
-
-
-def wall():
-    # 4 columns x 2 rows, every column pushed up or down so the grid reads as a moving wall, then tilted in 3D
-    W, H, G = 232, 290, 26
-    offs = [40, -90, 70, -40]
-    cards = []
-    for c in range(4):
-        for r in range(2):
-            k = c * 2 + r + 1
-            x = (3 - c) * (W + G)          # first post on the right, as Arabic reads
-            y = r * (H + G) + offs[c]
-            cards.append(f'<div class="card" style="left:{x}px;top:{y}px;width:{W}px;height:{H}px"><img src="posts/p{k:02d}.png"></div>')
-    stage = (f'<div style="position:absolute;left:50%;top:770px;width:0;height:0;perspective:2400px">'
-             f'<div style="position:absolute;left:{-(4 * W + 3 * G) / 2}px;top:{-(2 * H + G) / 2}px;width:{4 * W + 3 * G}px;height:{2 * H + G}px;'
-             f'transform:rotateX(24deg) rotateY(-8deg) rotateZ(-9deg) translateX(-18px) scale(0.93);transform-style:preserve-3d">{"".join(cards)}</div></div>')
-    title = ('<div class="title" style="top:150px"><div class="kicker">AL ASEMA LAB — VOL.1</div>'
-             '<div class="h1">معمل العاصمة <b>للتحاليل الطبية</b></div>'
-             '<div class="sub">٨ بوستات لباقات التحاليل.. كل باقة ليها فكرة وصورة</div></div>')
-    return BASE + head(1) + title + stage + foot()
-
-
-def fan():
-    # seven cards fanned from a pivot below the frame, one hero post standing in front
-    behind = [9, 10, 12, 13, 14, 15, 16]
-    hero = 11
-    W, H = 262, 328
-    R = 400
-    angles = [-36, -24, -12, 0, 12, 24, 36]
-    cards = []
-    for a, k in zip(angles, behind):
-        lift = 40 if a == 0 else 0
-        cards.append(f'<div class="card" style="left:{-W / 2}px;top:{-H - R - lift}px;width:{W}px;height:{H}px;'
-                     f'transform-origin:50% {H + R + lift}px;transform:rotate({a}deg)"><img src="posts/p{k:02d}.png"></div>')
-    fanw = f'<div style="position:absolute;left:540px;top:1210px">{"".join(cards)}</div>'
-    hw, hh = 352, 440
-    herow = (f'<div class="card" style="left:{540 - hw / 2}px;top:800px;width:{hw}px;height:{hh}px;border-radius:18px;'
-             f'box-shadow:0 0 0 6px rgba(255,255,255,.95),0 50px 90px -10px rgba(0,0,0,.8),0 0 120px rgba(224,38,43,.35)">'
-             f'<img src="posts/p{hero:02d}.png"></div>')
-    title = ('<div class="title" style="top:150px;text-align:center"><div class="kicker" style="text-align:center">AL ASEMA LAB — VOL.2</div>'
-             '<div class="h1">كل تحليل <b>ليه حكاية</b></div>'
-             '<div class="sub">٨ بوستات تانيين لمعمل العاصمة للتحاليل الطبية</div></div>')
-    return BASE + head(2) + title + fanw + herow + foot()
-
-
-(HERE / "board1.html").write_text(wall())
-(HERE / "board2.html").write_text(fan())
-print("wrote board1.html board2.html")
+for n, b in enumerate(BOARDS, 1):
+    (HERE / f"board{n}.html").write_text(board(*b, n))
+print("wrote", len(BOARDS), "boards")

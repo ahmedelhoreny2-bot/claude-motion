@@ -5,7 +5,7 @@ import path from 'path';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const browser = await chromium.launch();
 const page = await browser.newPage({viewport: {width: 1080, height: 1350}, deviceScaleFactor: 2});
-for (const n of [1, 2]) {
+for (const n of [1, 2, 3, 4]) {
   await page.goto('file://' + path.join(here, `board${n}.html`));
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(300);
