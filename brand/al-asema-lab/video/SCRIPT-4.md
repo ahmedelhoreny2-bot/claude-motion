@@ -16,7 +16,7 @@
 8. [relieved, warm] ونتيجة واضحة في إيدك.. بأسعار تنافسية، وخصومات على الباقات.
 9. [smiling, confident] متسألش جوجل.. اسأل معمل العاصمة. اتصل واحجز دلوقتي.
 
-## المشاهد (كل مشهد من Flow: 8 ثواني، 9:16، من غير كلام أو لوجو)
+## المشاهد (كل مشهد من Flow: 8 ثواني، 9:16، واقعي جدًا، صامت تمامًا، من غير كلام أو لوجو)
 
 | # | الوقت | المشهد | أنا هضيف |
 |---|---|---|---|
@@ -32,68 +32,51 @@
 
 **مهم: نفس الراجل في مشهد 1 و2 و8.** ولّد مشهد 1 الأول، وخد منه صورة الراجل كـ reference (Ingredients) في مشهد 2 و8.
 
-### مشهد 1 · الساعة ٢ بالليل
+### مشهد 1 · الساعة ٢ بالليل (هستخدم 0–4.5 ث)
 ```
-Vertical 9:16 cinematic shot, 8 seconds. Night, dark bedroom. An Egyptian man in his early 30s, short dark hair, light
-beard, wearing a plain royal blue t-shirt, lies in bed propped on a white pillow, scrolling on his phone; the cold phone
-light is the only light on his tired, worried face. A digital alarm clock glow on the nightstand (no readable numbers).
-Slow push-in from the foot of the bed. Moody, realistic, natural skin, realistic hands. The phone screen faces away from
-camera. No text, no logos, no watermark, no subtitles.
+Vertical 9:16, 8 seconds, 24fps. Night, dark bedroom lit only by a phone screen. An Egyptian man, early 30s, short dark hair, light beard, plain royal blue t-shirt, lies in bed on his back propped on a white pillow, holding a smartphone above his face with both hands, screen facing him (away from camera). 0-3s: he scrolls with his thumb, cold bluish light on his tired face. 3-6s: he stops scrolling and frowns slightly. 6-8s: he lowers the phone a little and stares at it, worried. Camera: slow dolly-in from the foot of the bed to a medium close-up, eye level, very smooth. White sheets, a burgundy blanket.
+Hyper-realistic live-action footage, shot on ARRI Alexa, 35mm lens, natural film grain, real skin texture with pores, correct human anatomy and hands with five fingers, no CGI or animated look. SILENT: no dialogue, no speech, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
 
-### مشهد 2 · عين قلقانة
+### مشهد 2 · عين قلقانة (هستخدم 4.5–8.5 ث)
 ```
-Vertical 9:16 extreme close-up, 8 seconds. The same Egyptian man (short dark hair, light beard), only his eyes and
-upper face in frame, lit by phone light from below; the light flickers and shifts color slightly as he scrolls, his
-eyebrows tighten with growing worry, he blinks slowly. Dark background, shallow depth of field, very cinematic,
-realistic skin. No text, no logos, no watermark, no subtitles.
+Vertical 9:16, 8 seconds, 24fps. Extreme close-up of the same Egyptian man (short dark hair, light beard): only his eyes and eyebrows fill the frame, lit from below by a phone screen, dark background. 0-3s: eyes move left to right as if reading. 3-5s: the screen light flickers brighter and his eyebrows draw together in worry. 5-8s: one slow blink, then he keeps staring, a small reflection of the screen visible in his pupils (no readable content). Locked-off camera, 100mm macro lens, shallow depth of field.
+Hyper-realistic live-action footage, shot on ARRI Alexa, 35mm lens, natural film grain, real skin texture with pores, correct human anatomy and hands with five fingers, no CGI or animated look. SILENT: no dialogue, no speech, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
 
-### مشهد 3 · يقفل الموبايل ويطلع الصبح
+### مشهد 3 · يقلب الموبايل ويطلع الصبح (هستخدم 8.5–12.5 ث)
 ```
-Vertical 9:16 cinematic shot, 8 seconds. Close-up on a nightstand: a man's hand puts a smartphone face-down on the wood
-and lets go. Then warm morning sunlight slowly rises across the nightstand and the white sheets, as if the night turns
-into day (time-lapse feel). Static camera, soft and hopeful mood, crimson and royal blue accents in the room.
-Realistic hand. No text, no logos, no watermark, no subtitles.
+Vertical 9:16, 8 seconds, 24fps. Close-up on a wooden nightstand next to a bed with white sheets. 0-2s: in the dark, a man's hand places a glowing smartphone face-down on the nightstand and slowly lets go; the room goes dark. 2-8s: warm golden morning sunlight gradually sweeps across the nightstand and sheets from the right, as if night turns into day, dust particles glowing in the light beam. Locked-off camera, 50mm lens. A small burgundy object and a royal blue book on the nightstand.
+Hyper-realistic live-action footage, shot on ARRI Alexa, 35mm lens, natural film grain, real skin texture with pores, correct human anatomy and hands with five fingers, no CGI or animated look. SILENT: no dialogue, no speech, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
 
-### مشهد 4 · دخول المعمل
+### مشهد 4 · دخول المعمل (هستخدم 12.5–18 ث)
 ```
-Vertical 9:16 cinematic shot, 8 seconds. First-person camera walking forward through an automatic glass door that
-slides open into a bright, spotless, modern medical laboratory reception: white walls, glossy white floor reflecting
-light, a reception desk with a crimson red front panel and a thin royal blue line, a few green plants, a smiling
-receptionist in a white coat in the soft background. Smooth steady gimbal movement forward. Clean, calm, premium.
-No text, no logos, no signs, no watermark, no subtitles.
+Vertical 9:16, 8 seconds, 24fps. First-person point of view walking slowly toward an automatic glass door. 0-2s: the door slides open. 2-8s: the camera glides through into a bright, spotless, modern medical laboratory reception: white walls, glossy white floor with soft reflections, a reception desk with a crimson red front panel and a thin royal blue line, two green plants, a smiling female receptionist in a white coat behind the desk who nods politely (she does not speak). Smooth steady gimbal move forward, 24mm lens, eye level, soft daylight from large windows.
+Hyper-realistic live-action footage, shot on ARRI Alexa, 35mm lens, natural film grain, real skin texture with pores, correct human anatomy and hands with five fingers, no CGI or animated look. SILENT: no dialogue, no speech, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
 
-### مشهد 5 · الأدوات المعقمة
+### مشهد 5 · الأدوات المعقمة (هستخدم 18–22 ث)
 ```
-Vertical 9:16 close-up, 8 seconds. Hands in royal blue nitrile gloves peel open a sealed sterile syringe package on a
-clean white tray, take out the new syringe and set it down; next to it a sealed alcohol swab and a red tourniquet.
-Bright clean light, shallow depth of field, slow push-in. Realistic hands with correct fingers.
-No text on packages, no logos, no watermark, no subtitles.
+Vertical 9:16, 8 seconds, 24fps. Close-up, top-down at 45 degrees, on a clean white stainless tray. 0-3s: two hands in royal blue nitrile gloves peel open a sealed sterile syringe pouch (blank paper, no printing). 3-5s: they take out the new syringe and place it on the tray. 5-8s: one hand places a sealed alcohol swab and a red tourniquet next to it. Slow push-in, 85mm lens, bright clean diffused light, shallow depth of field.
+Hyper-realistic live-action footage, shot on ARRI Alexa, 35mm lens, natural film grain, real skin texture with pores, correct human anatomy and hands with five fingers, no CGI or animated look. SILENT: no dialogue, no speech, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
 
-### مشهد 6 · جهاز التحليل
+### مشهد 6 · جهاز التحليل (هستخدم 22–26.5 ث)
 ```
-Vertical 9:16 cinematic shot, 8 seconds. A modern white automated laboratory analyzer: a rack of blood sample tubes
-with colored caps slides smoothly into the machine on a conveyor, a small robotic arm picks one tube, soft blue status
-lights blink. Slow sliding camera from left to right along the machine. Bright, clean, high-tech, crisp details.
-No text on screens, no logos, no brand names, no watermark, no subtitles.
+Vertical 9:16, 8 seconds, 24fps. A modern white automated clinical laboratory analyzer in a bright lab. 0-3s: a rack of blood sample tubes with colored caps slides into the machine on a conveyor. 3-6s: a small robotic gripper lifts one tube and moves it inside. 6-8s: soft blue status lights blink. Camera: slow lateral slide from left to right along the machine, 35mm lens, crisp details, clean high-tech look. Screens show only abstract colored bars.
+Hyper-realistic live-action footage, shot on ARRI Alexa, 35mm lens, natural film grain, real skin texture with pores, correct human anatomy and hands with five fingers, no CGI or animated look. SILENT: no dialogue, no speech, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
 
-### مشهد 7 · الأنابيب من فوق
+### مشهد 7 · الأنابيب من فوق (هستخدم 26.5–32 ث)
 ```
-Vertical 9:16 overhead top-down shot, perfect 90-degree view, 8 seconds. On a clean white lab bench, a gloved hand in
-royal blue places blood sample tubes one by one into a white rack, five tubes in total, caps in crimson red, gold-orange,
-royal blue, burgundy and purple, steady rhythm about one tube every second. Bright even light, static camera.
-No labels with text, no logos, no watermark, no subtitles.
+Vertical 9:16, 8 seconds, 24fps. Perfect 90-degree overhead top-down shot of a clean white lab bench with an empty white tube rack in the center. A hand in a royal blue nitrile glove places five blood sample tubes into the rack one by one, from right to left, one tube every second starting at 1s: caps crimson red, gold-orange, royal blue, burgundy, purple. Tubes have blank white labels. Locked-off camera, even soft light, no shadows on the rack.
+Hyper-realistic live-action footage, shot on ARRI Alexa, 35mm lens, natural film grain, real skin texture with pores, correct human anatomy and hands with five fingers, no CGI or animated look. SILENT: no dialogue, no speech, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
 
-### مشهد 8 · الراجل مرتاح
+### مشهد 8 · الراجل مرتاح (هستخدم 32–37 ث)
 ```
-Vertical 9:16 cinematic shot, 8 seconds. Daytime, bright clean lab reception with a crimson red desk panel. The same
-Egyptian man (short dark hair, light beard, now in a white shirt) receives a white envelope from a staff member,
-opens it, reads, and breathes out with a big relieved smile, shoulders relaxing. Warm soft light, slow push-in on his
-face. Natural skin, realistic hands. No readable text, no logos, no watermark, no subtitles.
+Vertical 9:16, 8 seconds, 24fps. Daytime, bright clean lab reception with a crimson red desk panel. The same Egyptian man (short dark hair, light beard), now in a crisp white shirt, stands at the desk. 0-2s: a staff hand hands him a white envelope. 2-5s: he opens it and reads the sheet inside (no readable text). 5-8s: he exhales, his shoulders relax and a genuine relieved smile spreads across his face, mouth closed. Slow push-in to a medium close-up, 50mm lens, warm soft window light.
+Hyper-realistic live-action footage, shot on ARRI Alexa, 35mm lens, natural film grain, real skin texture with pores, correct human anatomy and hands with five fingers, no CGI or animated look. SILENT: no dialogue, no speech, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
+
