@@ -78,3 +78,45 @@ Hyper-realistic live-action footage, shot on ARRI Alexa, natural film grain, rea
 Vertical 9:16, 8 seconds, 24fps. The same Egyptian woman from the staircase scene (late 20s, hair tied back, white t-shirt, royal blue trousers) now runs up the same clean white staircase easily, full of energy, and at the top turns and smiles warmly, mouth closed. Side view, camera locked off at mid-height, 35mm lens, bright sunny daylight.
 Hyper-realistic live-action footage, shot on ARRI Alexa, natural film grain, real skin texture, correct human anatomy and hands with five fingers, no CGI look. Clean, simple background with empty space around the subject for visual effects. SILENT: no dialogue, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
+
+---
+
+## مزج أسلوب Vox (كولاج Explainer) مع الـ VFX والـ Kinetic Typography
+
+الفيديو بيبدّل بين 3 طبقات، وكلها بألوان الهوية:
+1. **الحقيقي + VFX:** المشاهد الحقيقية وفوقها HUD وهياكل شفافة وجزيئات (زي ما هو فوق).
+2. **كولاج Vox:** الكاميرا "بتخرج" من المشهد على **ورقة بيج/بيضا بملمس ورق**، والشخص يتقص من المشهد ويتلزق
+   كصورة مقصوصة بحواف بيضا وشريط لاصق، وحواليها: قصاصات (رمز Fe، ورقة نتيجة تحليل، كوباية مية، مكعبات سكر)،
+   **هايلايتر برتقالي** بيعدّي على كلمة، **دواير وأسهم مرسومة باليد** بالأحمر، نقط **halftone** بالأزرق الملكي،
+   وحركة stop-motion خفيفة (كل عنصر بيتهز 2px بـ 12 فريم في الثانية).
+3. **Kinetic Typography:** كلمات تقيلة بتخبط وبتتكسر على خلفية حمرا أو زرقا كاملة كفواصل سريعة.
+
+| الوقت | الطبقة | اللي بيحصل |
+|---|---|---|
+| 0–4.5 | حقيقي + VFX | الهوك: تجميد + glitch + «استنى» + سكان العين |
+| 4.5–9 | حقيقي → **كولاج** | ست السلم تتقص وتتلزق على الورق، رئة مرسومة، قصاصة «Fe» بتتلزق، هايلايتر على «حديد ناقص» |
+| 9–13.5 | **كولاج** | الراجل مقصوص، مكعبات سكر مقصوصة بتقع، سهم مرسوم لـ«سكر عالي» |
+| 13.5–18 | حقيقي + VFX | فراشة الغدة الهولوجرام من رقبتها |
+| 18–19 | Kinetic | «مش بتتشاف.. بالعين» بتتكسر على أحمر |
+| 19–22 | حقيقي + VFX | زووم جوه نقطة الدم لعالم ميكروسكوبي |
+| 22–29 | حقيقي + **كولاج** | الجهاز، وقصاصة "ورقة نتيجة" بتتلزق والأرقام بتتعلّم بدواير، اللوجو بيتلزق كستيكر |
+| 29–33.5 | حقيقي + VFX | الست طالعة السلم بسهولة، كل المؤشرات مليانة ✓ |
+| 33.5–40 | **كولاج** → لوجو | كل القصاصات بتتجمع على الورقة وتطلع منها كارت المعمل بالأرقام والعنوان |
+
+### صور الكولاج (ولّدها من ChatGPT كصور ثابتة، خلفية بيضا سادة، عشان أقصها)
+```
+Product photo on a pure white seamless background, top-down, soft shadow: three glossy white sugar cubes, slightly scattered.
+Photorealistic, high detail. No text, no logos.
+```
+```
+Product photo on a pure white seamless background: a clear glass of water, half full, with a few droplets on the glass, front view.
+Photorealistic, high detail. No text, no logos.
+```
+```
+Flat lay on a pure white background: a blank white medical lab result sheet on a clipboard, the sheet shows only gray placeholder
+lines and empty table rows (no readable text), a royal blue pen beside it. Photorealistic, top-down. No logos.
+```
+```
+Product photo on a pure white seamless background: a red stethoscope coiled in a loose circle, top-down, soft shadow.
+Photorealistic, high detail. No text, no logos.
+```
