@@ -2,8 +2,9 @@
 
     python3 brand/al-asema-lab/video/vo2/mix.py
 
-The timeline was built on vo.mp3, so it plays from 0 unchanged. The closing line
-(vo_end.mp3, when recorded) is placed at its caption slot.
+vo.mp3 is the final take (full script, corrected «في قلب ميت غمر..» line spliced in from fix-line2.mp3);
+make_timeline.py warps the picture onto it, so it plays from 0 unchanged. An optional separate closing line
+(vo_end.mp3) is placed at its caption slot; the final take already contains it.
 """
 import json
 import subprocess
@@ -38,7 +39,7 @@ def main():
     )
     out = ROOT / "public/asema/mix2.wav"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", graph, "-map", "[out]", "-ar", "48000", str(out)], check=True)
-    print("wrote", out, "(with closing line)" if n == 2 else "(closing line not recorded yet)")
+    print("wrote", out, "(+ separate closing line)" if n == 2 else "")
 
 
 if __name__ == "__main__":
