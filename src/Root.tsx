@@ -8,6 +8,8 @@ import {LabTour, TFPS, TH, TW} from './asema2/LabTour';
 import tourTL from './asema2/timeline.json';
 import {AFPS, AH, AW, AskLab} from './asema3/AskLab';
 import askTL from './asema3/timeline.json';
+import {SeeInside, SFPS, SH, SW} from './asema4/SeeInside';
+import seeTL from './asema4/timeline.json';
 import {FPS, H, TL, W} from './lib';
 
 export const Root: React.FC = () => (
@@ -43,6 +45,14 @@ export const Root: React.FC = () => (
       fps={AFPS}
       width={AW}
       height={AH}
+    />
+    <Composition
+      id="SeeInside"
+      component={SeeInside}
+      durationInFrames={Math.round(seeTL.duration * SFPS)}
+      fps={SFPS}
+      width={SW}
+      height={SH}
     />
     <Still id="ArticleCover" component={ArticleCover} width={2000} height={800} />
   </>
