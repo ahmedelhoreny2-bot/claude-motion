@@ -398,18 +398,18 @@ const End: React.FC<{t: number; f: number}> = ({t, f}) => {
       <Slap t={t} f={f} at={B.tag} x={540} y={930} rot={2} seed={87}>
         <Strip text="شوف اللي مش باين" size={84} hl={prog(t, B.tag + 0.15, B.tag + 0.6, easeOut)} />
       </Slap>
-      <Slap t={t} f={f} at={B.pin} x={540} y={1110} rot={-2} seed={88}>
+      <Slap t={t} f={f} at={B.pin} x={540} y={1170} rot={-2} seed={88}>
         <div style={{background: '#fff', padding: '18px 32px', boxShadow: '0 10px 16px rgba(60,30,10,0.22)', direction: 'rtl', textAlign: 'center'}}>
           <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontFamily: AR, fontWeight: 800, fontSize: 46, color: L.burgundy}}><PinIcon size={44} />في قلب ميت غمر</div>
           <div style={{fontFamily: AR, fontWeight: 600, fontSize: 30, color: '#5F5F66', marginTop: 4, whiteSpace: 'nowrap'}}>برج دهب · شارع الجيش · ناصية شارع أبوسنة</div>
           <div style={{fontFamily: AR, fontWeight: 600, fontSize: 30, color: '#5F5F66', whiteSpace: 'nowrap'}}>أعلى التوحيد والنور · الدور الأول</div>
         </div>
       </Slap>
-      <Slap t={t} f={f} at={B.cta} x={540} y={1330} rot={0} seed={89}>
+      <Slap t={t} f={f} at={B.cta} x={540} y={1395} rot={0} seed={89}>
         <div style={{transform: `scale(${pulse})`, background: L.burgundy, color: '#fff', fontFamily: AR, fontWeight: 800, fontSize: 66, padding: '16px 70px', borderRadius: 999,
           boxShadow: '0 16px 30px rgba(92,14,29,0.35)', direction: 'rtl', whiteSpace: 'nowrap'}}>اتصل واحجز دلوقتي</div>
       </Slap>
-      <Slap t={t} f={f} at={B.cta + 0.3} x={540} y={1470} rot={-1} seed={90}>
+      <Slap t={t} f={f} at={B.cta + 0.3} x={540} y={1525} rot={-1} seed={90}>
         <div style={{background: L.blue, color: '#fff', fontFamily: EN, fontWeight: 700, fontSize: 50, padding: '10px 36px', whiteSpace: 'nowrap', boxShadow: '0 10px 16px rgba(31,35,107,0.3)'}}>01096534354 · 01019289733</div>
       </Slap>
     </AbsoluteFill>
