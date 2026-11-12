@@ -7,7 +7,7 @@
 
 ## التعليق الصوتي (ملف واحد، ثانية سكوت بين الجمل)
 ```
-في حاجات جسمك.. مش بيقولها بصوت عالي.
+استنى.. متقلّبش. جسمك دلوقتي بيحصل فيه حاجة.. انت مش شايفها.
 
 نَفَس بيتقطع على السلم.. ممكن يكون حديد ناقص.
 
@@ -30,10 +30,10 @@
 
 المشهد 8 (33.5–40 ث): موشن جرافيك بالكامل، الجزيئات بتتجمع وتكوّن اللوجو + «شوف اللي مش باين» + الأرقام والعنوان.
 
-### مشهد 1 · الوش (0–4 ث) · «في حاجات جسمك.. مش بيقولها بصوت عالي.»
-**الـ VFX اللي هضيفه:** HUD مسح دائري بيلف حوالين الوش + خطوط scan بتنزل + كلمة «مش باين» kinetic
+### مشهد 1 · الوش (0–4.5 ث) · «استنى.. متقلّبش. جسمك دلوقتي بيحصل فيه حاجة.. انت مش شايفها.»
+**الـ VFX اللي هضيفه:** على «استنى» الصورة بتتجمد ثانية بـ glitch أحمر وأزرق وكلمة «استنى» بتخبط في الشاشة؛ على «متقلّبش» إيد مرسومة بتمسك الشاشة كأنها بتوقف الإسكرول؛ بعدين HUD مسح دائري بيقفل على عينه وخطوط scan بتكشف جوه وشه، وكلمة «مش شايفها» بتتكسر
 ```
-Vertical 9:16, 8 seconds, 24fps. Extreme close-up of an Egyptian man in his 30s, short dark hair, light beard, looking straight into the camera with a calm, serious expression, neutral soft studio light from the front, plain light gray background. 0-8s: he barely moves, one slow blink at 3s, very slow push-in toward his eyes. 85mm lens.
+Vertical 9:16, 8 seconds, 24fps. Close-up of an Egyptian man in his 30s, short dark hair, light beard, plain white t-shirt, plain light gray background, soft studio light from the front. 0-1s: he looks down as if at his phone. 1-1.5s: he SUDDENLY snaps his eyes and head up straight into the camera lens, alert, intense stare. 1.5-8s: he holds the intense stare without moving, one slow blink at 5s, the camera pushes in quickly toward his eyes during 1-3s then slowly after. 85mm lens.
 Hyper-realistic live-action footage, shot on ARRI Alexa, natural film grain, real skin texture, correct human anatomy and hands with five fingers, no CGI look. Clean, simple background with empty space around the subject for visual effects. SILENT: no dialogue, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
 ```
 
