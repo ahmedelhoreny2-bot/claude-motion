@@ -53,6 +53,38 @@ BEATS = {
 }
 
 
+# The picture was choreographed on the first take. The final take (vo.mp3: full script with the corrected
+# «في قلب ميت غمر..» line spliced in) speaks the same lines at slightly different moments, so every time in
+# the timeline is warped piecewise-linearly through these (first take, final take) anchors: line starts and ends.
+WARP = [
+    (0.00, 0.00), (1.10, 1.04), (1.65, 1.64), (2.53, 2.55), (2.95, 3.02), (4.14, 4.03), (4.55, 4.43), (6.50, 6.47),
+    (6.89, 6.89), (8.18, 8.32), (8.42, 8.59), (9.30, 9.38), (9.78, 9.94), (12.14, 12.25), (12.40, 12.56), (13.77, 13.93),
+    (14.08, 14.23), (14.94, 15.14), (15.23, 15.40), (16.81, 16.97), (17.08, 17.21), (18.44, 18.58), (18.84, 18.97),
+    (20.11, 20.25), (20.34, 20.47), (22.93, 23.09), (23.27, 23.44), (24.85, 24.98), (25.20, 25.34), (27.65, 27.76),
+    (27.91, 28.23), (28.31, 28.65), (28.60, 28.94), (29.02, 29.33), (29.27, 29.54), (29.60, 29.84), (30.40, 30.14),
+    (33.90, 34.11),
+]
+
+
+def warp(t):
+    if t <= WARP[0][0]:
+        return t
+    for (a0, b0), (a1, b1) in zip(WARP, WARP[1:]):
+        if t <= a1:
+            return round(b0 + (t - a0) * (b1 - b0) / (a1 - a0), 3)
+    return round(t + WARP[-1][1] - WARP[-1][0], 3)
+
+
+def warped(x):
+    if isinstance(x, (int, float)):
+        return warp(x)
+    if isinstance(x, list):
+        return [warped(v) for v in x]
+    if isinstance(x, dict):
+        return {k: warped(v) for k, v in x.items()}
+    return x
+
+
 def main():
     words = []
     for a, b, text, anch in SEG:
@@ -66,7 +98,11 @@ def main():
         assert len(anch) == len(ws), text
         for i, w in enumerate(ws):
             words.append([round(anch[i], 3), round(anch[i + 1] if i + 1 < len(ws) else b, 3), w])
-    tl = {"fps": 60, "duration": 38.5, **BEATS, "mascot": MASCOT, "lines": [[a, b] for a, b, _, _ in SEG], "words": words}
+    beats = {k: warped(v) for k, v in BEATS.items()}
+    mascot = [[warp(k[0])] + k[1:] for k in MASCOT]
+    lines = [[warp(a), warp(b)] for a, b, _, _ in SEG]
+    words = [[warp(a), warp(b), w] for a, b, w in words]
+    tl = {"fps": 60, "duration": warp(38.5), **beats, "mascot": mascot, "lines": lines, "words": words}
     out = ROOT / "src/asema2/timeline.json"
     out.write_text(json.dumps(tl, ensure_ascii=False, indent=1))
     print("wrote", out, len(words), "words")

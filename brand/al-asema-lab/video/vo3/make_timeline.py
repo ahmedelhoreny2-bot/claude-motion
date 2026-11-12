@@ -38,36 +38,75 @@ TUBE_LANDS = [0.95, 2.35, 5.35, 7.15]   # seconds in s7.mp4 when each tube settl
 CLIP_LEN = 7.93
 
 
-def lines_from_voice(path):
-    out = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "silencedetect=noise=-30dB:d=0.25", "-f", "null", "-"],
+# The take's line breaks (silence starts that end a line). Pauses inside a line can be as long as the ones
+# between lines, so the breaks are set by matching each phrase's length to its text, not by gap length.
+LINE_BREAKS = [3.89, 7.39, 12.49, 19.61, 24.76, 28.90, 35.12, 39.49]
+
+
+def silences(path, noise=-30, d=0.15):
+    out = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", f"silencedetect=noise={noise}dB:d={d}", "-f", "null", "-"],
                          capture_output=True, text=True).stderr
-    starts = [float(x) for x in re.findall(r"silence_start: ([0-9.]+)", out)]
-    ends = [float(x) for x in re.findall(r"silence_end: ([0-9.]+)", out)]
-    dur = float(re.search(r"Duration: (\d+):(\d+):([0-9.]+)", out).group(3)) + 60 * int(re.search(r"Duration: (\d+):(\d+)", out).group(2))
-    gaps = [(e - s, s, e) for s, e in zip(starts, ends) if s > 0.05]
-    cuts = sorted(sorted(gaps, reverse=True)[: len(LINES) - 1], key=lambda g: g[1])
-    bounds, t0 = [], ends[0] if starts and starts[0] < 0.05 else 0.0
-    for _, s, e in cuts:
-        bounds.append((t0, s))
-        t0 = e
-    tail = starts[-1] if starts and starts[-1] > t0 else dur
+    st = [float(x) for x in re.findall(r"silence_start: ([0-9.]+)", out)]
+    en = [float(x) for x in re.findall(r"silence_end: ([0-9.]+)", out)]
+    m = re.search(r"Duration: (\d+):(\d+):([0-9.]+)", out)
+    dur = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+    return list(zip(st, en + [dur] * (len(st) - len(en)))), dur
+
+
+def lines_from_voice(path):
+    sil, dur = silences(path, -26, 0.2)
+    bounds, t0 = [], 0.0
+    if sil and sil[0][0] < 0.05:
+        t0 = sil[0][1]
+    for brk in LINE_BREAKS:
+        s0, e0 = min(sil, key=lambda g: abs(g[0] - brk))
+        bounds.append((t0, s0))
+        t0 = e0
+    tail = max((s0 for s0, _ in sil if s0 > t0 + 0.5), default=dur)  # the take's final silence ends the last line
     bounds.append((t0, tail))
-    return bounds
+    return bounds, sil
+
+
+def place_words(text, a, b, sil):
+    """Words spread over the voiced time of [a, b] only (pauses inside the line are skipped)."""
+    ws = text.split(" ")
+    weights = [len(re.sub(r"[.،؟:]", "", w)) + 1.5 for w in ws]
+    gaps = [(max(a, s0), min(b, e0)) for s0, e0 in sil if e0 > a and s0 < b]
+    voiced, t = [], a
+    for s0, e0 in gaps:
+        if s0 > t:
+            voiced.append((t, s0))
+        t = max(t, e0)
+    if t < b:
+        voiced.append((t, b))
+    total = sum(e - s for s, e in voiced)
+
+    def at(u):  # u in [0, total] voiced seconds -> clock time
+        for s, e in voiced:
+            if u <= e - s:
+                return s + u
+            u -= e - s
+        return b
+
+    out, acc, tot = [], 0.0, sum(weights)
+    for w, k in zip(ws, weights):
+        st = at(acc * total / tot)
+        acc += k
+        en = at(acc * total / tot)
+        out.append([round(st, 3), round(en, 3), w])
+    return out
 
 
 def main():
     voice = Path(sys.argv[1]) if len(sys.argv) > 1 else None
-    spans = lines_from_voice(voice) if voice else PROVISIONAL
+    if voice:
+        spans, sil = lines_from_voice(voice)
+    else:
+        spans, sil = PROVISIONAL, []
     assert len(spans) == len(LINES), spans
     words = []
     for (a, b), text in zip(spans, LINES):
-        ws = text.split(" ")
-        weights = [len(re.sub(r"[.،؟:]", "", w)) + 1.5 for w in ws]
-        tot, t = sum(weights), a
-        for w, k in zip(ws, weights):
-            d = (b - a) * k / tot
-            words.append([round(t, 3), round(t + d, 3), w])
-            t += d
+        words += place_words(text, a, b, sil)
     lead = 0.25
     starts = [0.0] + [max(0.0, a - lead) for a, _ in spans[1:]]
     end_card = starts[8]
