@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Cairo;src:url(Cairo-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:Cairo;src:url(Cairo-Bold.ttf);font-weight:700}
+@font-face{font-family:Cairo;src:url(Cairo-SemiBold.ttf);font-weight:600}
+@font-face{font-family:Mont;src:url(Montserrat-Bold.ttf);font-weight:700}
+@font-face{font-family:Mont;src:url(Montserrat-SemiBold.ttf);font-weight:600}
+:root{--bg:#0d0e12;--ink:#f4f1ea;--mute:#8d8f99;--red:#E0262B;--gold:#F2A11F;--blue:#33389A}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1350px;overflow:hidden;background:var(--bg)}
+body{position:relative;font-family:Cairo;color:var(--ink)}
+.glow{position:absolute;inset:0;background:
+ radial-gradient(700px 520px at 50% 58%,rgba(51,56,154,.38),transparent 70%),
+ radial-gradient(420px 320px at 85% 90%,rgba(224,38,43,.22),transparent 70%),
+ radial-gradient(380px 300px at 10% 15%,rgba(242,161,31,.12),transparent 70%)}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1.2px,transparent 1.3px);background-size:28px 28px;
+ -webkit-mask-image:radial-gradient(circle at 50% 55%,#000 30%,transparent 75%)}
+.grain{position:absolute;inset:0;opacity:.07;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>")}
+.card{position:absolute;border-radius:14px;overflow:hidden;background:#fff;
+ box-shadow:0 2px 0 rgba(255,255,255,.08) inset,0 30px 60px -10px rgba(0,0,0,.65),0 12px 24px rgba(0,0,0,.35)}
+.card img{display:block;width:100%;height:100%;object-fit:cover}
+.head{position:absolute;left:64px;right:64px;top:58px;display:flex;justify-content:space-between;align-items:flex-start;direction:rtl}
+.mark{display:flex;align-items:center;gap:12px;font-weight:800;font-size:30px;letter-spacing:0}
+.mark i{width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:22px 0 0 var(--red),44px 0 0 var(--blue)}
+.mark img{height:64px}
+.idx{font-family:Mont;font-weight:600;font-size:18px;color:var(--mute);letter-spacing:.3em;direction:ltr;padding-top:10px}
+.title{position:absolute;right:64px;left:64px;direction:rtl}
+.kicker{font-family:Mont;font-weight:600;font-size:17px;letter-spacing:.35em;color:var(--gold);direction:ltr;text-align:right}
+.h1{font-weight:800;font-size:64px;line-height:1.15;margin-top:4px}
+.h1 b{color:var(--red);font-weight:800}
+.sub{font-weight:600;font-size:24px;color:var(--mute);margin-top:4px}
+.foot{position:absolute;left:64px;right:64px;bottom:50px;display:flex;justify-content:space-between;align-items:center;direction:rtl;font-weight:600;font-size:20px;color:var(--mute)}
+.foot .tags{display:flex;gap:10px}
+.foot .tags span{border:1px solid rgba(255,255,255,.16);border-radius:40px;padding:4px 18px;color:var(--ink)}
+.foot .en{font-family:Mont;font-size:15px;letter-spacing:.3em;direction:ltr}
+</style></head><body><div class="glow"></div><div class="dots"></div>
+<div class="head"><div class="mark"><i></i><span style='margin-right:44px'>إبداع بيتحرك</span></div><div class="idx">02 / 02</div></div><div class="title" style="top:150px;text-align:center"><div class="kicker" style="text-align:center">AL ASEMA LAB — VOL.2</div><div class="h1">كل تحليل <b>ليه حكاية</b></div><div class="sub">٨ بوستات تانيين لمعمل العاصمة للتحاليل الطبية</div></div><div style="position:absolute;left:540px;top:1210px"><div class="card" style="left:-131.0px;top:-728px;width:262px;height:328px;transform-origin:50% 728px;transform:rotate(-36deg)"><img src="posts/p09.png"></div><div class="card" style="left:-131.0px;top:-728px;width:262px;height:328px;transform-origin:50% 728px;transform:rotate(-24deg)"><img src="posts/p10.png"></div><div class="card" style="left:-131.0px;top:-728px;width:262px;height:328px;transform-origin:50% 728px;transform:rotate(-12deg)"><img src="posts/p12.png"></div><div class="card" style="left:-131.0px;top:-768px;width:262px;height:328px;transform-origin:50% 768px;transform:rotate(0deg)"><img src="posts/p13.png"></div><div class="card" style="left:-131.0px;top:-728px;width:262px;height:328px;transform-origin:50% 728px;transform:rotate(12deg)"><img src="posts/p14.png"></div><div class="card" style="left:-131.0px;top:-728px;width:262px;height:328px;transform-origin:50% 728px;transform:rotate(24deg)"><img src="posts/p15.png"></div><div class="card" style="left:-131.0px;top:-728px;width:262px;height:328px;transform-origin:50% 728px;transform:rotate(36deg)"><img src="posts/p16.png"></div></div><div class="card" style="left:364.0px;top:800px;width:352px;height:440px;border-radius:18px;box-shadow:0 0 0 6px rgba(255,255,255,.95),0 50px 90px -10px rgba(0,0,0,.8),0 0 120px rgba(224,38,43,.35)"><img src="posts/p11.png"></div><div class="foot"><div class="tags"><span>سوشيال ميديا</span><span>باقات التحاليل</span></div><div class="en">SOCIAL MEDIA DESIGN</div></div><div class="grain"></div></body></html>
