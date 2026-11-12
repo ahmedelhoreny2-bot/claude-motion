@@ -16,6 +16,8 @@ const B = T.beats;
 const WORDS = T.words as unknown as [number, number, string][];
 const STICK = {damping: 8, stiffness: 200, mass: 0.7};
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+/** Overlay opacity for scene i: gone by the time the next scene's transition starts. */
+const fade = (t: number, i: number) => 1 - prog(t, T.scenes[i].exit - 0.3, T.scenes[i].exit - 0.05, easeIn);
 const sc = (i: number) => T.scenes[i];
 
 // ---------------------------------------------------------------- footage
@@ -185,7 +187,7 @@ const Night: React.FC<{t: number; f: number}> = ({t, f}) => {
   const press = Math.exp(-Math.max(0, t - B.enter) / 0.15) * (t >= B.enter ? 1 : 0);
   // suggestions under the bar after the first question
   const sugg = ['أعراض الأنيميا', 'مشاكل الغدة الدرقية', 'نقص فيتامين د'];
-  const sK = prog(t, b1 + 0.1, b1 + 0.5, easeOut) * (1 - prog(t, sc(1).exit - 0.3, sc(1).exit, easeIn));
+  const sK = prog(t, b1 + 0.1, b1 + 0.5, easeOut) * (1 - prog(t, B.chips[0] - 0.15, B.chips[0] + 0.15, easeIn));
   if (t > B.enter + 0.4) return null;
   return (
     <AbsoluteFill style={{opacity: inK * (1 - outK), transform: `translateY(${(1 - inK) * -60}px)`}}>
@@ -245,7 +247,7 @@ const Reception: React.FC<{t: number; f: number}> = ({t, f}) => {
   const pin = sp(f, B.pin, POP, AFPS);
   const lis = sp(f, B.listen, POP, AFPS);
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{opacity: fade(t, 3)}}>
       <Pill text="ميت غمر · برج دهب · شارع الجيش" k={pin} x={W / 2} y={470} size={40} icon={<PinIcon size={44} />} />
       <Pill text="فريق بيسمعك" k={lis} x={W / 2} y={570} size={40} bg={L.blue} fg={L.white} icon={<Check size={38} color={L.orange} />} />
     </AbsoluteFill>
@@ -258,7 +260,7 @@ const Sterile: React.FC<{t: number; f: number}> = ({t, f}) => {
   const chip = sp(f, s.enter + 0.4, POP, AFPS);
   const st = sp(f, B.stamp, {damping: 12, stiffness: 260, mass: 0.6}, AFPS);
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{opacity: fade(t, 4)}}>
       <Pill text="أدوات معقّمة" k={chip} x={W / 2} y={260} size={46} bg={L.blue} fg={L.white} icon={<Check size={40} color={L.orange} />} />
       {st > 0.01 && (
         <div style={{position: 'absolute', left: W / 2, top: 760, transform: `translate(-50%,-50%) scale(${2.2 - 1.2 * st}) rotate(-9deg)`, opacity: Math.min(1, st * 2)}}>
@@ -280,7 +282,7 @@ const Analyzer: React.FC<{t: number; f: number}> = ({t, f}) => {
   const bx0 = 520, by0 = 430, bx1 = 860, by1 = 920;
   const pad = (1 - box) * 60;
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{opacity: fade(t, 5)}}>
       <svg width={W} height={H} style={{position: 'absolute', inset: 0, opacity: box}}>
         {corner(bx0 - pad, by0 - pad, 1, 1)}{corner(bx1 + pad, by0 - pad, -1, 1)}{corner(bx0 - pad, by1 + pad, 1, -1)}{corner(bx1 + pad, by1 + pad, -1, -1)}
         {scan > 0 && scan < 1 && <>
@@ -305,7 +307,7 @@ const Answers: React.FC<{t: number; f: number}> = ({t, f}) => {
   if (t < s.enter || t > s.exit + 0.3) return null;
   const cols = [L.red, L.orange, L.blue, '#7B3FA0'];
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{opacity: fade(t, 6)}}>
       {T.snaps.map((sn, i) => {
         const k = sp(f, sn.t, POP, AFPS);
         const x = i < 4 ? TUBE_X[i] : W / 2;
@@ -326,8 +328,8 @@ const Relief: React.FC<{t: number; f: number}> = ({t, f}) => {
   const badge = sp(f, B.badge, STICK, AFPS);
   const swing = (1 - tag) * 35 + Math.sin(t * 2.4) * 2;
   return (
-    <AbsoluteFill>
-      <div style={{position: 'absolute', left: 820, top: 190, width: 220, transformOrigin: '110px 0px', transform: `rotate(${swing}deg) translateY(${(1 - tag) * -500}px)`}}>
+    <AbsoluteFill style={{opacity: fade(t, 7)}}>
+      <div style={{position: 'absolute', left: 50, top: 190, width: 220, transformOrigin: '110px 0px', transform: `rotate(${swing}deg) translateY(${(1 - tag) * -500}px)`}}>
         <svg width={220} height={330} style={{overflow: 'visible'}}>
           <line x1={110} y1={-200} x2={110} y2={40} stroke={L.orange} strokeWidth={5} />
           <path d="M60,30 L160,30 L200,80 L200,310 Q200,320 190,320 L30,320 Q20,320 20,310 L20,80 Z" fill={L.white} />
@@ -338,7 +340,7 @@ const Relief: React.FC<{t: number; f: number}> = ({t, f}) => {
         </div>
       </div>
       {badge > 0.01 && (
-        <div style={{position: 'absolute', left: 200, top: 1180, width: 330, height: 330, transform: `translate(-50%,-50%) scale(${badge}) rotate(${-12 + (1 - badge) * 40}deg)`}}>
+        <div style={{position: 'absolute', left: 870, top: 1170, width: 330, height: 330, transform: `translate(-50%,-50%) scale(${badge}) rotate(${12 - (1 - badge) * 40}deg)`}}>
           <svg width={330} height={330} style={{position: 'absolute'}}>
             <path d={Array.from({length: 32}, (_, i) => { const a = (i / 32) * Math.PI * 2; const r = i % 2 ? 138 : 164; return `${i ? 'L' : 'M'}${165 + Math.cos(a) * r},${165 + Math.sin(a) * r}`; }).join(' ') + 'Z'} fill={L.orange} />
           </svg>
@@ -405,7 +407,7 @@ const EndCard: React.FC<{t: number; f: number}> = ({t, f}) => {
         <div style={{fontFamily: AR, fontWeight: 600, fontSize: 34, color: L.gray, marginRight: 46}}>أعلى التوحيد والنور · الدور الأول</div>
         <div style={{fontFamily: EN, fontWeight: 700, fontSize: 54, color: L.blue, direction: 'ltr', textAlign: 'center', marginTop: 24}}>01096534354 · 01019289733</div>
       </div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 1600, display: 'flex', justifyContent: 'center'}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 1690, display: 'flex', justifyContent: 'center'}}>
         <div style={{transform: `scale(${btn * pulse})`, background: L.burgundy, color: L.white, fontFamily: AR, fontWeight: 800, fontSize: 64, padding: '18px 70px',
           borderRadius: 999, direction: 'rtl', boxShadow: '0 18px 36px rgba(92,14,29,0.35)'}}>اتصل واحجز دلوقتي</div>
       </div>
@@ -419,8 +421,9 @@ const PAGES: Page[] = (() => {
   const out: Page[] = [];
   for (const [la, lb] of T.lines as [number, number][]) {
     const ws = WORDS.filter(([s]) => s >= la - 0.01 && s <= lb);
-    for (let i = 0; i < ws.length; i += 5) {
-      const chunk = ws.slice(i, i + 5);
+    const n = Math.ceil(ws.length / 5);   // even pages, so no lone word is left on its own
+    for (let p = 0; p < n; p++) {
+      const chunk = ws.slice(Math.round((p * ws.length) / n), Math.round(((p + 1) * ws.length) / n));
       out.push({a: chunk[0][0], b: chunk[chunk.length - 1][1], words: chunk});
     }
   }
@@ -429,7 +432,7 @@ const PAGES: Page[] = (() => {
 
 const Captions: React.FC<{t: number}> = ({t}) => {
   const idx = PAGES.findIndex((p, i) => t >= p.a - 0.05 && t < (PAGES[i + 1] ? Math.min(PAGES[i + 1].a - 0.05, p.b + 0.6) : p.b + 0.6));
-  if (idx < 0 || t > T.endCard + 0.2) return null;
+  if (idx < 0) return null;
   const p = PAGES[idx];
   const k = prog(t, p.a - 0.05, p.a + 0.1, easeOut);
   return (

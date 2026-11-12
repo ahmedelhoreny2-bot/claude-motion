@@ -33,7 +33,7 @@ PROVISIONAL = [(0.3, 4.3), (4.7, 8.1), (8.5, 12.4), (12.8, 18.3), (18.7, 22.4), 
 
 # clip per scene: (file, in-point seconds). Scene 7 is cut on the words (see "snaps").
 CLIPS = [("s1.mp4", 2.4), ("s2.mp4", 1.4), ("s3.mp4", 0.0), ("s4.mp4", 0.0), ("s5.mp4", 0.4),
-         ("s6.mp4", 2.0), ("s7.mp4", 0.0), ("s8.mp4", 2.4)]
+         ("s6.mp4", 2.0), ("s7.mp4", 0.0), ("s8.mp4", 3.3)]
 TUBE_LANDS = [0.95, 2.35, 5.35, 7.15]   # seconds in s7.mp4 when each tube settles
 CLIP_LEN = 7.93
 
