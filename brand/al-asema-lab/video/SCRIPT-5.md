@@ -120,3 +120,76 @@ lines and empty table rows (no readable text), a royal blue pen beside it. Photo
 Product photo on a pure white seamless background: a red stethoscope coiled in a loose circle, top-down, soft shadow.
 Photorealistic, high detail. No text, no logos.
 ```
+
+---
+
+## الخطة النهائية (مزج): المطلوب بالظبط
+
+**4 فيديوهات من Flow** (للحركة اللي عليها VFX) + **6 صور من ChatGPT** (للكولاج) + **الصوت**.
+مشهد الجهاز والأنابيب هاخده من مشاهد فيديو «متسألش جوجل» (موجود عندي).
+
+| الوقت | الأسلوب | الخامة |
+|---|---|---|
+| 0–4.5 | حقيقي + VFX | فيديو 1 (الوش) |
+| 4.5–9 | حقيقي ← كولاج | فيديو 2 (السلم) + قصاصة منه |
+| 9–13.5 | كولاج | ص1 + ص3 + ص4 |
+| 13.5–18 | كولاج + هولوجرام | ص2 + فراشة الغدة |
+| 18–19 | Kinetic | — |
+| 19–22 | حقيقي + VFX | فيديو 3 (نقطة الدم) |
+| 22–29 | حقيقي + كولاج | جهاز التحليل (موجود) + ص5 |
+| 29–33.5 | حقيقي + VFX | فيديو 4 (السلم بسهولة) |
+| 33.5–40 | كولاج ← لوجو | ص6 + كل القصاصات |
+
+### فيديو 1 · الوش (الهوك)
+```
+Vertical 9:16, 8 seconds, 24fps. Close-up of an Egyptian man in his 30s, short dark hair, light beard, plain white t-shirt, plain light gray background, soft studio light from the front. 0-1s: he looks down as if at his phone. 1-1.5s: he SUDDENLY snaps his eyes and head up straight into the camera lens, alert, intense stare. 1.5-8s: he holds the intense stare without moving, one slow blink at 5s, the camera pushes in quickly toward his eyes during 1-3s then slowly after. 85mm lens.
+Hyper-realistic live-action footage, shot on ARRI Alexa, natural film grain, real skin texture, correct human anatomy and hands with five fingers, no CGI look. Clean, simple background with empty space around the subject for visual effects. SILENT: no dialogue, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
+```
+
+### فيديو 2 · السلم وهي بتنهج
+```
+Vertical 9:16, 8 seconds, 24fps. An Egyptian woman in her late 20s, hair tied back, wearing a plain white t-shirt and royal blue trousers, walks up a clean white modern staircase. 0-3s: she climbs normally. 3-6s: she slows, stops, puts one hand on her chest and breathes heavily, tired. 6-8s: she leans on the white handrail. Side view, camera locked off at mid-height, 35mm lens, bright daylight.
+Hyper-realistic live-action footage, shot on ARRI Alexa, natural film grain, real skin texture, correct human anatomy and hands with five fingers, no CGI look. Clean, simple background with empty space around the subject for visual effects. SILENT: no dialogue, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
+```
+
+### فيديو 3 · نقطة الدم
+```
+Vertical 9:16, 8 seconds, 24fps. Extreme macro of a fingertip held still over a clean white surface; a gloved hand in a royal blue nitrile glove holds a small lancet near it. 0-2s: a single glossy crimson drop of blood slowly forms on the fingertip. 2-8s: the drop grows round and shiny, catching a soft highlight, camera slowly pushes in to fill the frame with the drop. 100mm macro lens, very shallow depth of field, bright clean light.
+Hyper-realistic live-action footage, shot on ARRI Alexa, natural film grain, real skin texture, correct human anatomy and hands with five fingers, no CGI look. Clean, simple background with empty space around the subject for visual effects. SILENT: no dialogue, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
+```
+
+### فيديو 4 · السلم بسهولة (نفس الست)
+```
+Vertical 9:16, 8 seconds, 24fps. The same Egyptian woman from the staircase scene (late 20s, hair tied back, white t-shirt, royal blue trousers) now runs up the same clean white staircase easily, full of energy, and at the top turns and smiles warmly, mouth closed. Side view, camera locked off at mid-height, 35mm lens, bright sunny daylight.
+Hyper-realistic live-action footage, shot on ARRI Alexa, natural film grain, real skin texture, correct human anatomy and hands with five fingers, no CGI look. Clean, simple background with empty space around the subject for visual effects. SILENT: no dialogue, nobody talks, lips stay closed, no music, no sound effects, no audio. No text, no letters, no numbers, no logos, no watermark, no subtitles.
+```
+
+### ص1 · راجل بيشرب مية (مشهد السكر)
+```
+An Egyptian man in his 30s in a white shirt drinking a full glass of water in one go, head tilted back, eyes closed, holding the glass with one hand, waist-up. Photorealistic, natural skin, realistic hands with five fingers. Pure white seamless studio background (for cutting out), soft even light, subject fully in frame with space around. Portrait 4:5. No text, no letters, no numbers, no logos.
+```
+
+### ص2 · ست بتتاوب (مشهد الغدة)
+```
+An Egyptian woman in her 40s in a burgundy blouse yawning widely, one hand covering her mouth, the other hand gently touching the front of her neck, tired eyes, waist-up. Photorealistic, natural skin, realistic hands with five fingers. Pure white seamless studio background (for cutting out), soft even light, subject fully in frame with space around. Portrait 4:5. No text, no letters, no numbers, no logos.
+```
+
+### ص3 · مكعبات سكر
+```
+Three glossy white sugar cubes slightly scattered, top-down, soft shadow. Photorealistic, natural skin, realistic hands with five fingers. Pure white seamless studio background (for cutting out), soft even light, subject fully in frame with space around. Portrait 4:5. No text, no letters, no numbers, no logos.
+```
+
+### ص4 · كوباية مية
+```
+A clear glass of water, half full, droplets on the glass, front view. Photorealistic, natural skin, realistic hands with five fingers. Pure white seamless studio background (for cutting out), soft even light, subject fully in frame with space around. Portrait 4:5. No text, no letters, no numbers, no logos.
+```
+
+### ص5 · ورقة نتيجة
+```
+A blank white medical lab result sheet on a clipboard, only gray placeholder lines and empty table rows (no readable text), a royal blue pen beside it, top-down. Photorealistic, natural skin, realistic hands with five fingers. Pure white seamless studio background (for cutting out), soft even light, subject fully in frame with space around. Portrait 4:5. No text, no letters, no numbers, no logos.
+```
+
+### ص6 · سماعة
+```
+A red stethoscope coiled in a loose circle, top-down, soft shadow. Photorealistic, natural skin, realistic hands with five fingers. Pure white seamless studio background (for cutting out), soft even light, subject fully in frame with space around. Portrait 4:5. No text, no letters, no numbers, no logos.
+```
