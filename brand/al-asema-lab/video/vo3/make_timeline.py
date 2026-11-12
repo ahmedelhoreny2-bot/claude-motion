@@ -22,10 +22,10 @@ LINES = [
     "كفاية تخمين.. الإجابة الحقيقية مش على الموبايل، الإجابة في تحليل.",
     "في معمل العاصمة للتحاليل الطبية بميت غمر.. استقبال نضيف وهادي، وفريق بيسمعك ويفهم انت محتاج إيه.",
     "سحب آمن بأدوات معقّمة.. بتتفتح قدامك، وبتتستخدم مرة واحدة بس.",
-    "وعينتك بتتحلل على أجهزة آلية حديثة.. بدقة في كل رقم.",
+    "والعيّنة بتتحلل على أجهزة آلية حديثة.. بدقة في كل رقم.",
     "سكر، غدة، أنيميا، كبد وكلى، فيتامينات.. بدل ألف سؤال، تحليل واحد يجاوبك.",
     "ونتيجة واضحة في إيدك.. بأسعار تنافسية، وخصومات على الباقات.",
-    "متسألش جوجل.. اسأل معمل العاصمة. اتصل واحجز دلوقتي.",
+    "بلاش تسأل جوجل.. اسأل معمل العاصمة. اتصل واحجز دلوقتي.",
 ]
 # provisional (start, end) per line until the voice arrives, ~2.9 words/s
 PROVISIONAL = [(0.3, 4.3), (4.7, 8.1), (8.5, 12.4), (12.8, 18.3), (18.7, 22.4), (22.8, 26.3),
@@ -40,7 +40,8 @@ CLIP_LEN = 7.93
 
 # The take's line breaks (silence starts that end a line). Pauses inside a line can be as long as the ones
 # between lines, so the breaks are set by matching each phrase's length to its text, not by gap length.
-LINE_BREAKS = [3.89, 7.39, 12.49, 19.61, 24.76, 28.90, 35.12, 39.49]
+# Lines 6 and 9 were re-recorded (fix-sample.mp3, fix-google.mp3, spliced by ../fix_lines.py; vo-prefix.mp3 is the take before).
+LINE_BREAKS = [3.89, 7.39, 12.49, 19.61, 24.76, 29.60, 35.88, 40.25]
 
 
 def silences(path, noise=-30, d=0.15):
@@ -97,6 +98,33 @@ def place_words(text, a, b, sil):
     return out
 
 
+def place_line(text, a, b, sil):
+    """Each written phrase (split after .. . ، ؟ :) gets its own spoken chunk when the counts match."""
+    phrases, cur = [], []
+    for x in text.split(" "):
+        cur.append(x)
+        if re.search(r"(\.\.|[.،؟:])$", x):
+            phrases.append(cur)
+            cur = []
+    if cur:
+        phrases.append(cur)
+    chunks, t = [], a
+    for s0, e0 in sil:
+        s0, e0 = max(a, s0), min(b, e0)
+        if e0 > s0:
+            if s0 > t:
+                chunks.append((t, s0))
+            t = max(t, e0)
+    if t < b:
+        chunks.append((t, b))
+    if len(chunks) != len(phrases):
+        return place_words(text, a, b, sil)
+    return [w for ph, (c0, c1) in zip(phrases, chunks) for w in place_words(" ".join(ph), c0, c1, [])]
+
+
+PHRASE_LINES = {5, 8}  # the re-recorded lines; the others were reviewed with letter-count placement
+
+
 def main():
     voice = Path(sys.argv[1]) if len(sys.argv) > 1 else None
     if voice:
@@ -105,8 +133,8 @@ def main():
         spans, sil = PROVISIONAL, []
     assert len(spans) == len(LINES), spans
     words = []
-    for (a, b), text in zip(spans, LINES):
-        words += place_words(text, a, b, sil)
+    for i, ((a, b), text) in enumerate(zip(spans, LINES)):
+        words += (place_line if i in PHRASE_LINES else place_words)(text, a, b, sil)
     lead = 0.25
     starts = [0.0] + [max(0.0, a - lead) for a, _ in spans[1:]]
     end_card = starts[8]

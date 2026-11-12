@@ -271,7 +271,7 @@ const Gland: React.FC<{t: number; f: number}> = ({t, f}) => (
     {['Z', 'Z', 'Z'].map((z, i) => (
       <Slam key={i} t={t} f={f} at={B.sleep + 0.3 + i * 0.25} text={z} size={70 + i * 26} x={820 + i * 60} y={480 - i * 80} color={L.blue} shadow="#fff" rot={-12} seed={41 + i} />
     ))}
-    <Slap t={t} f={f} at={B.heavy} x={300} y={420} rot={-6} seed={44}><Strip text="نعاس؟ تقل؟" size={64} bg={L.blue} fg="#fff" /></Slap>
+    <Slap t={t} f={f} at={B.heavy} x={300} y={420} rot={-6} seed={44}><Strip text="نعاس؟ خمول؟" size={64} bg={L.blue} fg="#fff" /></Slap>
     <Loop cx={540} cy={820} rx={330} ry={300} k={prog(t, B.gland, B.gland + 0.45, easeOut)} color={L.red} w={12} rot={6} />
     <Slap t={t} f={f} at={B.gland} x={540} y={1230} rot={3} seed={45}>
       <Strip text="الغدة؟" size={96} hl={prog(t, B.gland + 0.1, B.gland + 0.45, easeOut)} />
