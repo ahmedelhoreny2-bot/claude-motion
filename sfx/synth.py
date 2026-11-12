@@ -423,3 +423,75 @@ def pipette():
         s = random.uniform(-1, 1) * math.exp(-tt / 0.003) + 0.6 * math.sin(2 * math.pi * 2600 * tt) * math.exp(-tt / 0.012)
         out.append(s * 0.7)
     return out
+
+
+# ---------------------------------------------------------------- ambience and foley (video 3)
+
+
+def murmur(dur, voices=7, seed=21):
+    """Distant crowd murmur: several band-limited 'voices' with syllable-rate envelopes; a waiting room in the background."""
+    rng = random.Random(seed)
+    n = int(dur * SR)
+    out = [0.0] * n
+    for v in range(voices):
+        fc = rng.uniform(380, 900)
+        body = bandnoise(n, lambda k, fc=fc: fc * (1 + 0.15 * math.sin(k / SR * 1.3 + fc)), q=2.5)
+        rate = rng.uniform(3.2, 5.5)
+        ph = rng.uniform(0, 6.28)
+        talk_on = rng.uniform(0.4, 0.8)
+        for k in range(n):
+            t = k / SR
+            syl = 0.5 + 0.5 * math.sin(2 * math.pi * rate * t + ph + 0.6 * math.sin(t * 1.7))
+            phrase = 1.0 if math.sin(2 * math.pi * 0.17 * t + v) > -talk_on else 0.15
+            out[k] += body[k] * syl * syl * phrase
+    m = max(1e-6, max(abs(x) for x in out))
+    fin = int(0.4 * SR)
+    for k in range(min(fin, n)):
+        out[k] *= k / fin
+        out[n - 1 - k] *= k / fin
+    return [x / m for x in out]
+
+
+def rustle(dur=0.6, seed=13):
+    """Paper rustle / envelope opening: crackly bursts of bright noise."""
+    rng = random.Random(seed)
+    n = int(dur * SR)
+    hiss = bandnoise(n, lambda k: 3200 + 1800 * math.sin(k / SR * 31), q=0.5)
+    out = []
+    env = 0.0
+    for k in range(n):
+        if rng.random() < 0.004:
+            env = rng.uniform(0.5, 1.0)
+        env *= 0.9993
+        out.append(hiss[k] * env * math.sin(math.pi * k / n) ** 0.4)
+    return out
+
+
+def crinkle(dur=0.8, seed=17):
+    """Sterile pouch peeling / plastic crinkle: dense micro-crackles over a soft tear."""
+    rng = random.Random(seed)
+    n = int(dur * SR)
+    tear = bandnoise(n, lambda k: 2400 + 2600 * (k / n), q=0.8)
+    out = [0.35 * tear[k] * math.sin(math.pi * k / n) for k in range(n)]
+    t = 0.0
+    while t < dur:
+        t += rng.expovariate(120)
+        i0 = int(t * SR)
+        g = rng.uniform(0.2, 0.9)
+        for k in range(int(0.0025 * SR)):
+            if i0 + k < n:
+                out[i0 + k] += g * rng.uniform(-1, 1) * math.exp(-k / (0.0006 * SR))
+    return out
+
+
+def notify(f1=1318.5, f2=1760.0):
+    """Phone notification: two soft glassy notes."""
+    a = beep(f1, 0.09)
+    b = beep(f2, 0.16)
+    out = a + [0.0] * int(0.02 * SR) + b
+    return [x * 0.8 for x in out]
+
+
+def tick(soft=1.0):
+    """Clock tick: a tiny dry click, for a bedside clock in a quiet room."""
+    return [x * soft for x in click(3600, 0.012)]

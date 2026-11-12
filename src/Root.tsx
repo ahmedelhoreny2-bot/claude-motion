@@ -6,6 +6,8 @@ import {AsemaPromo, PFPS, PH, PW} from './asema/AsemaPromo';
 import asemaTL from './asema/timeline.json';
 import {LabTour, TFPS, TH, TW} from './asema2/LabTour';
 import tourTL from './asema2/timeline.json';
+import {AFPS, AH, AW, AskLab} from './asema3/AskLab';
+import askTL from './asema3/timeline.json';
 import {FPS, H, TL, W} from './lib';
 
 export const Root: React.FC = () => (
@@ -33,6 +35,14 @@ export const Root: React.FC = () => (
       fps={TFPS}
       width={TW}
       height={TH}
+    />
+    <Composition
+      id="AskLab"
+      component={AskLab}
+      durationInFrames={Math.round(askTL.duration * AFPS)}
+      fps={AFPS}
+      width={AW}
+      height={AH}
     />
     <Still id="ArticleCover" component={ArticleCover} width={2000} height={800} />
   </>
