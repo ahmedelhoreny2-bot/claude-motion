@@ -33,20 +33,62 @@ const Clip: React.FC<{i: number; t: number; push?: number}> = ({i, t, push = 0.0
   );
 };
 
+/** Barcode labels on the tubes' blank label areas (measured on the clip, canvas px), printed on as each tube lands. */
+const LABELS = [
+  {x: 365, y: 952, w: 76, h: 266}, {x: 500, y: 932, w: 76, h: 290}, {x: 635, y: 937, w: 76, h: 283}, {x: 771, y: 937, w: 79, h: 278},
+];
+const bars = (seed: number) => {
+  const out: [number, number][] = [];
+  let y = 0;
+  let k = seed * 9.73;
+  while (y < 1) {
+    k = (k * 16807 + 11) % 2147483647;
+    const w = 0.012 + ((k % 1000) / 1000) * 0.03;
+    out.push([y, w]);
+    k = (k * 16807 + 7) % 2147483647;
+    y += w + 0.012 + ((k % 1000) / 1000) * 0.022;
+  }
+  return out;
+};
+const TubeLabel: React.FC<{i: number; k: number}> = ({i, k}) => {
+  const l = LABELS[i];
+  const bh = l.h * 0.62;
+  return (
+    <svg width={l.w} height={l.h} style={{position: 'absolute', left: l.x, top: l.y, clipPath: `inset(0 0 ${(1 - k) * 100}% 0)`}}>
+      <defs>
+        <linearGradient id={`wrap${i}`} x1="0" x2="1">
+          <stop offset="0" stopColor="#000" stopOpacity={0.28} /><stop offset="0.25" stopColor="#000" stopOpacity={0} />
+          <stop offset="0.7" stopColor="#000" stopOpacity={0} /><stop offset="1" stopColor="#000" stopOpacity={0.32} />
+        </linearGradient>
+      </defs>
+      <rect x={2} y={0} width={l.w - 4} height={l.h} rx={4} fill="#F7F7F5" />
+      <rect x={2} y={0} width={l.w - 4} height={14} fill={[L.red, L.orange, L.blue, '#7B3FA0'][i]} opacity={0.9} />
+      {bars(i + 1).map(([y, w], j) => (
+        <rect key={j} x={12} y={24 + y * bh} width={l.w - 24} height={w * bh} fill="#1A1A1A" />
+      ))}
+      <text x={l.w / 2} y={l.h - 14} textAnchor="middle" fontFamily="Montserrat" fontWeight={700} fontSize={12} fill="#1A1A1A"
+        transform={`rotate(-90 ${l.w / 2} ${l.h - 50})`}>{`AS-${2611 + i * 7}${(i * 3 + 4) % 10}`}</text>
+      <rect x={2} y={0} width={l.w - 4} height={l.h} rx={4} fill={`url(#wrap${i})`} />
+    </svg>
+  );
+};
+
 /** Scene 7: hard cuts on each spoken test name to the moment its tube lands, then hold the full rack. */
 const Snaps: React.FC<{t: number}> = ({t}) => {
   const s = sc(6);
   const snaps = T.snaps;
   const idx = snaps.reduce((acc, sn, k) => (t >= sn.t ? k : acc), -1);
-  const clipT = idx < 0 ? 0 : snaps[idx].clipT + Math.max(0, t - snaps[idx].t) * (idx === snaps.length - 1 ? 0.15 : 0.35);
-  const at = idx < 0 ? t - s.enter : clipT;
+  // after each snap the clip creeps on slowly (the rack settles); the last one nearly holds still
+  const rate = idx < 0 ? 1 : idx === snaps.length - 1 ? 0.06 : 0.3;
+  const from = idx < 0 ? s.enter : snaps[idx].t - snaps[idx].clipT / rate;
   const flash = idx < 0 ? 0 : Math.exp(-(t - snaps[idx].t) / 0.06) * 0.5;
   const k = clamp01((t - s.enter) / (s.exit - s.enter));
   return (
     <AbsoluteFill style={{transform: `scale(${1.02 + 0.04 * k})`}}>
-      <Sequence from={Math.round((s.enter - at) * AFPS)} durationInFrames={Math.round(8 * AFPS)} key={idx}>
-        <OffthreadVideo src={staticFile('asema3/s7.mp4')} muted playbackRate={1} style={{width: W, height: H, objectFit: 'cover'}} />
+      <Sequence from={Math.round(from * AFPS)} key={idx}>
+        <OffthreadVideo src={staticFile('asema3/s7.mp4')} muted playbackRate={rate} style={{width: W, height: H, objectFit: 'cover'}} />
       </Sequence>
+      {LABELS.map((_, i) => (idx >= i ? <TubeLabel key={i} i={i} k={prog(t, snaps[i].t + 0.02, snaps[i].t + 0.3, easeOut)} /> : null))}
       <AbsoluteFill style={{background: '#fff', opacity: flash}} />
     </AbsoluteFill>
   );
