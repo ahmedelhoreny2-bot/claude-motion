@@ -8,7 +8,7 @@ import math
 import random
 
 from sfx.cues.asema import EASE_OUT, HEAVY, POP, land, panned, thock, tick, xpan
-from sfx.synth import (beep, bubbles, centrifuge, chime, click, drip, hum, pipette, pop, roomtone, scratch, servo,
+from sfx.synth import (beep, bubbles, chime, click, drip, hum, pipette, pop, scratch, servo,
                        whoosh)
 
 TIMELINE = "src/asema2/timeline.json"
@@ -43,9 +43,6 @@ def score(mix, tl):
     put = mix.put
     rng = random.Random(4)
 
-    # ---- the room: a quiet lab under everything
-    put(0, roomtone(dur), 0.028)
-    put(0, centrifuge(dur), 0.016)
 
     # ---- the mascot: a liquid plop on every hop landing, whoosh on each leap, panned where it lands
     keys = tl["mascot"]

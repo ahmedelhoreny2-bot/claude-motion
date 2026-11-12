@@ -1,12 +1,12 @@
 """Sound design for AskLab (video 3). Every time comes from src/asema3/timeline.json; the voice is mixed on top
 by brand/al-asema-lab/video/vo3/mix.py and ducks this bed.
 
-Ambience: a quiet night room (with a bedside clock) for scenes 1-3, then the lab: room tone, a soft distant
-murmur of the waiting room, the analyzer's whir. Foley follows the footage and the graphics.
+No ambience beds (no room tone, murmur or machine whir: they read as hiss under the voice). A bedside clock
+in the dark room for scenes 1-3, then foley that follows the footage and the graphics.
 """
 
 from sfx.cues.asema import POP, land, panned, thock, xpan
-from sfx.synth import (beep, centrifuge, chime, click, crinkle, drip, hum, murmur, notify, pipette, pop, roomtone, rustle,
+from sfx.synth import (beep, chime, click, crinkle, drip, hum, notify, pipette, pop, rustle,
                        scratch, servo, tick, whoosh)
 
 TIMELINE = "src/asema3/timeline.json"
@@ -25,14 +25,10 @@ def score(mix, tl):
     lab = sc[3]["enter"]
 
     # ---- ambience
-    put(0, roomtone(lab + 0.6), 0.03)
     t = 0.35
     while t < lab - 0.2:                       # bedside clock in the dark room
         put(t, tick(), 0.035, 0.5)
         t += 1.0
-    put(lab - 0.1, roomtone(dur - lab), 0.035)
-    put(lab + 0.2, murmur(end - lab + 1.0), 0.06, -0.2)     # the soft human background of a waiting room
-    put(lab, centrifuge(dur - lab), 0.012)
 
     # ---- 1-3: night, the search bar
     put(0.45, whoosh(0.5, 2400, 900, peak=0.3), 0.04)

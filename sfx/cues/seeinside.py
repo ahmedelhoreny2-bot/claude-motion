@@ -4,7 +4,7 @@ Times from src/asema4/timeline.json; the voice is added by brand/al-asema-lab/vi
 """
 
 from sfx.cues.asema import land, thock
-from sfx.synth import beep, chime, click, crinkle, pop, roomtone, rustle, scratch, whoosh
+from sfx.synth import beep, chime, click, crinkle, pop, rustle, scratch, whoosh
 
 TIMELINE = "src/asema4/timeline.json"
 OUT = "public/asema4/sfx.wav"
@@ -16,7 +16,6 @@ SLAM = (12, 380, 0.6)
 def score(mix, tl):
     b, sc, dur = tl["b"], tl["scenes"], tl["duration"]
     put = mix.put
-    put(0, roomtone(dur), 0.03)
 
     def slap(t, pitch=700, pan=0.0, g=1.0):
         put(t, rustle(0.22, seed=int(t * 10)), 0.07 * g, pan)

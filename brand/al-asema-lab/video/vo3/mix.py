@@ -22,8 +22,8 @@ def main():
         f"[0:a]aformat=sample_rates=48000:channel_layouts=stereo,apad=whole_dur={dur},atrim=0:{dur},highpass=f=80,"
         "acompressor=threshold=-20dB:ratio=3:attack=5:release=120,equalizer=f=3000:t=q:w=1:g=3,volume=1.9[vo];"
         "[vo]asplit=2[vo1][vo2];"
-        "[1:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.55[bed];"
-        "[bed][vo1]sidechaincompress=threshold=0.02:ratio=7:attack=10:release=320[ducked];"
+        "[1:a]aformat=sample_rates=48000:channel_layouts=stereo,lowpass=f=11000,volume=0.7[bed];"
+        "[bed][vo1]sidechaincompress=threshold=0.04:ratio=4:attack=10:release=250[ducked];"
         f"[ducked][vo2]amix=inputs=2:normalize=0,afade=t=out:st={dur - 1.2}:d=1.2,"
         "loudnorm=I=-14:TP=-3:LRA=11,alimiter=limit=0.7:level=false[out]"
     )
