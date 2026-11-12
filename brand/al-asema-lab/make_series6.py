@@ -112,16 +112,16 @@ def kids():
 
 # 5 ---- hair: extreme macro; logo on the left (the helix fills the right), headline beside the helix
 def hair():
-    b = [photo("q-hair.png"), scrim(0, 560, WHITE, 0.5), logo_at(40), tag("باقة الشعر والبشرة", 680, 150, "right")]
-    p, _ = tr(CAIRO_XB, "شعرك بيقع؟", 110, 680, 330, RED)
+    b = [photo("q-hair.png"), logo_at(40), tag("باقة الشعر والبشرة", 640, 150, "right")]
+    p, _ = tr(CAIRO_XB, "شعرك بيقع؟", 110, 640, 330, RED)
     b.append(p)
-    p, _ = tr(CAIRO_XB, "الإجابة مش في الشامبو", 46, 680, 400, INK)
+    p, _ = tr(CAIRO_XB, "الإجابة مش في الشامبو", 46, 640, 400, INK)
     b.append(p)
     c, _ = chips(["مخزون الحديد", "فيتامين د", "B12", "الزنك"], 0, 452, 20, latin=False,
-                 fill=WHITE, fop=0.97, stroke=RED, sop=0.35, color=BURGUNDY, x_right=680)
+                 fill=WHITE, fop=0.97, stroke=RED, sop=0.35, color=BURGUNDY, x_right=640)
     b.append(c)
     c, _ = chips(["الغدة TSH", "صورة دم", "الهرمونات"], 0, 502, 20, latin=False,
-                 fill=WHITE, fop=0.97, stroke=RED, sop=0.35, color=BURGUNDY, x_right=680)
+                 fill=WHITE, fop=0.97, stroke=RED, sop=0.35, color=BURGUNDY, x_right=640)
     b.append(c)
     b.append(starburst(930, 790, 88, "سعر", "خاص", rot=10))
     b.append(footer("احجز باقة الشعر"))

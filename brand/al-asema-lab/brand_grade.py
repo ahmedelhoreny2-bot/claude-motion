@@ -64,8 +64,9 @@ def grade(img):
     s2 = np.where(cyan, s * 0.3, s2)
     s2 = np.where(azure & (v > 0.6) & (s < 0.6), s * 0.75, s2)
     # tinted light backgrounds (pink, lavender, cyan haze) -> clean white / light gray
-    light = (v > 0.82) & (s < 0.32)
-    s2 = np.where(light, s2 * 0.18, s2)
+    # soft, not a hard threshold: hard edges leave blotches on skin highlights and fabric folds
+    light = np.clip((v - 0.78) / 0.12, 0, 1) * np.clip((0.34 - s) / 0.14, 0, 1)
+    s2 = s2 * (1 - 0.8 * light)
     # convert back
     hh = h2 / 60
     i = np.floor(hh).astype(int) % 6
@@ -82,6 +83,11 @@ def grade(img):
     # leave near-grays untouched in hue (avoids tinting neutral shadows)
     gray = s < 0.06
     out = np.where(gray[..., None], a, out)
+    # skin stays exactly as shot (light, warmth, highlights): weight by hue 5..45 deg and moderate saturation
+    hw = np.clip((h - 2) / 6, 0, 1) * np.clip((48 - h) / 6, 0, 1)
+    sw = np.clip((s - 0.05) / 0.06, 0, 1) * np.clip((0.75 - s) / 0.1, 0, 1)
+    skin = (hw * sw * np.clip((v - 0.2) / 0.1, 0, 1))[..., None]
+    out = out * (1 - skin) + a * skin
     return Image.fromarray((np.clip(out, 0, 1) * 255).astype(np.uint8))
 
 
