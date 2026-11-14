@@ -144,8 +144,10 @@ export const Words: React.FC<{
               style={{
                 display: 'inline-block',
                 color: accent[i] ?? color,
-                opacity: (slam ? clamp01(k * 6) : clamp01(k * 2.2)) * (1 - clamp01((ko - 0.3) / 0.5)),
-                transform: slam
+                opacity: (slam ? clamp01(k * 6) : weight < 900 ? k : clamp01(k * 2.2)) * (1 - clamp01((ko - 0.3) / 0.5)),
+                transform: weight < 900
+                  ? `translateY(${(1 - k) * 28 - ko * 20}px)`
+                  : slam
                   ? `translateZ(${1300 * (1 - k) + 520 * ko}px) rotateX(${(1 - k) * 25}deg) scale(${1 + 0.12 * hit}, ${1 - 0.1 * hit})`
                   : `translateZ(${-900 * (1 - k) + 520 * ko}px) translateY(${(1 - k) * 90 - ko * 40}px) rotateX(${(1 - k) * -78 + ko * 30}deg) rotateY(${(1 - k) * 14}deg) scale(${1 - st * 0.25}, ${1 + st})`,
                 transformOrigin: '50% 100%',

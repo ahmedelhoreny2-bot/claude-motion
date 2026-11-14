@@ -18,7 +18,7 @@ export const camera = (frame: number) => {
   const t = frame / FPS;
   const {s1, s2, s3, s4, s5, s6, s7} = TL;
   // reading calm: the CTA and logo hold barely move
-  const calm = 1 - 0.75 * prog(t, s6.word2, s6.word2 + 1.2);
+  const calm = 1 - 0.92 * prog(t, s6.word2, s6.word2 + 1.2);
   let rx = 2.2 * Math.sin(t * 0.31 + 0.4) * calm;
   let ry = 3.2 * Math.sin(t * 0.23) * calm;
   let rz = 0;
