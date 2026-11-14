@@ -117,10 +117,10 @@ const Converge: React.FC<{t: number}> = ({t}) => {
   );
 };
 
-const CHANNELS = [
-  {text: 'واتساب', bg: P.teal, fg: P.onTeal},
-  {text: 'رسالة على الصفحة', bg: P.surface, fg: P.ink},
-  {text: '', bg: P.surface, fg: P.ink},
+const TILES = [
+  {bg: P.surface, fg: P.ink, side: P.line, border: true, radius: 999, to: {x: 90, y: 610, w: 900, h: 150}},
+  {bg: P.teal, fg: P.onTeal, side: P.teal, border: false, radius: 56, to: {x: 90, y: 805, w: 900, h: 230}},
+  {bg: P.surface, fg: P.ink, side: P.line, border: true, radius: 999, to: {x: 90, y: 1070, w: 900, h: 140}},
 ];
 const WHATSAPP = '01130808848';
 const LINE_COLORS = [P.teal, P.orange, P.teal];
@@ -156,6 +156,9 @@ const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const beat = t > s7.cta ? Math.exp(-(((t - s7.cta) % BEAT) / BEAT) * 5) : 0;
   const ctaK = sp(frame, s7.cta, POP);
   const typing = (i: number) => Math.max(0, Math.sin(t * 6 - i * 0.9));
+  const press = t >= s7.press ? Math.sin(Math.PI * prog(t, s7.press, s7.press + 0.32)) : 0;
+  const ripple = clamp01((t - s7.press - 0.12) / 0.9);
+  const rr = 330 + 520 * ripple;
 
   return (
     <AbsoluteFill style={P3}>
@@ -169,55 +172,66 @@ const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         </div>
       ) : null}
 
-      {/* the logo's three lines pull out into chat bubbles */}
-      {CHANNELS.map((c, i) => {
+      {/* the logo's three lines pull out: a message, then the two ways to reach us */}
+      {TILES.map((c, i) => {
         const k = bubbleK[i];
         if (k <= 0) return null;
         const a = map(LOGO_LINES[i].x, LOGO_LINES[i].y);
         const from = {x: a.x, y: a.y - 6 * z, w: LOGO_LINES[i].w * 1.5 * z, h: 12 * z};
-        const to = {x: i === 1 ? 160 : 280, y: 620 + i * 170, w: 640, h: 132};
-        const x = lerp(from.x, to.x, k);
-        const y = lerp(from.y, to.y, k);
-        const w = lerp(from.w, to.w, k);
-        const h = lerp(from.h, to.h, k);
+        const x = lerp(from.x, c.to.x, k);
+        const y = lerp(from.y, c.to.y, k);
+        const w = lerp(from.w, c.to.w, k);
+        const h = lerp(from.h, c.to.h, k);
         const content = clamp01((k - 0.6) / 0.4);
         const bg = k < 0.5 ? LINE_COLORS[i] : c.bg;
+        const radius = Math.min(h / 2, c.radius);
+        const asked = prog(t, s7.line1, s7.line1 + 0.3, easeOut);
         return (
-          <Extrude key={i} depth={30 * clamp01(k)} layers={4} back={<Slab color={shade(k < 0.5 ? LINE_COLORS[i] : i === 0 ? P.teal : P.line, 0.6)} radius={R.pill} />} style={{position: 'absolute', left: x, top: y, width: w, height: h, transform: `translateZ(${Math.sin(clamp01(k) * Math.PI) * 300}px) rotateY(${(1 - clamp01(k)) * -70 + Math.sin(t * 1.3 + i) * 6}deg) rotateX(${(1 - clamp01(k)) * 40}deg)`}}>
-          <div style={{width: w, height: h, borderRadius: R.pill, background: bg, border: i > 0 && k >= 0.5 ? `3px solid ${P.line}` : undefined, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-            {i < 2 ? (
-              <div dir="rtl" style={{display: 'flex', alignItems: 'center', gap: 24, fontFamily: F.ar, fontWeight: 700, fontSize: 60, color: c.fg, opacity: content}}>
-                <svg width={58} height={58} viewBox="0 0 58 58" style={{display: 'block'}}>
-                  <path d="M 29 6 A 23 23 0 1 1 13 45 L 7 52 L 9 40 A 23 23 0 0 1 29 6 Z" fill="none" stroke={i === 0 ? c.fg : P.teal} strokeWidth={5} strokeLinejoin="round" />
-                </svg>
-                {c.text}
-              </div>
-            ) : (
-              <div style={{display: 'flex', gap: 22, opacity: content}}>
-                {[0, 1, 2].map((d) => (
-                  <div key={d} style={{width: 30, height: 30, borderRadius: 15, background: P.ink, opacity: 0.4 + 0.6 * typing(d), transform: `translateY(${-10 * typing(d)}px)`}} />
-                ))}
-              </div>
-            )}
-          </div>
+          <Extrude key={i} depth={34 * clamp01(k)} layers={4} back={<Slab color={shade(k < 0.5 ? LINE_COLORS[i] : c.side, 0.6)} radius={radius} />} style={{position: 'absolute', left: x, top: y, width: w, height: h, transform: `translateZ(${Math.sin(clamp01(k) * Math.PI) * 320}px) rotateY(${(1 - clamp01(k)) * -70 + Math.sin(t * 1.3 + i) * 5}deg) rotateX(${(1 - clamp01(k)) * 40 + Math.sin(t * 0.9 + i) * 3}deg)`}}>
+            <div dir="rtl" style={{width: w, height: h, borderRadius: radius, background: bg, border: c.border && k >= 0.5 ? `3px solid ${P.line}` : undefined, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 28, color: c.fg, opacity: 1}}>
+              {i === 0 ? (
+                t < s7.line1 ? (
+                  <div style={{display: 'flex', gap: 22, opacity: content}}>
+                    {[0, 1, 2].map((d) => (
+                      <div key={d} style={{width: 28, height: 28, borderRadius: 14, background: P.ink, opacity: 0.4 + 0.6 * typing(d), transform: `translateY(${-10 * typing(d)}px)`}} />
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{fontFamily: F.ar, fontWeight: 700, fontSize: 58, opacity: asked, transform: `translateY(${(1 - asked) * 24}px)`}}>عندك فكرة عايزها تتحرك؟</div>
+                )
+              ) : (
+                <div style={{display: 'flex', alignItems: 'center', gap: 28, opacity: content}}>
+                  <svg width={i === 1 ? 92 : 64} height={i === 1 ? 92 : 64} viewBox="0 0 58 58" style={{display: 'block'}}>
+                    <path d="M 29 6 A 23 23 0 1 1 13 45 L 7 52 L 9 40 A 23 23 0 0 1 29 6 Z" fill="none" stroke={i === 1 ? c.fg : P.teal} strokeWidth={5} strokeLinejoin="round" />
+                  </svg>
+                  {i === 1 ? (
+                    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1}}>
+                      <span style={{fontFamily: F.ar, fontWeight: 700, fontSize: 44}}>واتساب</span>
+                      <span dir="ltr" style={{fontFamily: F.display, fontSize: 100, lineHeight: 1.15, letterSpacing: '0.02em'}}>{WHATSAPP}</span>
+                    </div>
+                  ) : (
+                    <span style={{fontFamily: F.ar, fontWeight: 700, fontSize: 56}}>رسالة على الصفحة</span>
+                  )}
+                </div>
+              )}
+            </div>
           </Extrude>
         );
       })}
-      {t > s7.line1 - 0.05 ? (
-        <>
-          <Words text="عندك فكرة عايزها تتحرك؟" t={t} start={s7.line1} size={112} style={{position: 'absolute', top: 1135, left: 70, right: 70}} />
-          <Words text="وإحنا معاك في كل التفاصيل" t={t} start={s7.line2} size={56} weight={700} color={P.muted} style={{position: 'absolute', top: 1445, left: 40, right: 40}} />
-        </>
+      {t > s7.line2 - 0.05 ? (
+        <Words text="وإحنا معاك في كل التفاصيل" t={t} start={s7.line2} size={62} weight={700} color={P.muted} style={{position: 'absolute', top: 1240, left: 40, right: 40}} />
       ) : null}
       {t > s7.cta ? (
-        <div style={{position: 'absolute', top: 1580, left: 0, right: 0, display: 'flex', justifyContent: 'center', ...P3}}>
-          <Extrude depth={34} layers={5} back={<Slab color={shade(P.orange, 0.5)} radius={R.pill} />} style={{transform: `translateZ(${80 + 40 * beat}px) scale(${ctaK * (1 + 0.04 * beat)}) rotateX(${(1 - clamp01(ctaK)) * 80 + Math.sin(t * 1.5) * 5}deg) rotateY(${Math.sin(t * 1.1) * 7}deg)`}}>
-          <div dir="rtl" style={{padding: '22px 64px', borderRadius: R.pill, background: P.orange, fontFamily: F.ar, fontWeight: 700, fontSize: 60, color: P.onOrange, display: 'flex', gap: 26, alignItems: 'center'}}>
-            <span>واتساب</span>
-            <span dir="ltr" style={{fontFamily: F.display, fontSize: 68, letterSpacing: '0.02em'}}>{WHATSAPP}</span>
-          </div>
+        <div style={{position: 'absolute', top: 1400, left: 0, right: 0, display: 'flex', justifyContent: 'center', ...P3}}>
+          <Extrude depth={38} layers={5} back={<Slab color={shade(P.orange, 0.5)} radius={R.pill} />} style={{transform: `translateZ(${90 + 30 * beat - 70 * press}px) scale(${ctaK * (1 + 0.03 * beat) * (1 - 0.08 * press)}) rotateX(${(1 - clamp01(ctaK)) * 80 + Math.sin(t * 1.5) * 4}deg) rotateY(${Math.sin(t * 1.1) * 6}deg)`}}>
+            <div dir="rtl" style={{padding: '30px 100px', borderRadius: R.pill, background: P.orange, fontFamily: F.ar, fontWeight: 700, fontSize: 76, color: P.onOrange}}>
+              ابعتلنا دلوقتي
+            </div>
           </Extrude>
         </div>
+      ) : null}
+      {t >= s7.press && ripple < 1 ? (
+        <div style={{position: 'absolute', left: W / 2 - rr, top: 1470 - rr * 0.42, width: 2 * rr, height: 2 * rr * 0.42, borderRadius: '50%', border: `${24 * (1 - ripple) + 2}px solid ${P.orange}`, opacity: 1 - ripple, transform: 'translateZ(-30px)'}} />
       ) : null}
       {t > s7.cta + 0.4 ? (
         <div dir="rtl" style={{position: 'absolute', top: 1775, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 500, fontSize: 34, color: P.muted, opacity: prog(t, s7.cta + 0.4, s7.cta + 1)}}>

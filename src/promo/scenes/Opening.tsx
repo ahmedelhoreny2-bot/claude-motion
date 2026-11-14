@@ -7,6 +7,11 @@ import {arNum, ELASTIC, F, FPS, H, HEAVY, P, POP, R, sp, TL, W} from '../theme';
 
 const {s1, s2, s3} = TL;
 const TRI_SIDE = shade(P.orange, 0.5);
+const TRAILS = [
+  {y: -66, len: 115, c: P.teal},
+  {y: 0, len: 127, c: P.orange},
+  {y: 66, len: 115, c: P.teal},
+];
 
 /* ---------------- scene 1: the feed ---------------- */
 
@@ -170,10 +175,10 @@ const triState = (t: number, frame: number) => {
   // pop out of the card
   const pop = sp(frame, s1.stop, POP);
   let x = W / 2;
-  let y = lerp(CARD_IMG_Y, 760, pop);
+  let y = lerp(CARD_IMG_Y, 830, pop);
   let s = lerp(0.87, 1.9, pop);
   let rot = 0;
-  let z = lerp(-120, 170, pop);
+  let z = lerp(-120, 170, pop) + 280 * Math.sin(Math.PI * Math.min(1, Math.max(0, (t - s1.stop) / 0.5))) * Math.exp(-Math.max(0, t - s1.stop) * 2);
   let ry = (1 - pop) * -75;
   let sx = 1;
   let sy = 1;
@@ -226,8 +231,7 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
   const pos = scrollAt(t);
   const speed = Math.abs(scrollAt(t) - scrollAt(t - 1 / FPS)) * FPS;
   const blur = Math.min(10, speed / 600);
-  const feedDim = prog(t, s1.stop + 0.05, s1.stop + 0.5, easeOut);
-  const feedOut = prog(t, s1.exit, s1.exit + 0.5, easeIn);
+  const feedBack = prog(t, s1.stop, s1.stop + 0.55, easeIn);
   const shakeK = t >= s1.stop ? Math.exp(-(t - s1.stop) * 7) : 0;
   const shake = shakeK * 26;
   const sx = (rand(frame) - 0.5) * shake;
@@ -249,12 +253,12 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
   return (
     <AbsoluteFill style={{...P3, transform: `translate(${sx}px, ${sy}px)`}}>
       {/* feed */}
-      {t < s1.exit + 0.6 ? (
+      {t < s1.stop + 0.6 ? (
         <AbsoluteFill
           style={{
-            transform: `translateY(${-pos + feedOut * 600}px)`,
-            filter: `blur(${blur}px) saturate(${1 - feedDim})`,
-            opacity: (1 - feedDim * 0.72) * (1 - feedOut),
+            transform: `translateZ(${-1900 * feedBack}px) rotateX(${28 * feedBack}deg) translateY(${-pos}px)`,
+            filter: `blur(${blur + 6 * feedBack}px)`,
+            opacity: 1 - feedBack,
           }}
         >
           {Array.from({length: TARGET + 2}).map((_, i) => (
@@ -278,8 +282,8 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
       {/* scene 1 type */}
       {t < s1.exit + 0.6 ? (
         <>
-          <Words text="استنّى" t={t} start={s1.word1} dur={0.45} out={s1.exit} size={230} style={{position: 'absolute', top: 1180, left: 0, right: 0}} />
-          <Words text="إنت كنت هتعدّي." t={t} start={s1.word2} out={s1.exit} size={92} weight={700} color={P.creamDim} style={{position: 'absolute', top: 1500, left: 0, right: 0}} />
+          <Words text="استنّى!" t={t} start={s1.word1} dur={0.24} slam out={s1.exit} size={250} style={{position: 'absolute', top: 1230, left: 0, right: 0}} />
+          <Words text="إنت كنت هتعدّي؟" t={t} start={s1.word2} out={s1.exit} size={92} weight={700} color={P.creamDim} style={{position: 'absolute', top: 1570, left: 0, right: 0}} />
         </>
       ) : null}
 
@@ -365,6 +369,16 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
             transformOrigin: '50% 100%',
           }}
         >
+          {t >= s1.stop && t < s1.exit + 0.5
+            ? TRAILS.map((l, i) => {
+                const shoot = sp(frame, s1.stop + i * 0.04, {damping: 13, stiffness: 170, mass: 0.6});
+                const back = prog(t, s1.word2 + 0.5 + i * 0.05, s1.word2 + 0.85 + i * 0.05, easeIn);
+                const len = (l.len + 260 * Math.exp(-(t - s1.stop) * 4)) * shoot * (1 - back);
+                return len > 2 ? (
+                  <div key={i} style={{position: 'absolute', left: 250, top: 133 + l.y - 13.5, width: len, height: 27, borderRadius: 14, background: l.c, transform: 'translateZ(2px)'}} />
+                ) : null;
+              })
+            : null}
           <Extrude depth={46} layers={8} back={<Tri size={230} color={TRI_SIDE} />}>
             <Tri size={230} />
           </Extrude>

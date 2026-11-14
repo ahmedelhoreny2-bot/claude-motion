@@ -107,7 +107,8 @@ export const Words: React.FC<{
   color?: string;
   accent?: Record<number, string>;
   style?: React.CSSProperties;
-}> = ({text, t, start, stagger = 0.09, dur = 0.7, out, size, weight = 900, color = P.cream, accent = {}, style}) => {
+  slam?: boolean;
+}> = ({text, t, start, stagger = 0.09, dur = 0.7, out, size, weight = 900, color = P.cream, accent = {}, style, slam}) => {
   const words = text.split(' ');
   const o = out === undefined ? 0 : prog(t, out, out + 0.4, easeIn);
   return (
@@ -130,9 +131,11 @@ export const Words: React.FC<{
     >
       {words.map((w, i) => {
         const a = start + i * stagger;
-        const k = prog(t, a, a + dur, easeOut);
+        const ease = slam ? easeIn : easeOut;
+        const k = prog(t, a, a + dur, ease);
         // entrance speed drives the stretch: fast words smear toward the lens
-        const vel = (k - prog(t - 1 / FPS, a, a + dur, easeOut)) * FPS;
+        const vel = (k - prog(t - 1 / FPS, a, a + dur, ease)) * FPS;
+        const hit = slam && t >= a + dur ? Math.exp(-(t - a - dur) * 9) : 0;
         const st = Math.min(0.55, vel * 0.09);
         const ko = clamp01(o * 1.4 - i * 0.08);
         return (
@@ -141,8 +144,10 @@ export const Words: React.FC<{
               style={{
                 display: 'inline-block',
                 color: accent[i] ?? color,
-                opacity: clamp01(k * 2.2) * (1 - clamp01((ko - 0.3) / 0.5)),
-                transform: `translateZ(${-900 * (1 - k) + 520 * ko}px) translateY(${(1 - k) * 90 - ko * 40}px) rotateX(${(1 - k) * -78 + ko * 30}deg) rotateY(${(1 - k) * 14}deg) scale(${1 - st * 0.25}, ${1 + st})`,
+                opacity: (slam ? clamp01(k * 6) : clamp01(k * 2.2)) * (1 - clamp01((ko - 0.3) / 0.5)),
+                transform: slam
+                  ? `translateZ(${1300 * (1 - k) + 520 * ko}px) rotateX(${(1 - k) * 25}deg) scale(${1 + 0.12 * hit}, ${1 - 0.1 * hit})`
+                  : `translateZ(${-900 * (1 - k) + 520 * ko}px) translateY(${(1 - k) * 90 - ko * 40}px) rotateX(${(1 - k) * -78 + ko * 30}deg) rotateY(${(1 - k) * 14}deg) scale(${1 - st * 0.25}, ${1 + st})`,
                 transformOrigin: '50% 100%',
               }}
             >

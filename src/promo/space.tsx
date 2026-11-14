@@ -30,6 +30,10 @@ export const camera = (frame: number) => {
   z += -260 * (1 - up);
   ry += 6 * (1 - up);
 
+  // the hook word slams into the glass
+  z += 110 * decay(t - s1.word1 - 0.24, 6);
+  rz += 2.2 * Math.sin((t - s1.word1) * 30) * decay(t - s1.word1 - 0.24, 7);
+
   // the pile: a slow orbit that builds tension
   const orbit = prog(t, s2.fall, s3.squash);
   if (t > s2.fall && t < s3.tap + 1.5) ry += (-12 + 24 * orbit) * (1 - prog(t, s3.tap, s3.tap + 1.2));
