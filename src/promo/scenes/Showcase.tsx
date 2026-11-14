@@ -173,10 +173,10 @@ const Data: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         <div dir="rtl" style={{position: 'absolute', top: 520, left: 0, right: 0, textAlign: 'center', fontFamily: F.display, fontSize: 110, color: P.ink, opacity: prog(t, a + 0.7, a + 1.0)}}>خصم</div>
         <div dir="rtl" style={{position: 'absolute', top: 690, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 30, fontFamily: F.ar, fontWeight: 700, fontSize: 52}}>
           <span style={{color: P.muted, position: 'relative'}}>
-            {arNum(400)} ج
+            {arNum(800)} ج
             <span style={{position: 'absolute', left: -8, width: `calc(${100 * old}% + 16px)`, top: '50%', height: 5, borderRadius: 3, background: P.orange, transform: 'rotate(-18deg)', transformOrigin: '0 50%'}} />
           </span>
-          <span style={{color: P.teal, opacity: old}}>{arNum(280)} ج</span>
+          <span style={{color: P.teal, opacity: old}}>{arNum(560)} ج</span>
         </div>
       </div>
       <div style={{position: 'absolute', right: 150, top: 500, width: 170, height: 170, borderRadius: R.pill, background: P.teal, color: P.onTeal, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontSize: 52, transform: `scale(${stamp}) rotate(${12 - 12 * stamp + 10}deg)`}}>
