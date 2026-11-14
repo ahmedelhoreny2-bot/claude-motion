@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill} from 'remotion';
+import {AbsoluteFill, Img, staticFile} from 'remotion';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, rand} from '../../lib';
 import {Floaters, Tri, Words} from '../kit';
 import {Extrude, P3, shade, stretch} from '../space';
@@ -100,6 +100,20 @@ const paper = (i: number) => {
 };
 const PILE_TOP = 1560 - 4 * 44 - 160;
 
+const PHOTOS = [
+  'coffee-1', 'product-1', 'shop-2', 'clinic-2', 'gym-2', 'product-3', 'coffee-2', 'shop-3',
+  'clinic-3', 'product-2', 'coffee-4', 'gym-3', 'product-4', 'shop-4', 'coffee-3',
+];
+// where each photo ends up in the collage around the line (x, y, z, tilt, scale)
+const SLOTS: [number, number, number, number, number][] = [
+  [170, 260, -300, -8, 0.78], [540, 170, -650, 4, 0.62], [910, 280, -250, 9, 0.78],
+  [115, 640, -150, -12, 0.7], [965, 660, -120, 10, 0.7],
+  [150, 860, -520, 6, 0.56], [935, 875, -470, -7, 0.56],
+  [110, 1390, -220, 9, 0.7], [975, 1410, -260, -10, 0.7],
+  [215, 1770, -110, -6, 0.82], [560, 1840, -520, 3, 0.6], [880, 1770, -160, 8, 0.82],
+  [320, 460, -950, -4, 0.5], [770, 480, -950, 6, 0.5], [540, 1610, -1050, 0, 0.5],
+];
+
 const Paper: React.FC<{i: number; t: number; frame: number}> = ({i, t, frame}) => {
   const p = paper(i);
   if (t < p.start) return null;
@@ -112,57 +126,60 @@ const Paper: React.FC<{i: number; t: number; frame: number}> = ({i, t, frame}) =
   let y = landed ? p.land - 22 * Math.abs(settle) : fallY;
   let x = p.x;
   let rot = landed ? p.rot + settle * 6 : p.rot * 0.4 + dt * 140 * (p.vx > 0 ? 1 : -1);
-  // forgotten: everything goes grey
+  // forgotten: everything goes grey and dim
   const dead = prog(t, s2.forget, s2.forget + 1.2, easeInOut);
-  // the tap: papers blow outward and turn into coloured shapes
-  const blow = t >= s3.tap ? t - s3.tap : 0;
-  const morph = prog(t, s3.tap, s3.tap + 0.5, easeOut);
   let scale = 1;
   let z = i * 6;
   let rx = landed ? 0 : 35 * (1 - dt / landT);
   let ry = 0;
-  if (blow > 0) {
-    const ang = (-90 + (i / PAPERS - 0.5) * 200 + (rand(i) - 0.5) * 30) * (Math.PI / 180);
-    const speed = 2400 + rand(i + 3) * 1600;
-    const d = speed * (1 - Math.exp(-blow * 3)) / 3;
-    x += Math.cos(ang) * d;
-    y += Math.sin(ang) * d + 120 * blow * blow;
-    rot += blow * 260 * (rand(i + 9) - 0.5);
-    scale = lerp(1, 0.38, morph);
-    z += d * (rand(i + 11) > 0.35 ? 0.9 : -0.4);
-    rx += blow * 420 * (rand(i + 12) - 0.5);
-    ry += blow * 520 * (rand(i + 13) - 0.5);
-    if (blow > 1.6) return null;
+  // the tap: colour comes back and every photo flies to its place in the collage
+  const color = prog(t, s3.tap, s3.tap + 0.45, easeOut);
+  const morph = prog(t, s3.tap, s3.tap + 0.4, easeOut);
+  if (t >= s3.tap) {
+    const [sx, sy, sz, st, ss] = SLOTS[i];
+    const k = sp(frame, s3.tap + rand(i + 21) * 0.08, {damping: 15, stiffness: 70, mass: 0.9});
+    const arc = Math.sin(Math.PI * Math.min(1, k)) * (380 + rand(i + 4) * 300);
+    const drift = t - s3.tap;
+    x = lerp(x, sx, k) + Math.sin(drift * 0.9 + i) * 10;
+    y = lerp(y, sy, k) + Math.cos(drift * 0.8 + i * 2) * 12;
+    z = lerp(z, sz, k) + arc;
+    rot = lerp(rot, st, k);
+    rx = (1 - k) * 300 * (rand(i + 12) - 0.5) + Math.sin(drift * 1.1 + i) * 6;
+    ry = (1 - k) * 420 * (rand(i + 13) - 0.5) + Math.cos(drift * 0.9 + i) * 8;
+    scale = lerp(1, ss * 1.3, k);
+    // leave toward the lens with the triangle
+    const go = prog(t, s3.exit + rand(i + 30) * 0.15, s3.exit + 0.5, easeIn);
+    z += 1250 * go;
+    if (go >= 1) return null;
   }
   const w = 290;
   const h = 370;
-  const radius = lerp(R.md, p.kind === 0 ? 200 : p.kind === 1 ? 70 : 30, morph);
-  const base = morph > 0 ? p.color : P.paper;
-  const wiggle = 0; // stillness is the point of this scene
-  void frame;
+  const photoH = lerp(250, h, morph);
   return (
     <div
       style={{
         position: 'absolute',
         left: x - w / 2,
-        top: y - h / 2 + wiggle,
+        top: y - h / 2,
         width: w,
         height: h,
-        borderRadius: radius,
-        background: base,
+        borderRadius: R.md,
+        background: P.paper,
         transform: `translateZ(${z}px) rotateX(${rx}deg) rotateY(${ry}deg) rotate(${rot}deg) scale(${scale})`,
-        filter: `saturate(${1 - dead * (morph > 0 ? 0 : 1)}) brightness(${1 - dead * 0.55 * (1 - morph)})`,
+        filter: `brightness(${1 - dead * 0.5 * (1 - color)})`,
         boxShadow: '0 18px 40px rgba(0,0,0,0.45)',
-        padding: 28,
         boxSizing: 'border-box',
         overflow: 'hidden',
+        border: `${lerp(10, 8, morph)}px solid ${P.paper}`,
       }}
     >
-      <div style={{opacity: 1 - morph}}>
-        <div style={{height: 150, borderRadius: R.sm, background: P.muted}} />
-        <div style={{marginTop: 22, height: 20, width: '80%', marginLeft: 'auto', borderRadius: 10, background: P.muted}} />
-        <div style={{marginTop: 14, height: 20, width: '55%', marginLeft: 'auto', borderRadius: 10, background: P.muted}} />
-        <div style={{marginTop: 30, height: 44, width: 120, borderRadius: R.pill, background: P.muted}} />
+      <Img
+        src={staticFile(`photos/${PHOTOS[i]}.jpg`)}
+        style={{width: '100%', height: photoH - 16, objectFit: 'cover', borderRadius: R.sm, display: 'block', filter: `grayscale(${1 - color}) contrast(${1 - 0.25 * (1 - color)})`}}
+      />
+      <div style={{opacity: 1 - morph, padding: '14px 6px 0'}}>
+        <div style={{height: 18, width: '80%', marginLeft: 'auto', borderRadius: 9, background: P.muted}} />
+        <div style={{marginTop: 12, height: 18, width: '50%', marginLeft: 'auto', borderRadius: 9, background: P.muted}} />
       </div>
     </div>
   );
@@ -288,7 +305,7 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
       ) : null}
 
       {/* scene 2: pile + counter */}
-      {t > s2.fall && t < s3.tap + 1.7
+      {t > s2.fall && t < s3.exit + 0.7
         ? Array.from({length: PAPERS}).map((_, i) => <Paper key={i} i={i} t={t} frame={frame} />)
         : null}
       {t > s2.count - 0.1 && t < s2.forget + 0.6 ? (
@@ -349,7 +366,7 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
           ))}
         </AbsoluteFill>
       ) : null}
-      {t > s3.tap ? <Floaters t={t} k={prog(t, s3.tap + 0.1, s3.tap + 1.2, easeOut) * (1 - prog(t, s3.exit + 0.2, TL.s4.wipes[0], easeIn))} seed={3} /> : null}
+      {t > s3.tap ? <Floaters t={t} k={prog(t, s3.tap + 0.1, s3.tap + 1.2, easeOut) * (1 - prog(t, s3.exit + 0.2, TL.s4.wipes[0], easeIn))} seed={3} count={8} /> : null}
       {t > s3.line1 - 0.1 ? (
         <>
           <Words text="بس لما الفكرة تتحرك…" t={t} start={s3.line1} out={s3.exit} size={96} weight={700} style={{position: 'absolute', top: 1030, left: 60, right: 60}} />

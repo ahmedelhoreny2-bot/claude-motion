@@ -34,6 +34,7 @@ const Icon: React.FC<{kind: number; size: number; dark?: boolean}> = ({kind, siz
 };
 
 const SLOTS = ['مطعمك', 'عيادتك', 'براندك', 'متجرك'];
+const FIELD_PHOTOS = ['coffee-1', 'clinic-2', 'product-1', 'shop-2'];
 const STEP_DEG = 72;
 const DRUM_R = 230;
 const DRUM: Partial<SpringConfig> = {damping: 11, stiffness: 150, mass: 0.8};
@@ -48,6 +49,29 @@ const Fields: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   void finalK;
   return (
     <AbsoluteFill style={{...P3, opacity: out > 0 ? 1 - out : undefined, transform: `translateZ(${out * 400}px)`}}>
+      {/* a photo of each field turns over behind its word; the four fan out for the last one */}
+      <div style={{position: 'absolute', inset: 0, ...P3, transform: 'translateZ(-420px)'}}>
+        {FIELD_PHOTOS.map((ph, i) => {
+          const end = i < SLOTS.length - 1 ? s5.slots[i + 1] : s5.final;
+          const inK = sp(frame, s5.slots[i] - 0.05, {damping: 15, stiffness: 140, mass: 0.8});
+          const fan = sp(frame, s5.final, {damping: 14, stiffness: 110, mass: 0.9});
+          if (inK <= 0) return null;
+          const leaving = t < s5.final ? prog(t, end - 0.1, end + 0.15, easeIn) : 0;
+          const fx = (i - 1.5) * 300;
+          const x = W / 2 - 330 + fx * fan;
+          const y = 760 - 330 * fan + (Math.abs(i - 1.5) * 50) * fan;
+          const rot = (i - 1.5) * 9 * fan;
+          const ry = (1 - inK) * -95 + leaving * 95;
+          const sc = 1 - 0.45 * fan;
+          const visible = t >= s5.final || leaving < 1;
+          return visible ? (
+            <div key={ph} style={{position: 'absolute', left: x, top: y, width: 660, height: 820, borderRadius: R.xl, overflow: 'hidden', border: `10px solid ${P.ink}`, boxSizing: 'border-box', transform: `rotateY(${ry}deg) rotate(${rot}deg) scale(${sc})`, opacity: t >= s5.final ? 1 : 1 - leaving, boxShadow: '0 30px 70px rgba(0,0,0,0.5)'}}>
+              <Img src={staticFile(`photos/${ph}.jpg`)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+              <div style={{position: 'absolute', inset: 0, background: P.bg, opacity: 0.42 + 0.18 * fan}} />
+            </div>
+          ) : null;
+        })}
+      </div>
       <Words text="عندنا فكرة لـ" t={t} start={s5.head} size={120} style={{position: 'absolute', top: 470, left: 0, right: 0}} />
       {/* icon */}
       <div style={{position: 'absolute', left: W / 2 - 130, top: 760, width: 260, height: 260, ...P3, transform: 'translateZ(120px)'}}>

@@ -178,6 +178,9 @@ def score(mix, tl):
     put(drop, K, 0.4)
     put(drop, chime([293.66, 440.0, 587.33, 698.46], dur=2.2, tau=0.8), 0.12)
     put(drop, whoosh(0.9, 200, 4000, peak=0.15, q=0.6), 0.16)            # the wave across the floor
+    for i, dt in enumerate((0.06, 0.17, 0.3)):                           # colour comes back: shutter clicks
+        put(drop + dt, click(3200 - i * 300, dur=0.04), 0.12, [-0.5, 0.4, -0.1][i])
+        put(drop + dt + 0.03, click(1600, dur=0.03), 0.07, [-0.5, 0.4, -0.1][i])
     for i in range(10):                                                   # papers burst toward the lens
         put(drop + 0.04 + i * 0.035, flap(), 0.09, -0.8 + i * 0.17)
     put(s3["line1"], whoosh(0.35, 500, 2600, peak=0.5), 0.08)
@@ -191,6 +194,8 @@ def score(mix, tl):
         put(w, whoosh(0.4, 3800, 600, peak=0.2, q=0.7), 0.1, -0.6)
     a = s4["logo"]
     put(a, whoosh(0.7, 200, 2600, peak=0.7), 0.12)                        # the mark spins in from depth
+    put(a + 0.25, whoosh(0.4, 500, 2000, peak=0.7), 0.06, -0.6)           # cafe photos land
+    put(a + 0.4, whoosh(0.4, 500, 2000, peak=0.7), 0.06, 0.6)
     put(a + 0.05, scratch(0.7), 0.06)                                     # ring draws
     put(a + 0.6, pop(1200, 700), 0.16, 0.3)
     put(a + 0.75, pop(1500, 900), 0.16, -0.1)

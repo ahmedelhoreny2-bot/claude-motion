@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill} from 'remotion';
+import {AbsoluteFill, Img, staticFile} from 'remotion';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog} from '../../lib';
 import {Floaters, Label, Words} from '../kit';
 import {Extrude, P3, shade, Slab} from '../space';
@@ -52,6 +52,17 @@ const LogoBuild: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   return (
     <AbsoluteFill style={P3}>
       <Label t={t} start={a} out={w1} text="لوجو بيتولد قدامك" />
+      {[
+        {ph: 'coffee-2', x: 60, y: 1080, z: -650, r: -9, d: 0.25},
+        {ph: 'coffee-4', x: 760, y: 560, z: -800, r: 8, d: 0.4},
+      ].map((c) => {
+        const k = sp(frame, a + c.d, {damping: 14, stiffness: 90, mass: 0.9});
+        return (
+          <div key={c.ph} style={{position: 'absolute', left: c.x, top: c.y, width: 280, height: 350, padding: 12, paddingBottom: 46, background: P.ink, borderRadius: 8, boxSizing: 'border-box', transform: `translateZ(${lerp(-1800, c.z, k)}px) rotate(${c.r + Math.sin(t + c.r) * 3}deg) rotateY(${(1 - k) * 80}deg)`, opacity: clamp01(k * 2), boxShadow: '0 20px 50px rgba(0,0,0,0.5)'}}>
+            <Img src={staticFile(`photos/${c.ph}.jpg`)} style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4}} />
+          </div>
+        );
+      })}
       <div style={{position: 'absolute', left: cx - 340, top: cy - 340, width: 680, height: 680, ...P3, transform: `translateZ(${lerp(-700, 120, spin)}px) rotateY(${(1 - spin) * -160 + Math.sin(t * 1.2) * 12}deg) rotateX(${Math.sin(t * 0.9) * 8}deg)`}}>
       <Extrude depth={60} layers={7} back={<Madar dark />}>
       <Madar dark={false} />
@@ -134,8 +145,9 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
           }}
         >
           <div style={{position: 'absolute', inset: 0, background: P.orange}} />
-          <div style={{position: 'absolute', left: 40, right: 40, top: 120, height: 400, borderRadius: 40, background: 'rgba(22,8,3,0.16)', transform: `translateZ(40px) translateY(${Math.sin(t * 2) * 8}px)`}} />
-          <div style={{position: 'absolute', left: 150, top: 220, width: 150, height: 200, borderRadius: 24, background: P.cream, transform: `rotate(${-8 + Math.sin(t * 1.5) * 4}deg)`}} />
+          <div style={{position: 'absolute', left: 40, right: 40, top: 110, height: 420, borderRadius: 36, overflow: 'hidden', border: `8px solid ${P.onOrange}`, boxSizing: 'border-box'}}>
+            <Img src={staticFile('photos/product-3.jpg')} style={{width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${1.08 + 0.04 * Math.sin(t * 1.2)})`}} />
+          </div>
           <div dir="rtl" style={{position: 'absolute', right: 44, top: 556, fontFamily: F.display, fontWeight: 400, fontSize: 70, color: P.onOrange}}>الجديد</div>
           <div style={{position: 'absolute', right: 44, top: 670, width: 260, height: 22, borderRadius: 11, background: 'rgba(22,8,3,0.35)'}} />
           <div style={{position: 'absolute', left: 44, right: 44, bottom: 60, height: 100, borderRadius: 50, background: P.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.ar, fontWeight: 700, fontSize: 44, color: P.ink}}>اطلب دلوقتي</div>
