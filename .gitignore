@@ -7,5 +7,5 @@ __pycache__/
 .env
 drafts/
 sims/dist/
-public/promo-music.wav
+public/promo-sfx.wav
 public/promo-vo*.wav

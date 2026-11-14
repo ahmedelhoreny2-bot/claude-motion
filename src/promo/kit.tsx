@@ -162,7 +162,7 @@ export const Words: React.FC<{
  * across the frame, fully covering it at `at`.
  */
 export const SpeedWipe: React.FC<{t: number; at: number}> = ({t, at}) => {
-  const d = 0.62;
+  const d = 0.38;
   if (t < at - d || t > at + d) return null;
   const bands = [
     {c: P.teal, top: -260, h: 900, lag: 0.05},

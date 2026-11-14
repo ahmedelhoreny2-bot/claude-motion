@@ -29,11 +29,11 @@ const Demo: React.FC<{t: number; at: number; top: number}> = ({t, at, top}) => (
 /* 1. a logo is born: "مدار" */
 const LogoBuild: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const a = s4.logo;
-  const ring = prog(t, a + 0.1, a + 1.0, easeInOut);
-  const arc = prog(t, a + 0.45, a + 1.2, easeOut);
-  const dot = sp(frame, a + 0.8, POP);
+  const ring = prog(t, a + 0.05, a + 0.75, easeInOut);
+  const arc = prog(t, a + 0.3, a + 0.9, easeOut);
+  const dot = sp(frame, a + 0.6, POP);
   const orbit = (t - a) * 2.2;
-  const name = a + 1.4;
+  const name = a + 1.0;
   const cx = W / 2;
   const cy = 900;
   const R = 230;
@@ -45,7 +45,7 @@ const LogoBuild: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         <path d={`M ${cx - 120} ${cy + 40} A 130 130 0 0 0 ${cx + 120} ${cy + 40}`} fill="none" stroke={(dark ? SIDE.teal : P.teal)}
           strokeWidth={34} strokeLinecap="round" strokeDasharray={`${420 * arc} 9999`} />
         <circle cx={cx + Math.cos(orbit - 1.2) * R} cy={cy + Math.sin(orbit - 1.2) * R} r={52 * dot} fill={(dark ? SIDE.orange : P.orange)} />
-        <circle cx={cx} cy={cy - 40} r={46 * sp(frame, a + 1.0, POP)} fill={(dark ? SIDE.orange : P.orange)} />
+        <circle cx={cx} cy={cy - 40} r={46 * sp(frame, a + 0.75, POP)} fill={(dark ? SIDE.orange : P.orange)} />
       </svg>
   );
 
@@ -59,7 +59,7 @@ const LogoBuild: React.FC<{t: number; frame: number}> = ({t, frame}) => {
       </div>
       <Words text="مَدار" t={t} start={name} size={180} style={{position: 'absolute', top: 1220, left: 0, right: 0}} />
       <Words text="كافيه وروستري" t={t} start={name + 0.3} size={58} weight={500} color={P.muted} style={{position: 'absolute', top: 1470, left: 0, right: 0}} />
-      <Demo t={t} at={name + 0.8} top={1620} />
+      <Demo t={t} at={name + 0.6} top={1620} />
     </AbsoluteFill>
   );
 };
@@ -68,11 +68,11 @@ const LogoBuild: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 const Kinetic: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const a = s4.type;
   const lines = [
-    {w: 'فكرتك', c: P.cream, at: a + 0.2, size: 250},
-    {w: 'لازم', c: P.teal, at: a + 0.7, size: 200},
-    {w: 'تتشاف', c: P.orange, at: a + 1.2, size: 270},
+    {w: 'فكرتك', c: P.cream, at: a + 0.1, size: 250},
+    {w: 'لازم', c: P.teal, at: a + 0.45, size: 200},
+    {w: 'تتشاف', c: P.orange, at: a + 0.8, size: 270},
   ];
-  const beat = pulse(t, a + 1.7);
+  const beat = pulse(t, a + 1.2);
   return (
     <AbsoluteFill style={P3}>
       <Label t={t} start={a} out={w2} text="كلمة بتتكلم" />
@@ -80,7 +80,7 @@ const Kinetic: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         {lines.map((l, i) => {
           const k = sp(frame, l.at, ELASTIC);
           const vel = Math.abs(k - sp(frame - 1, l.at, ELASTIC)) * FPS;
-          const stretch = 1 + Math.min(0.9, vel * 0.12);
+          const stretch = 1 + Math.min(0.45, vel * 0.08);
           const zi = [-160, 60, 240][i];
           const b = i === 2 ? beat : beat * 0.4;
           return (
@@ -112,8 +112,8 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const k = sp(frame, a + 0.1, {damping: 15, stiffness: 120, mass: 0.9});
   const ry = lerp(-70, 0, k) + Math.sin((t - a) * 1.6) * 18;
   const rx = 8 + Math.sin((t - a) * 1.1) * 4;
-  const shine = prog(t, a + 1.0, a + 2.0, easeInOut);
-  const badge = sp(frame, a + 1.6, POP);
+  const shine = prog(t, a + 0.7, a + 1.5, easeInOut);
+  const badge = sp(frame, a + 1.1, POP);
   return (
     <AbsoluteFill style={P3}>
       <Label t={t} start={a} out={w3} text="منتج بيلمع" />
@@ -144,7 +144,7 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         </div>
         </Extrude>
       </div>
-      <Demo t={t} at={a + 1.2} top={1660} />
+      <Demo t={t} at={a + 0.9} top={1660} />
       <div
         dir="rtl"
         style={{
@@ -170,10 +170,10 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 /* 4. a number that convinces: an offer for a demo shop */
 const Data: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const a = s4.data;
-  const n = Math.round(30 * prog(t, a + 0.5, a + 1.6, easeOut));
-  const tag = sp(frame, a + 0.35, POP);
-  const stamp = sp(frame, a + 1.7, ELASTIC);
-  const old = prog(t, a + 1.0, a + 1.4, easeOut);
+  const n = Math.round(30 * prog(t, a + 0.35, a + 1.2, easeOut));
+  const tag = sp(frame, a + 0.2, POP);
+  const stamp = sp(frame, a + 1.25, ELASTIC);
+  const old = prog(t, a + 0.7, a + 1.0, easeOut);
   return (
     <AbsoluteFill style={P3}>
       <Label t={t} start={a} out={w4} text="رقم بيقنع" />
@@ -183,7 +183,7 @@ const Data: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         <div dir="rtl" style={{position: 'absolute', top: 150, left: 0, right: 0, textAlign: 'center', fontFamily: F.display, fontSize: 300, lineHeight: 1.3, color: P.orange}}>
           {arNum(n)}٪
         </div>
-        <div dir="rtl" style={{position: 'absolute', top: 520, left: 0, right: 0, textAlign: 'center', fontFamily: F.display, fontSize: 110, color: P.ink, opacity: prog(t, a + 0.7, a + 1.0)}}>خصم</div>
+        <div dir="rtl" style={{position: 'absolute', top: 520, left: 0, right: 0, textAlign: 'center', fontFamily: F.display, fontSize: 110, color: P.ink, opacity: prog(t, a + 0.5, a + 0.8)}}>خصم</div>
         <div dir="rtl" style={{position: 'absolute', top: 690, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 30, fontFamily: F.ar, fontWeight: 700, fontSize: 52}}>
           <span style={{color: P.muted, position: 'relative'}}>
             {arNum(800)} ج
@@ -196,7 +196,7 @@ const Data: React.FC<{t: number; frame: number}> = ({t, frame}) => {
       <div style={{position: 'absolute', right: 150, top: 500, width: 170, height: 170, borderRadius: R.pill, background: P.teal, color: P.onTeal, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontSize: 52, transform: `translateZ(${180 + (1 - stamp) * 600}px) scale(${stamp}) rotate(${12 - 12 * stamp + 10}deg) rotateY(${Math.sin(t * 2.2) * 20}deg)`}}>
         لفترة
       </div>
-      <Demo t={t} at={a + 1.4} top={1460} />
+      <Demo t={t} at={a + 1.1} top={1460} />
     </AbsoluteFill>
   );
 };

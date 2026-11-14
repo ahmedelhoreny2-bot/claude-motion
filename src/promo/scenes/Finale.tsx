@@ -72,6 +72,7 @@ const Fields: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         ) : null}
       </div>
       {/* the fields turn on a drum in space */}
+      {t > s5.slots[0] - 0.2 ? (
       <div style={{position: 'absolute', top: 1080, left: 0, right: 0, height: 330, ...P3, transform: `translateZ(${lerp(-900, 0, drumIn)}px)`}}>
         <div style={{position: 'absolute', inset: 0, ...P3, transform: `rotateX(${drum}deg)`}}>
           {[...SLOTS, 'شغلك إنت'].map((w, i) => {
@@ -86,6 +87,7 @@ const Fields: React.FC<{t: number; frame: number}> = ({t, frame}) => {
           })}
         </div>
       </div>
+      ) : null}
       <Words text="وكل مجال… له حركة." t={t} start={s5.sub} size={76} weight={700} color={P.muted} style={{position: 'absolute', top: 1470, left: 0, right: 0}} />
     </AbsoluteFill>
   );

@@ -1,8 +1,8 @@
-"""Sound design + procedural beat for IbdaaPromo (إبداع بيتحرك). Every time comes from the timeline.
+"""Sound effects for IbdaaPromo (no music: SFX under the voiceover) (إبداع بيتحرك). Every time comes from the timeline.
 
     python3 -m sfx sfx/cues/promo.py
 
-Key: D minor with a hijaz touch (C# over A). Beat: 120 BPM, drop on the tap (s3.tap).
+Tonal hits stay in D minor so they sit together.
 """
 
 import math
@@ -12,8 +12,8 @@ from sfx import dsp
 from sfx.synth import SR, blip, chime, click, envelope, impact, pad, pop, riser, scratch, whoosh
 
 TIMELINE = "src/promo/timeline.json"
-OUT = "public/promo-music.wav"
-TARGET_LUFS = -16.0  # leaves headroom for the voiceover to sit on top
+OUT = "public/promo-sfx.wav"
+TARGET_LUFS = -20.0  # sits under the voiceover
 
 RNG = random.Random(7)
 D2, F2, G2, A2, Bb1, C2 = 73.42, 87.31, 98.0, 110.0, 58.27, 65.41
@@ -108,23 +108,9 @@ def score(mix, tl):
     s1, s2, s3, s4, s5, s6, s7 = (tl[k] for k in ("s1", "s2", "s3", "s4", "s5", "s6", "s7"))
     dur = tl["duration"]
     beat = 60 / tl["bpm"]
+    drop = s3["tap"]
     put = mix.put
     K, CL, H, HO, DM, TK, TH = kick(), clap(), hat(), hat(True), doum(), tek(), thud()
-
-    # ---- bed: low drone before the drop, full chords after
-    drop = s3["tap"]
-    chords = [(0, [73.42, 110.0])]
-    t, i = drop, 0
-    while t < dur:
-        chords.append((t, CHORDS[PROG[i % 4]]))
-        t += 4 * beat * 2
-        i += 1
-    vol = envelope([
-        (0, 0.5), (s1["stop"], 0.5), (s1["stop"] + 0.05, 0.15), (s2["fall"], 0.5), (s3["squash"], 0.8),
-        (drop, 0.4), (drop + 0.3, 1.0), (s6["converge"], 1.0), (s6["hit"] - 0.1, 0.4), (s6["hit"], 1.1),
-        (s7["dock"], 0.9), (dur - 1.5, 0.9), (dur, 0),
-    ])
-    mix.put_stereo(0, *pad(dur, chords, volume=vol), gain=0.05)
 
     # ---- scene 1: scroll, brake, hook
     tt = 0.0
@@ -173,33 +159,6 @@ def score(mix, tl):
     put(drop, impact(1.6), 0.4)
     put(drop, chime([293.66, 440.0, 587.33, 698.46], dur=2.2, tau=0.8), 0.12)
     put(s3["line2"], whoosh(0.35, 500, 3000, peak=0.5), 0.1)
-
-    # ---- the beat: drop → brand hit, then a lighter groove under the CTA
-    def section(a, b, full=True):
-        steps = int(round((b - a) / (beat / 4)))
-        for st in range(steps):
-            t0 = a + st * beat / 4
-            bar_pos = st % 16
-            ch = PROG[int((t0 - drop) // (8 * beat)) % 4]
-            if bar_pos % 4 == 0 and (full or bar_pos in (0, 8)):
-                put(t0, K, 0.5)
-            if bar_pos in (4, 12) and full:
-                put(t0, CL, 0.22, 0.05)
-            if bar_pos % 2 == 0:
-                put(t0, HO if bar_pos % 4 == 2 else H, 0.06 if full else 0.045, 0.35)
-            if bar_pos in (3, 6, 11, 14):
-                put(t0, TK, 0.07, -0.35)
-            if bar_pos in (0, 10) and full:
-                put(t0, DM, 0.18, -0.15)
-            if bar_pos in (0, 3, 6, 8, 11, 14):
-                note = BASS_ROOT[ch] * (2 if bar_pos in (6, 14) else 1)
-                put(t0, bass(note, beat * 0.7), 0.16 if full else 0.11)
-
-    section(drop, s6["converge"])
-    for k in range(16):  # snare roll into the brand hit
-        put(s6["converge"] + 1.0 + k * 0.0625, CL, 0.04 + 0.12 * k / 15, 0.05)
-    section(s6["hit"], s7["dock"])
-    section(s7["dock"] + 0.2, dur - 2.0, full=False)
 
     # ---- scene 4: wipes and showcase
     for w in s4["wipes"] + [s6["converge"]]:
@@ -255,5 +214,3 @@ def score(mix, tl):
     put(s7["line2"], whoosh(0.3, 700, 2400), 0.06)
     put(s7["cta"], pop(600, 1600, 0.25), 0.2)
     put(s7["cta"], chime([293.66, 440.0, 587.33, 880.0], dur=3.0, tau=1.2), 0.12)
-    put(dur - 2.0, K, 0.3)
-    put(dur - 2.0, chime([146.83, 220.0, 293.66, 440.0, 587.33], dur=2.0, tau=1.0), 0.14)
