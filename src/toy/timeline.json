@@ -1,11 +1,11 @@
 {
   "fps": 30,
   "duration": 27.8,
-  "takes": {"a": "public/toy/vo-a.wav", "promo": "public/promo-vo-raw.wav", "dot": "public/dot/vo-a.wav"},
+  "takes": {"a": "public/toy/vo-a.wav", "dot": "public/dot/vo-a.wav"},
   "hook": {"drop": 0.05, "hand": 1.95, "rain": 2.95, "rocket": 3.95},
   "build": {"launch": 4.2, "house": 4.75, "giraffe": 5.55, "letter": 6.55, "name": 7.45, "box": 8.3, "lid": 8.95, "spin": 9.2},
   "why": {"cards": [11.0, 12.75, 13.6], "big": 15.05, "colors": 16.8, "cta": 18.15, "order": 19.55},
-  "flip": {"suck": 20.85, "cube": 21.2, "dark": 21.35, "ask": 21.5, "wa": 23.25, "sting": 24.0, "hit": 24.45, "end": 27.8},
+  "flip": {"suck": 20.85, "cube": 21.2, "dark": 21.35, "ask": 21.6, "line": 22.75, "wa": 23.75, "sting": 24.0, "hit": 24.45, "end": 27.8},
   "captions": [
     {"text": "مكعّب واحد…", "at": 0.6, "out": 1.85, "kind": "top"},
     {"text": "في إيد طفل…", "at": 1.95, "out": 2.85, "kind": "top"},
@@ -35,8 +35,8 @@
     {"file": "a", "src": [16.78, 17.88], "at": 16.8, "text": "وألوان تفرّحه."},
     {"file": "a", "src": [18.13, 19.31], "at": 18.15, "text": "اطلب علبة شطّور…"},
     {"file": "a", "src": [19.50, 20.60], "at": 19.55, "text": "وخلّي اللعب يعلّم."},
-    {"file": "promo", "src": [18.92, 20.28], "at": 21.5, "text": "عندك فكرة عايزها تتحرك؟"},
-    {"file": "dot", "src": [16.47, 17.31], "at": 23.25, "text": "ابعتلنا فكرتك…"},
+    {"file": "dot", "src": [16.47, 17.31], "at": 21.6, "text": "ابعتلنا فكرتك…"},
+    {"file": "dot", "src": [17.70, 18.63], "at": 22.75, "text": "حتى لو لسه نقطة."},
     {"file": "dot", "src": [15.07, 16.04], "at": 24.45, "text": "إبداع بيتحرك."}
   ]
 }

@@ -26,6 +26,8 @@ const T = {
   skin: '#F6C7A1',
 };
 const FONT = '"Baloo Bhaijaan 2", system-ui, sans-serif';
+/** Where the full stop of «حتى لو لسه نقطة» sits (left end of the centred line). */
+const PERIOD = {x: 192, y: 874};
 
 const useToyFont = () => {
   const [h] = useState(() => delayRender('baloo'));
@@ -410,7 +412,8 @@ const Flip: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const cubeK = sp(frame, FL.suck + 0.2, {damping: 10, stiffness: 200});
   const reveal = prog(t, FL.dark, FL.dark + 0.5, easeInOut);
   const toDot = prog(t, FL.dark + 0.1, FL.dark + 0.45, easeInOut);
-  const dotOut = prog(t, FL.sting, FL.sting + 0.15, easeIn);
+  const dotOut = 0;
+  const toPeriod = sp(frame, FL.line + 0.55, {damping: 12, stiffness: 120});
   const ask = sp(frame, FL.ask, {damping: 14, stiffness: 140});
   const wa = sp(frame, FL.wa, {damping: 15, stiffness: 150});
   const z = 0.62;
@@ -426,7 +429,8 @@ const Flip: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         </svg>
       ) : null}
       {toDot > 0 && dotOut < 1 ? (
-        <div style={{position: 'absolute', left: 540 - 36, top: 1060 - 36, width: 72, height: 72, borderRadius: '50%', background: BP.orange, transform: `scale(${toDot * (1 - dotOut) * (1 + 0.05 * Math.sin(t * 3))})`}} />
+        // the cube became a dot; on «حتى لو لسه نقطة» it flies to the end of the line and becomes its full stop
+        <div style={{position: 'absolute', left: lerp(540, PERIOD.x, toPeriod) - 36, top: lerp(1060, PERIOD.y, toPeriod) - 36 - Math.sin(Math.PI * toPeriod) * 160, width: 72, height: 72, borderRadius: '50%', background: BP.orange, transform: `scale(${toDot * (1 - dotOut) * lerp(1, 0.7, toPeriod) * (1 + 0.05 * Math.sin(t * 3))})`}} />
       ) : null}
       {t >= FL.hit && ring < 1 ? (
         <div style={{position: 'absolute', left: 540 - 1200 * ring, top: 360 - 1200 * ring, width: 2400 * ring, height: 2400 * ring, borderRadius: '50%', border: `${40 * (1 - ring) + 2}px solid ${BP.orange}`, opacity: 1 - ring}} />
@@ -440,13 +444,16 @@ const Flip: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         </div>
       ) : null}
       {t >= FL.ask ? (
-        <Words text="عندك فكرة عايزها تتحرك؟" t={t} start={FL.ask} size={104} style={{position: 'absolute', top: 700, left: 60, right: 60}} />
+        <>
+          <Words text="ابعتلنا فكرتك…" t={t} start={FL.ask} size={104} style={{position: 'absolute', top: 640, left: 60, right: 60}} />
+          <Words text="حتى لو لسه نقطة" t={t} start={FL.line} size={104} style={{position: 'absolute', top: 800, left: 60, right: 60}} />
+        </>
       ) : null}
       {t >= FL.wa ? (
         <div dir="rtl" style={{position: 'absolute', left: 90, width: 900, top: 1060, height: 230, borderRadius: 56, background: BP.teal, color: BP.onTeal, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 30, transform: `translateY(${(1 - wa) * 120}px) scale(${0.6 + 0.4 * wa})`, opacity: clamp01(wa * 2)}}>
           <svg width={92} height={92} viewBox="0 0 58 58"><path d="M 29 6 A 23 23 0 1 1 13 45 L 7 52 L 9 40 A 23 23 0 0 1 29 6 Z" fill="none" stroke={BP.onTeal} strokeWidth={5} strokeLinejoin="round" /></svg>
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1}}>
-            <span style={{fontFamily: BF.ar, fontWeight: 700, fontSize: 44}}>ابعتلنا فكرتك</span>
+            <span style={{fontFamily: BF.ar, fontWeight: 700, fontSize: 44}}>واتساب</span>
             <span dir="ltr" style={{fontFamily: BF.display, fontSize: 100, lineHeight: 1.15}}>01130808848</span>
           </div>
         </div>
