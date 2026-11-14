@@ -105,9 +105,10 @@ const Converge: React.FC<{t: number}> = ({t}) => {
 
 const CHANNELS = [
   {text: 'واتساب', bg: P.teal, fg: P.onTeal},
-  {text: 'رسايل الصفحة', bg: P.surface, fg: P.ink},
+  {text: 'رسالة على الصفحة', bg: P.surface, fg: P.ink},
   {text: '', bg: P.surface, fg: P.ink},
 ];
+const WHATSAPP = '01130808848';
 const LINE_COLORS = [P.teal, P.orange, P.teal];
 // the speed lines inside the logo file (720 × 466 px)
 const LOGO_LINES = [
@@ -188,19 +189,20 @@ const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
       })}
       {t > s7.line1 - 0.05 ? (
         <>
-          <Words text="قولّنا مجالك…" t={t} start={s7.line1} size={150} style={{position: 'absolute', top: 1150, left: 0, right: 0}} />
-          <Words text="ونبعتلك الفكرة والتفاصيل كلها" t={t} start={s7.line2} size={58} weight={700} color={P.muted} style={{position: 'absolute', top: 1370, left: 40, right: 40}} />
+          <Words text="عندك فكرة عايزها تتحرك؟" t={t} start={s7.line1} size={112} style={{position: 'absolute', top: 1135, left: 70, right: 70}} />
+          <Words text="وإحنا معاك في كل التفاصيل" t={t} start={s7.line2} size={56} weight={700} color={P.muted} style={{position: 'absolute', top: 1445, left: 40, right: 40}} />
         </>
       ) : null}
       {t > s7.cta ? (
-        <div style={{position: 'absolute', top: 1540, left: 0, right: 0, display: 'flex', justifyContent: 'center'}}>
-          <div dir="rtl" style={{padding: '24px 76px', borderRadius: R.pill, background: P.orange, fontFamily: F.ar, fontWeight: 700, fontSize: 66, color: P.onOrange, transform: `scale(${ctaK * (1 + 0.04 * beat)})`}}>
-            ابعتلنا رسالة
+        <div style={{position: 'absolute', top: 1580, left: 0, right: 0, display: 'flex', justifyContent: 'center'}}>
+          <div dir="rtl" style={{padding: '22px 64px', borderRadius: R.pill, background: P.orange, fontFamily: F.ar, fontWeight: 700, fontSize: 60, color: P.onOrange, display: 'flex', gap: 26, alignItems: 'center', transform: `scale(${ctaK * (1 + 0.04 * beat)})`}}>
+            <span>واتساب</span>
+            <span dir="ltr" style={{fontFamily: F.display, fontSize: 68, letterSpacing: '0.02em'}}>{WHATSAPP}</span>
           </div>
         </div>
       ) : null}
       {t > s7.cta + 0.4 ? (
-        <div dir="rtl" style={{position: 'absolute', top: 1760, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 500, fontSize: 34, color: P.muted, opacity: prog(t, s7.cta + 0.4, s7.cta + 1)}}>
+        <div dir="rtl" style={{position: 'absolute', top: 1775, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 500, fontSize: 34, color: P.muted, opacity: prog(t, s7.cta + 0.4, s7.cta + 1)}}>
           إعلان متعمل بالذكاء الاصطناعي
         </div>
       ) : null}
