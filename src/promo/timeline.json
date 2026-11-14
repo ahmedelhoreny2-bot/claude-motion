@@ -1,0 +1,12 @@
+{
+  "fps": 30,
+  "duration": 60,
+  "bpm": 120,
+  "s1": {"start": 0, "burst": 1.5, "stop": 1.7, "word1": 2.0, "word2": 2.9, "exit": 4.3},
+  "s2": {"fall": 4.4, "count": 5.4, "countEnd": 6.8, "forget": 7.6, "why": 9.6, "still": 10.6, "exit": 12.4},
+  "s3": {"hop": 12.6, "squash": 13.5, "tap": 14.0, "line1": 14.4, "line2": 15.7, "exit": 17.6},
+  "s4": {"wipes": [18.0, 22.0, 26.0, 30.0, 34.0], "logo": 18.3, "type": 22.3, "product": 26.3, "data": 30.3},
+  "s5": {"head": 34.4, "slots": [35.2, 36.2, 37.2, 38.2], "final": 39.2, "sub": 40.2, "exit": 41.7},
+  "s6": {"converge": 42.0, "hit": 44.0, "lines": [44.25, 44.4, 44.55], "word1": 44.8, "word2": 45.15, "exit": 49.6},
+  "s7": {"dock": 49.8, "bubbles": [50.4, 50.9, 51.4], "line1": 52.0, "line2": 53.2, "cta": 55.2, "end": 60}
+}
