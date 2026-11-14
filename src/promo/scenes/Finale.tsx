@@ -1,7 +1,8 @@
 import React from 'react';
-import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile} from 'remotion';
+import {AbsoluteFill, Img, OffthreadVideo, Sequence, SpringConfig, staticFile} from 'remotion';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, rand} from '../../lib';
 import {Tri, Words} from '../kit';
+import {Extrude, P3, shade, Slab} from '../space';
 import {ELASTIC, F, FPS, HEAVY, P, POP, R, sp, TL, W} from '../theme';
 
 const {s5, s6, s7} = TL;
@@ -9,15 +10,15 @@ const BEAT = 60 / TL.bpm;
 
 /* ---------------- scene 5: "عندنا فكرة لـ ___" ---------------- */
 
-const Icon: React.FC<{kind: number; size: number}> = ({kind, size}) => {
-  const s = {stroke: P.teal, strokeWidth: 22, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, fill: 'none'};
+const Icon: React.FC<{kind: number; size: number; dark?: boolean}> = ({kind, size, dark}) => {
+  const s = {stroke: dark ? shade(P.teal, 0.5) : P.teal, strokeWidth: 22, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, fill: 'none'};
   return (
     <svg width={size} height={size} viewBox="0 0 260 260" style={{display: 'block', overflow: 'visible'}}>
       {kind === 0 ? (
         <>
           <circle cx={130} cy={130} r={78} {...s} />
-          <path d="M 30 60 V 110 M 50 60 V 200 M 70 60 V 110 M 30 110 Q 50 130 70 110" {...s} stroke={P.cream} strokeWidth={14} />
-          <path d="M 228 60 Q 200 100 214 140 L 228 140 V 200" {...s} stroke={P.cream} strokeWidth={14} />
+          <path d="M 30 60 V 110 M 50 60 V 200 M 70 60 V 110 M 30 110 Q 50 130 70 110" {...s} stroke={dark ? shade(P.ink, 0.45) : P.cream} strokeWidth={14} />
+          <path d="M 228 60 Q 200 100 214 140 L 228 140 V 200" {...s} stroke={dark ? shade(P.ink, 0.45) : P.cream} strokeWidth={14} />
         </>
       ) : null}
       {kind === 1 ? <path d="M 130 50 V 210 M 50 130 H 210" {...s} strokeWidth={46} /> : null}
@@ -33,49 +34,57 @@ const Icon: React.FC<{kind: number; size: number}> = ({kind, size}) => {
 };
 
 const SLOTS = ['مطعمك', 'عيادتك', 'براندك', 'متجرك'];
+const STEP_DEG = 72;
+const DRUM_R = 230;
+const DRUM: Partial<SpringConfig> = {damping: 11, stiffness: 150, mass: 0.8};
 
 const Fields: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const ends = [...s5.slots.slice(1), s5.final];
   const finalK = prog(t, s5.final, s5.final + 0.45, easeOut);
   const out = prog(t, s5.exit, s5.exit + 0.4, easeIn);
+  const turns = [...s5.slots.slice(1), s5.final];
+  const drum = STEP_DEG * turns.reduce((acc, at) => acc + sp(frame, at, DRUM), 0);
+  const drumIn = sp(frame, s5.slots[0] - 0.1, {damping: 14, stiffness: 120});
+  void finalK;
   return (
-    <AbsoluteFill style={{opacity: 1 - out, transform: `scale(${1 + 0.03 * clamp01((t - s5.head) / 7)})`}}>
+    <AbsoluteFill style={{...P3, opacity: out > 0 ? 1 - out : undefined, transform: `translateZ(${out * 400}px)`}}>
       <Words text="عندنا فكرة لـ" t={t} start={s5.head} size={120} style={{position: 'absolute', top: 470, left: 0, right: 0}} />
       {/* icon */}
-      <div style={{position: 'absolute', left: W / 2 - 130, top: 760, width: 260, height: 260}}>
+      <div style={{position: 'absolute', left: W / 2 - 130, top: 760, width: 260, height: 260, ...P3, transform: 'translateZ(120px)'}}>
         {SLOTS.map((_, i) => {
           const k = sp(frame, s5.slots[i], POP);
           const o = prog(t, ends[i] - 0.12, ends[i] + 0.12, easeIn);
           if (k <= 0 || o >= 1) return null;
           return (
-            <div key={i} style={{position: 'absolute', inset: 0, transform: `scale(${k * (1 - o)}) rotate(${(1 - k) * -40}deg)`}}>
-              <Icon kind={i} size={260} />
+            <div key={i} style={{position: 'absolute', inset: 0, ...P3, transform: `rotateY(${(1 - k) * -120 + o * 120}deg) scale(${0.4 + 0.6 * clamp01(k) - 0.4 * o})`}}>
+              <Extrude depth={34} layers={5} back={<Icon kind={i} size={260} dark />}>
+                <Icon kind={i} size={260} />
+              </Extrude>
             </div>
           );
         })}
         {t >= s5.final ? (
-          <div style={{position: 'absolute', left: 30, top: 0, transform: `scale(${sp(frame, s5.final, ELASTIC)})`}}>
-            <Tri size={220} />
+          <div style={{position: 'absolute', left: 30, top: 0, ...P3, transform: `rotateY(${(1 - sp(frame, s5.final, ELASTIC)) * -200 + Math.sin(t * 1.6) * 18}deg) scale(${sp(frame, s5.final, ELASTIC)})`}}>
+            <Extrude depth={44} layers={7} back={<Tri size={220} color={shade(P.orange, 0.5)} />}>
+              <Tri size={220} />
+            </Extrude>
           </div>
         ) : null}
       </div>
-      {/* slot word */}
-      <div style={{position: 'absolute', top: 1080, left: 0, right: 0, height: 330, overflow: 'hidden'}}>
-        {SLOTS.map((w, i) => {
-          const k = prog(t, s5.slots[i], s5.slots[i] + 0.35, easeOut);
-          const o = prog(t, ends[i] - 0.15, ends[i] + 0.2, easeIn);
-          if (k <= 0 || o >= 1) return null;
-          return (
-            <div key={i} dir="rtl" style={{position: 'absolute', inset: 0, textAlign: 'center', fontFamily: F.display, fontSize: 210, lineHeight: '330px', color: P.ink, transform: `translateY(${(1 - k) * 100 - o * 100}%)`}}>
-              {w}
-            </div>
-          );
-        })}
-        {t >= s5.final - 0.05 ? (
-          <div dir="rtl" style={{position: 'absolute', inset: 0, textAlign: 'center', fontFamily: F.display, fontSize: 210, lineHeight: '330px', color: P.orange, transform: `translateY(${(1 - finalK) * 100}%) scale(${1 + 0.05 * Math.exp(-(t - s5.final) * 4)})`}}>
-            شغلك إنت
-          </div>
-        ) : null}
+      {/* the fields turn on a drum in space */}
+      <div style={{position: 'absolute', top: 1080, left: 0, right: 0, height: 330, ...P3, transform: `translateZ(${lerp(-900, 0, drumIn)}px)`}}>
+        <div style={{position: 'absolute', inset: 0, ...P3, transform: `rotateX(${drum}deg)`}}>
+          {[...SLOTS, 'شغلك إنت'].map((w, i) => {
+            const rel = ((drum - i * STEP_DEG) % 360 + 540) % 360 - 180;
+            if (Math.abs(rel) > 62) return null;
+            if (i === SLOTS.length && t < s5.slots[SLOTS.length - 1] + 0.3) return null;
+            return (
+              <div key={i} dir="rtl" style={{position: 'absolute', inset: 0, textAlign: 'center', fontFamily: F.display, fontSize: 176, lineHeight: '330px', color: i === SLOTS.length ? P.orange : P.ink, transform: `rotateX(${-i * STEP_DEG}deg) translateZ(${DRUM_R}px)`, backfaceVisibility: 'hidden', opacity: 1 - Math.abs(rel) / 66}}>
+                {w}
+              </div>
+            );
+          })}
+        </div>
       </div>
       <Words text="وكل مجال… له حركة." t={t} start={s5.sub} size={76} weight={700} color={P.muted} style={{position: 'absolute', top: 1470, left: 0, right: 0}} />
     </AbsoluteFill>
@@ -89,14 +98,17 @@ const Converge: React.FC<{t: number}> = ({t}) => {
   const k = prog(t, s6.converge, s6.sting + 0.1, (x) => x * x * x);
   if (k <= 0 || k >= 1) return null;
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={P3}>
       {Array.from({length: SHARDS}).map((_, i) => {
         const a = (i / SHARDS) * Math.PI * 2 + rand(i) * 0.4;
         const d = 1300 * (1 - k);
+        const z0 = i % 2 ? 1100 : -1800;
+        const zz = lerp(z0, 0, k);
+        const sv = Math.min(1.6, 3 * k * k);
         const c = [P.teal, P.ink, P.teal][i % 3];
         const size = 40 + rand(i + 4) * 50;
         return (
-          <div key={i} style={{position: 'absolute', left: W / 2 + Math.cos(a) * d - size / 2, top: 840 + Math.sin(a) * d - size / 2, width: size, height: size, borderRadius: i % 2 ? '50%' : 14, background: c, transform: `rotate(${k * 400}deg) scale(${1 - k * 0.7})`}} />
+          <div key={i} style={{position: 'absolute', left: W / 2 + Math.cos(a) * d - size / 2, top: 840 + Math.sin(a) * d - size / 2, width: size, height: size, borderRadius: i % 2 ? '50%' : 14, background: c, transform: `translateZ(${zz}px) rotate(${(a * 180) / Math.PI}deg) scale(${(1 - k * 0.7) * (1 + sv)}, ${(1 - k * 0.7) / (1 + sv * 0.5)}) rotateX(${k * 300}deg)`}} />
         );
       })}
     </AbsoluteFill>
@@ -144,7 +156,7 @@ const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const typing = (i: number) => Math.max(0, Math.sin(t * 6 - i * 0.9));
 
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={P3}>
       <Converge t={t} />
       {t >= s6.hit && ring < 1 ? (
         <div style={{position: 'absolute', left: W / 2 - 1400 * ring, top: cy - 1400 * ring, width: 2800 * ring, height: 2800 * ring, borderRadius: '50%', border: `${50 * (1 - ring) + 2}px solid ${P.teal}`, opacity: 1 - ring}} />
@@ -169,7 +181,8 @@ const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         const content = clamp01((k - 0.6) / 0.4);
         const bg = k < 0.5 ? LINE_COLORS[i] : c.bg;
         return (
-          <div key={i} style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: R.pill, background: bg, border: i > 0 && k >= 0.5 ? `3px solid ${P.line}` : undefined, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.35)'}}>
+          <Extrude key={i} depth={30 * clamp01(k)} layers={4} back={<Slab color={shade(k < 0.5 ? LINE_COLORS[i] : i === 0 ? P.teal : P.line, 0.6)} radius={R.pill} />} style={{position: 'absolute', left: x, top: y, width: w, height: h, transform: `translateZ(${Math.sin(clamp01(k) * Math.PI) * 300}px) rotateY(${(1 - clamp01(k)) * -70 + Math.sin(t * 1.3 + i) * 6}deg) rotateX(${(1 - clamp01(k)) * 40}deg)`}}>
+          <div style={{width: w, height: h, borderRadius: R.pill, background: bg, border: i > 0 && k >= 0.5 ? `3px solid ${P.line}` : undefined, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             {i < 2 ? (
               <div dir="rtl" style={{display: 'flex', alignItems: 'center', gap: 24, fontFamily: F.ar, fontWeight: 700, fontSize: 60, color: c.fg, opacity: content}}>
                 <svg width={58} height={58} viewBox="0 0 58 58" style={{display: 'block'}}>
@@ -185,6 +198,7 @@ const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
               </div>
             )}
           </div>
+          </Extrude>
         );
       })}
       {t > s7.line1 - 0.05 ? (
@@ -194,11 +208,13 @@ const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         </>
       ) : null}
       {t > s7.cta ? (
-        <div style={{position: 'absolute', top: 1580, left: 0, right: 0, display: 'flex', justifyContent: 'center'}}>
-          <div dir="rtl" style={{padding: '22px 64px', borderRadius: R.pill, background: P.orange, fontFamily: F.ar, fontWeight: 700, fontSize: 60, color: P.onOrange, display: 'flex', gap: 26, alignItems: 'center', transform: `scale(${ctaK * (1 + 0.04 * beat)})`}}>
+        <div style={{position: 'absolute', top: 1580, left: 0, right: 0, display: 'flex', justifyContent: 'center', ...P3}}>
+          <Extrude depth={34} layers={5} back={<Slab color={shade(P.orange, 0.5)} radius={R.pill} />} style={{transform: `translateZ(${80 + 40 * beat}px) scale(${ctaK * (1 + 0.04 * beat)}) rotateX(${(1 - clamp01(ctaK)) * 80 + Math.sin(t * 1.5) * 5}deg) rotateY(${Math.sin(t * 1.1) * 7}deg)`}}>
+          <div dir="rtl" style={{padding: '22px 64px', borderRadius: R.pill, background: P.orange, fontFamily: F.ar, fontWeight: 700, fontSize: 60, color: P.onOrange, display: 'flex', gap: 26, alignItems: 'center'}}>
             <span>واتساب</span>
             <span dir="ltr" style={{fontFamily: F.display, fontSize: 68, letterSpacing: '0.02em'}}>{WHATSAPP}</span>
           </div>
+          </Extrude>
         </div>
       ) : null}
       {t > s7.cta + 0.4 ? (

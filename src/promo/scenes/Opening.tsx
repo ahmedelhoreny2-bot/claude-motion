@@ -2,9 +2,11 @@ import React from 'react';
 import {AbsoluteFill} from 'remotion';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, rand} from '../../lib';
 import {Floaters, Tri, Words} from '../kit';
+import {Extrude, P3, shade, stretch} from '../space';
 import {arNum, ELASTIC, F, FPS, H, HEAVY, P, POP, R, sp, TL, W} from '../theme';
 
 const {s1, s2, s3} = TL;
+const TRI_SIDE = shade(P.orange, 0.5);
 
 /* ---------------- scene 1: the feed ---------------- */
 
@@ -111,6 +113,9 @@ const Paper: React.FC<{i: number; t: number; frame: number}> = ({i, t, frame}) =
   const blow = t >= s3.tap ? t - s3.tap : 0;
   const morph = prog(t, s3.tap, s3.tap + 0.5, easeOut);
   let scale = 1;
+  let z = i * 6;
+  let rx = landed ? 0 : 35 * (1 - dt / landT);
+  let ry = 0;
   if (blow > 0) {
     const ang = (-90 + (i / PAPERS - 0.5) * 200 + (rand(i) - 0.5) * 30) * (Math.PI / 180);
     const speed = 2400 + rand(i + 3) * 1600;
@@ -119,6 +124,9 @@ const Paper: React.FC<{i: number; t: number; frame: number}> = ({i, t, frame}) =
     y += Math.sin(ang) * d + 120 * blow * blow;
     rot += blow * 260 * (rand(i + 9) - 0.5);
     scale = lerp(1, 0.38, morph);
+    z += d * (rand(i + 11) > 0.35 ? 0.9 : -0.4);
+    rx += blow * 420 * (rand(i + 12) - 0.5);
+    ry += blow * 520 * (rand(i + 13) - 0.5);
     if (blow > 1.6) return null;
   }
   const w = 290;
@@ -137,7 +145,7 @@ const Paper: React.FC<{i: number; t: number; frame: number}> = ({i, t, frame}) =
         height: h,
         borderRadius: radius,
         background: base,
-        transform: `rotate(${rot}deg) scale(${scale})`,
+        transform: `translateZ(${z}px) rotateX(${rx}deg) rotateY(${ry}deg) rotate(${rot}deg) scale(${scale})`,
         filter: `saturate(${1 - dead * (morph > 0 ? 0 : 1)}) brightness(${1 - dead * 0.55 * (1 - morph)})`,
         boxShadow: '0 18px 40px rgba(0,0,0,0.45)',
         padding: 28,
@@ -165,6 +173,8 @@ const triState = (t: number, frame: number) => {
   let y = lerp(CARD_IMG_Y, 760, pop);
   let s = lerp(0.87, 1.9, pop);
   let rot = 0;
+  let z = lerp(-120, 170, pop);
+  let ry = (1 - pop) * -75;
   let sx = 1;
   let sy = 1;
   // retreat to the side while the pile falls
@@ -173,11 +183,15 @@ const triState = (t: number, frame: number) => {
   y = lerp(y, 1500, side);
   s = lerp(s, 0.62, side);
   rot = lerp(0, -10, side);
+  z = lerp(z, 40, side);
+  ry += 25 * side * Math.sin(t * 1.3);
   // hop onto the pile
   const hop = prog(t, s3.hop, s3.hop + 0.75, easeInOut);
   x = lerp(x, W / 2, hop);
   y = lerp(y, PILE_TOP - 70, hop) - Math.sin(hop * Math.PI) * 360;
   rot = lerp(rot, 0, hop) + Math.sin(hop * Math.PI) * 20;
+  z += Math.sin(hop * Math.PI) * 260;
+  ry = lerp(ry, 0, hop) + Math.sin(hop * Math.PI) * 180;
   // anticipation squash, then the tap
   const squash = prog(t, s3.squash, s3.tap, easeIn) * (t < s3.tap ? 1 : 0);
   sx *= 1 + 0.28 * squash;
@@ -186,17 +200,20 @@ const triState = (t: number, frame: number) => {
   x = lerp(x, W / 2, rise);
   y = lerp(y, 690, rise);
   s = lerp(s, 1.35, rise);
+  z = lerp(z, 220, rise);
+  ry += (1 - rise) * 30 * (t > s3.tap ? 1 : 0) + Math.sin((t - s3.tap) * 1.4) * 16 * rise;
   const st = t >= s3.tap ? Math.exp(-(t - s3.tap) * 6) : 0;
   sx *= 1 - 0.2 * st;
   sy *= 1 + 0.3 * st;
   // exits left, the way it points
   const go = prog(t, s3.exit, s3.exit + 0.5, easeIn);
   x = lerp(x, -500, go);
+  z += go * 500;
   sx *= 1 + go * 0.5;
   sy *= 1 - go * 0.25;
   // idle breathing
   const breathe = 1 + 0.025 * Math.sin(t * 3.2);
-  return {x, y, s: s * breathe, rot, sx, sy};
+  return {x, y, z, ry, s: s * breathe, rot, sx, sy};
 };
 
 /* ---------------- composition ---------------- */
@@ -217,6 +234,7 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
   const sy = (rand(frame + 50) - 0.5) * shake;
 
   const tri = triState(t, frame);
+  const triPrev = triState(t - 1 / FPS, frame - 1);
   const showTri = t >= s1.stop;
 
   // scene 2 counter
@@ -229,7 +247,7 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
   const flash = t >= s3.tap ? Math.exp(-tap * 5) : 0;
 
   return (
-    <AbsoluteFill style={{transform: `translate(${sx}px, ${sy}px)`}}>
+    <AbsoluteFill style={{...P3, transform: `translate(${sx}px, ${sy}px)`}}>
       {/* feed */}
       {t < s1.exit + 0.6 ? (
         <AbsoluteFill
@@ -304,15 +322,16 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
 
       {/* scene 3: the tap */}
       {t >= s3.tap && t < s3.tap + 1.2 ? (
-        <AbsoluteFill style={{pointerEvents: 'none'}}>
-          <div style={{position: 'absolute', inset: 0, background: P.orange, opacity: flash * 0.55}} />
+        <AbsoluteFill style={{pointerEvents: 'none', ...P3}}>
+          <div style={{position: 'absolute', inset: -1400, background: P.orange, opacity: flash * 0.55}} />
           {[
-            {k: waveA, c: P.orange, w: 60},
-            {k: waveB, c: P.teal, w: 40},
+            {k: waveA, c: P.orange, w: 60, tilt: 74},
+            {k: waveB, c: P.teal, w: 40, tilt: 0},
           ].map((r, i) => (
             <div
               key={i}
               style={{
+                transform: `rotateX(${r.tilt}deg)`,
                 position: 'absolute',
                 left: W / 2 - 1600 * r.k,
                 top: PILE_TOP - 70 - 1600 * r.k,
@@ -334,18 +353,21 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
         </>
       ) : null}
 
-      {/* hero triangle */}
+      {/* hero triangle: solid, stretched by its own speed */}
       {showTri ? (
         <div
           style={{
             position: 'absolute',
             left: tri.x,
             top: tri.y,
-            transform: `translate(-50%, -50%) rotate(${tri.rot}deg) scale(${tri.s * tri.sx}, ${tri.s * tri.sy})`,
+            ...P3,
+            transform: `translate(-50%, -50%) translateZ(${tri.z}px) ${stretch(tri.x - triPrev.x, tri.y - triPrev.y, 0.006, 0.6)} rotateY(${tri.ry}deg) rotate(${tri.rot}deg) scale(${tri.s * tri.sx}, ${tri.s * tri.sy})`,
             transformOrigin: '50% 100%',
           }}
         >
-          <Tri size={230} />
+          <Extrude depth={46} layers={8} back={<Tri size={230} color={TRI_SIDE} />}>
+            <Tri size={230} />
+          </Extrude>
         </div>
       ) : null}
     </AbsoluteFill>

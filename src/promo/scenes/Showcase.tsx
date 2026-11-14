@@ -2,11 +2,13 @@ import React from 'react';
 import {AbsoluteFill} from 'remotion';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog} from '../../lib';
 import {Floaters, Label, Words} from '../kit';
+import {Extrude, P3, shade, Slab} from '../space';
 import {arNum, ELASTIC, F, FPS, P, POP, R, sp, TL, W} from '../theme';
 
 const {s4} = TL;
 const [w0, w1, w2, w3, w4] = s4.wipes;
 const BEAT = 60 / TL.bpm;
+const SIDE = {ink: shade(P.ink, 0.45), teal: shade(P.teal, 0.5), orange: shade(P.orange, 0.5)};
 
 /** Beat pulse 0..1 that peaks on every beat after `from`. */
 const pulse = (t: number, from: number) => {
@@ -35,17 +37,26 @@ const LogoBuild: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const cx = W / 2;
   const cy = 900;
   const R = 230;
-  return (
-    <AbsoluteFill>
-      <Label t={t} start={a} out={w1} text="لوجو بيتولد قدامك" />
-      <svg width={W} height={1920} style={{position: 'absolute'}}>
-        <circle cx={cx} cy={cy} r={R} fill="none" stroke={P.cream} strokeWidth={34} strokeLinecap="round"
+  const spin = sp(frame, a + 0.05, {damping: 13, stiffness: 90, mass: 1});
+  const Madar: React.FC<{dark: boolean}> = ({dark}) => (
+      <svg width={680} height={680} viewBox={`${cx - 340} ${cy - 340} 680 680`} style={{display: 'block'}}>
+        <circle cx={cx} cy={cy} r={R} fill="none" stroke={(dark ? SIDE.ink : P.ink)} strokeWidth={34} strokeLinecap="round"
           strokeDasharray={`${2 * Math.PI * R * ring} 9999`} transform={`rotate(-90 ${cx} ${cy})`} />
-        <path d={`M ${cx - 120} ${cy + 40} A 130 130 0 0 0 ${cx + 120} ${cy + 40}`} fill="none" stroke={P.teal}
+        <path d={`M ${cx - 120} ${cy + 40} A 130 130 0 0 0 ${cx + 120} ${cy + 40}`} fill="none" stroke={(dark ? SIDE.teal : P.teal)}
           strokeWidth={34} strokeLinecap="round" strokeDasharray={`${420 * arc} 9999`} />
-        <circle cx={cx + Math.cos(orbit - 1.2) * R} cy={cy + Math.sin(orbit - 1.2) * R} r={52 * dot} fill={P.orange} />
-        <circle cx={cx} cy={cy - 40} r={46 * sp(frame, a + 1.0, POP)} fill={P.orange} />
+        <circle cx={cx + Math.cos(orbit - 1.2) * R} cy={cy + Math.sin(orbit - 1.2) * R} r={52 * dot} fill={(dark ? SIDE.orange : P.orange)} />
+        <circle cx={cx} cy={cy - 40} r={46 * sp(frame, a + 1.0, POP)} fill={(dark ? SIDE.orange : P.orange)} />
       </svg>
+  );
+
+  return (
+    <AbsoluteFill style={P3}>
+      <Label t={t} start={a} out={w1} text="لوجو بيتولد قدامك" />
+      <div style={{position: 'absolute', left: cx - 340, top: cy - 340, width: 680, height: 680, ...P3, transform: `translateZ(${lerp(-700, 120, spin)}px) rotateY(${(1 - spin) * -160 + Math.sin(t * 1.2) * 12}deg) rotateX(${Math.sin(t * 0.9) * 8}deg)`}}>
+      <Extrude depth={60} layers={7} back={<Madar dark />}>
+      <Madar dark={false} />
+      </Extrude>
+      </div>
       <Words text="مَدار" t={t} start={name} size={180} style={{position: 'absolute', top: 1220, left: 0, right: 0}} />
       <Words text="كافيه وروستري" t={t} start={name + 0.3} size={58} weight={500} color={P.muted} style={{position: 'absolute', top: 1470, left: 0, right: 0}} />
       <Demo t={t} at={name + 0.8} top={1620} />
@@ -63,12 +74,14 @@ const Kinetic: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   ];
   const beat = pulse(t, a + 1.7);
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={P3}>
       <Label t={t} start={a} out={w2} text="كلمة بتتكلم" />
-      <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', gap: 0, paddingTop: 80}}>
+      <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', gap: 0, paddingTop: 80, ...P3}}>
         {lines.map((l, i) => {
           const k = sp(frame, l.at, ELASTIC);
-          const stretch = 1 + (1 - clamp01(k)) * 0.6;
+          const vel = Math.abs(k - sp(frame - 1, l.at, ELASTIC)) * FPS;
+          const stretch = 1 + Math.min(0.9, vel * 0.12);
+          const zi = [-160, 60, 240][i];
           const b = i === 2 ? beat : beat * 0.4;
           return (
             <div
@@ -80,7 +93,7 @@ const Kinetic: React.FC<{t: number; frame: number}> = ({t, frame}) => {
                 fontSize: l.size,
                 lineHeight: 1.15,
                 color: l.c,
-                transform: `translateX(${(1 - k) * 700}px) scale(${stretch * (1 + b * 0.06)}, ${(1 / stretch) * (1 + b * 0.06)}) rotate(${(i - 1) * -3 * k}deg)`,
+                transform: `translateZ(${lerp(-2200, zi, k)}px) translateX(${(1 - k) * (i - 1) * 500}px) rotateY(${(1 - k) * (i % 2 ? 70 : -70) + Math.sin(t * 1.4 + i) * 8}deg) scale(${(1 / Math.sqrt(stretch)) * (1 + b * 0.06)}, ${stretch * (1 + b * 0.06)}) rotate(${(i - 1) * -3 * k}deg)`,
                 opacity: clamp01(k * 3),
               }}
             >
@@ -102,24 +115,22 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const shine = prog(t, a + 1.0, a + 2.0, easeInOut);
   const badge = sp(frame, a + 1.6, POP);
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={P3}>
       <Label t={t} start={a} out={w3} text="منتج بيلمع" />
-      <AbsoluteFill style={{top: 420}}><Floaters t={t} k={prog(t, a, a + 0.8)} seed={7} count={8} /></AbsoluteFill>
+      <AbsoluteFill style={{top: 420, ...P3}}><Floaters t={t} k={prog(t, a, a + 0.8)} seed={7} count={8} /></AbsoluteFill>
       <div style={{position: 'absolute', left: W / 2 - 300, top: 1580, width: 600, height: 60, borderRadius: '50%', background: 'rgba(0,0,0,0.55)', filter: 'blur(20px)', transform: `scaleX(${0.6 + 0.4 * k})`}} />
-      <div style={{position: 'absolute', left: 0, right: 0, top: 520, display: 'flex', justifyContent: 'center', perspective: 1600}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 520, display: 'flex', justifyContent: 'center', ...P3}}>
+        <Extrude depth={44} layers={6} back={<Slab color={P.line} radius={70} />} style={{transform: `translateZ(${lerp(-900, 80, k)}px) translateY(${(1 - k) * 600}px) rotateY(${ry}deg) rotateX(${rx}deg)`}}>
         <div
           style={{
             width: 480,
             height: 960,
             borderRadius: 70,
-            background: '#0B0B0B',
-            border: '14px solid #2E2D2B',
+            background: P.bg,
+            border: `14px solid ${P.line}`,
             boxSizing: 'border-box',
-            transform: `translateY(${(1 - k) * 600}px) rotateY(${ry}deg) rotateX(${rx}deg)`,
-            transformStyle: 'preserve-3d',
             position: 'relative',
             overflow: 'hidden',
-            boxShadow: '0 30px 70px rgba(0,0,0,0.5)',
           }}
         >
           <div style={{position: 'absolute', inset: 0, background: P.orange}} />
@@ -131,6 +142,7 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
           {/* light sweep */}
           <div style={{position: 'absolute', top: -200, bottom: -200, width: 160, left: lerp(-300, 700, shine), background: 'rgba(255,255,255,0.28)', transform: 'rotate(18deg)'}} />
         </div>
+        </Extrude>
       </div>
       <Demo t={t} at={a + 1.2} top={1660} />
       <div
@@ -146,7 +158,7 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
           fontFamily: F.ar,
           fontWeight: 700,
           fontSize: 52,
-          transform: `scale(${badge}) rotate(-8deg)`,
+          transform: `translateZ(260px) scale(${badge}) rotate(-8deg) rotateY(${Math.sin(t * 2) * 15}deg)`,
         }}
       >
         جديد
@@ -163,9 +175,10 @@ const Data: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const stamp = sp(frame, a + 1.7, ELASTIC);
   const old = prog(t, a + 1.0, a + 1.4, easeOut);
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={P3}>
       <Label t={t} start={a} out={w4} text="رقم بيقنع" />
-      <div style={{position: 'absolute', left: W / 2 - 330, top: 560, width: 660, height: 820, borderRadius: R.xl, background: P.surface, border: `3px solid ${P.line}`, transform: `scale(${tag}) rotate(${(1 - tag) * 8}deg)`, boxShadow: '0 30px 70px rgba(0,0,0,0.5)'}}>
+      <Extrude depth={40} layers={5} back={<Slab color={P.line} radius={R.xl} />} style={{position: 'absolute', left: W / 2 - 330, top: 560, width: 660, height: 820, transform: `translateZ(${lerp(-900, 0, tag)}px) rotateY(${(1 - tag) * 80 + Math.sin(t * 1.1) * 7}deg) rotateX(${(1 - tag) * -20 + Math.sin(t * 0.8) * 4}deg)`}}>
+      <div style={{position: 'relative', width: 660, height: 820, borderRadius: R.xl, background: P.surface, border: `3px solid ${P.line}`, boxSizing: 'border-box'}}>
         <div dir="rtl" style={{position: 'absolute', top: 60, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 700, fontSize: 56, color: P.ink}}>عرض الأسبوع</div>
         <div dir="rtl" style={{position: 'absolute', top: 150, left: 0, right: 0, textAlign: 'center', fontFamily: F.display, fontSize: 300, lineHeight: 1.3, color: P.orange}}>
           {arNum(n)}٪
@@ -179,7 +192,8 @@ const Data: React.FC<{t: number; frame: number}> = ({t, frame}) => {
           <span style={{color: P.teal, opacity: old}}>{arNum(560)} ج</span>
         </div>
       </div>
-      <div style={{position: 'absolute', right: 150, top: 500, width: 170, height: 170, borderRadius: R.pill, background: P.teal, color: P.onTeal, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontSize: 52, transform: `scale(${stamp}) rotate(${12 - 12 * stamp + 10}deg)`}}>
+      </Extrude>
+      <div style={{position: 'absolute', right: 150, top: 500, width: 170, height: 170, borderRadius: R.pill, background: P.teal, color: P.onTeal, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontSize: 52, transform: `translateZ(${180 + (1 - stamp) * 600}px) scale(${stamp}) rotate(${12 - 12 * stamp + 10}deg) rotateY(${Math.sin(t * 2.2) * 20}deg)`}}>
         لفترة
       </div>
       <Demo t={t} at={a + 1.4} top={1460} />
@@ -201,7 +215,7 @@ export const Showcase: React.FC<{frame: number}> = ({frame}) => {
     <>
       {scenes.map(({from, to, C}, i) =>
         t >= from && t < to ? (
-          <AbsoluteFill key={i} style={{transform: push(from)}}>
+          <AbsoluteFill key={i} style={{...P3, transform: push(from)}}>
             <C t={t} frame={frame} />
           </AbsoluteFill>
         ) : null,

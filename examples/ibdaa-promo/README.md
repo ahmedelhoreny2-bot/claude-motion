@@ -7,6 +7,7 @@
 - الكومبوزيشن: `IbdaaPromo` (1080×1920، 30fps)، والكود في `src/promo/`
 - التايم لاين: `src/promo/timeline.json`
 - الهوية: ماشية على الـ design system بتاع الصفحة. الألوان من التوكنز، والعناوين بخط Lalezar، والنصوص بخط IBM Plex Sans Arabic، ومفيش جرادينت، والنص اللي فوق البرتقالي غامق. اللوجو نفسه (حركة الـ sting والصورة) مستخدم زي ما هو من غير ما يتعاد رسمه، والبراندات التخيلية مكتوب عليها «للعرض».
+- الـ 2.5D: الكاميرا وطبقات العمق والسُمك والتمطيط مع السرعة كلها في `src/promo/space.tsx`. الكاميرا بتتحرك على البيتس، وبتهدى لما يكون فيه كلام لازم يتقري.
 - الصوت: `sfx/cues/promo.py` → `public/promo-music.wav` (عند ‎-16 LUFS عشان يفضل مكان للفويس)
 
 ## الفويس أوفر
@@ -38,7 +39,7 @@
 
 ```bash
 python3 -m sfx sfx/cues/promo.py && python3 scripts/promo-vo.py
-npx remotion render IbdaaPromo out/ibdaa-silent.mp4
+npx remotion render IbdaaPromo out/ibdaa-silent.mp4 --gl=angle --timeout=120000   # angle أسرع بـ 3 مرات تقريباً مع الـ 3D
 ffmpeg -y -i out/ibdaa-silent.mp4 -i public/promo-music.wav -i public/promo-vo.wav \
   -filter_complex "[2:a]aresample=48000,loudnorm=I=-16:TP=-1.5,pan=stereo|c0=c0|c1=c0,asplit=2[vo][sc];[1:a][sc]sidechaincompress=threshold=0.02:ratio=8:attack=10:release=400:makeup=1[duck];[duck][vo]amix=inputs=2:normalize=0:weights='0.6 1.25',loudnorm=I=-14:TP=-1.5:LRA=11[a]" \
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 256k -ar 48000 -movflags +faststart -shortest out/ibdaa-promo.mp4

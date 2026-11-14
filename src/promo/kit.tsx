@@ -6,6 +6,7 @@ import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
 import '@fontsource/ibm-plex-sans-arabic/arabic-700.css';
 import '@fontsource/ibm-plex-sans-arabic/latin-700.css';
 import {clamp01, easeIn, easeOut, prog, rand} from '../lib';
+import {Extrude, P3, shade} from './space';
 import {F, FPS, H, P, W} from './theme';
 
 export const useBrandFonts = () => {
@@ -123,24 +124,26 @@ export const Words: React.FC<{
         flexWrap: 'wrap',
         justifyContent: 'center',
         columnGap: size * 0.26,
+        ...P3,
         ...style,
       }}
     >
       {words.map((w, i) => {
-        const k = prog(t, start + i * stagger, start + i * stagger + dur, easeOut);
+        const a = start + i * stagger;
+        const k = prog(t, a, a + dur, easeOut);
+        // entrance speed drives the stretch: fast words smear toward the lens
+        const vel = (k - prog(t - 1 / FPS, a, a + dur, easeOut)) * FPS;
+        const st = Math.min(0.55, vel * 0.09);
         const ko = clamp01(o * 1.4 - i * 0.08);
         return (
-          <span
-            key={i}
-            style={{display: 'inline-block', overflow: 'hidden', padding: '0.18em 0.06em 0.3em', margin: '-0.18em -0.06em -0.3em'}}
-          >
+          <span key={i} style={{display: 'inline-block', ...P3}}>
             <span
               style={{
                 display: 'inline-block',
                 color: accent[i] ?? color,
-                opacity: 1 - clamp01((ko - 0.6) / 0.3),
-                transform: `translateY(${(1 - k) * 115 - ko * 115}%) rotate(${(1 - k) * -6}deg)`,
-                transformOrigin: '100% 100%',
+                opacity: clamp01(k * 2.2) * (1 - clamp01((ko - 0.3) / 0.5)),
+                transform: `translateZ(${-900 * (1 - k) + 520 * ko}px) translateY(${(1 - k) * 90 - ko * 40}px) rotateX(${(1 - k) * -78 + ko * 30}deg) rotateY(${(1 - k) * 14}deg) scale(${1 - st * 0.25}, ${1 + st})`,
+                transformOrigin: '50% 100%',
               }}
             >
               {w}
@@ -162,31 +165,28 @@ export const SpeedWipe: React.FC<{t: number; at: number}> = ({t, at}) => {
   const d = 0.62;
   if (t < at - d || t > at + d) return null;
   const bands = [
-    {c: P.teal, top: -40, h: 700, lag: 0.05},
-    {c: P.orange, top: 600, h: 740, lag: 0},
-    {c: P.teal, top: 1280, h: 700, lag: 0.08},
+    {c: P.teal, top: -260, h: 900, lag: 0.05},
+    {c: P.orange, top: 560, h: 860, lag: 0},
+    {c: P.teal, top: 1320, h: 900, lag: 0.08},
   ];
   return (
-    <AbsoluteFill style={{pointerEvents: 'none'}}>
+    <AbsoluteFill style={{pointerEvents: 'none', ...P3}}>
       {bands.map((b, i) => {
         const k = prog(t, at - d + b.lag, at + d + b.lag - 0.1, (x) => x);
         // in: leading edge sweeps from right to left; out: trailing edge follows.
-        const lead = interpolate(k, [0, 0.5], [W + 40, -40], {extrapolateRight: 'clamp', easing: easeOut});
-        const trail = interpolate(k, [0.5, 1], [W + 40, -60], {extrapolateLeft: 'clamp', easing: easeIn});
+        const lead = interpolate(k, [0, 0.5], [W + 400, -400], {extrapolateRight: 'clamp', easing: easeOut});
+        const trail = interpolate(k, [0.5, 1], [W + 400, -420], {extrapolateLeft: 'clamp', easing: easeIn});
         const width = Math.max(0, trail - lead);
         return (
-          <div
+          <Extrude
             key={i}
-            style={{
-              position: 'absolute',
-              top: b.top,
-              left: lead,
-              width,
-              height: b.h,
-              background: b.c,
-              borderRadius: b.h / 2,
-            }}
-          />
+            depth={70}
+            layers={4}
+            back={<div style={{position: 'absolute', inset: 0, background: shade(b.c, 0.5), borderRadius: b.h / 2}} />}
+            style={{position: 'absolute', top: b.top, left: lead, width, height: b.h, transform: `translateZ(${140 + i * 50}px) rotateY(${-10 + i * 6}deg)`}}
+          >
+            <div style={{width: '100%', height: b.h, background: b.c, borderRadius: b.h / 2}} />
+          </Extrude>
         );
       })}
     </AbsoluteFill>
@@ -210,7 +210,7 @@ export const Backdrop: React.FC<{t: number; tint?: string; glow?: number}> = ({t
 
 /** Floating confetti-shapes in three depth layers (2.5D parallax). */
 export const Floaters: React.FC<{t: number; k: number; seed?: number; count?: number}> = ({t, k, seed = 1, count = 18}) => (
-  <AbsoluteFill style={{pointerEvents: 'none'}}>
+  <AbsoluteFill style={{pointerEvents: 'none', ...P3}}>
     {Array.from({length: count}).map((_, i) => {
       const r = (n: number) => rand(seed * 100 + i * 7 + n);
       const depth = 0.4 + r(1) * 1.2;
@@ -233,9 +233,8 @@ export const Floaters: React.FC<{t: number; k: number; seed?: number; count?: nu
             borderRadius: kind === 0 ? '50%' : kind === 2 ? size : size * 0.22,
             background: kind === 1 ? 'transparent' : c,
             border: kind === 1 ? `${Math.max(4, size * 0.16)}px solid ${c}` : undefined,
-            transform: `scale(${kk}) rotate(${t * 30 * (r(7) - 0.5) + r(8) * 180}deg)`,
-            opacity: (0.25 + 0.55 * (depth - 0.4) / 1.2) * kk,
-            filter: depth < 0.7 ? 'blur(3px)' : undefined,
+            transform: `translateZ(${(depth - 1) * 700}px) scale(${kk}) rotateX(${t * 50 * (r(9) - 0.5)}deg) rotateY(${t * 70 * (r(10) - 0.5)}deg) rotate(${t * 30 * (r(7) - 0.5) + r(8) * 180}deg)`,
+            opacity: (0.35 + 0.55 * (depth - 0.4) / 1.2) * kk,
           }}
         />
       );
