@@ -5,6 +5,7 @@ import {EffortVideo} from './EffortVideo';
 import {FPS, H, TL, W} from './lib';
 import {PromoVideo} from './promo/PromoVideo';
 import {DOT_DURATION, DOT_FPS, DotVideo} from './dot/DotVideo';
+import {TOY_DURATION, TOY_FPS, ToyVideo} from './toy/ToyVideo';
 import * as PT from './promo/theme';
 
 export const Root: React.FC = () => (
@@ -30,6 +31,14 @@ export const Root: React.FC = () => (
       component={DotVideo}
       durationInFrames={Math.round(DOT_DURATION * DOT_FPS)}
       fps={DOT_FPS}
+      width={1080}
+      height={1920}
+    />
+    <Composition
+      id="ShattourToy"
+      component={ToyVideo}
+      durationInFrames={Math.round(TOY_DURATION * TOY_FPS)}
+      fps={TOY_FPS}
       width={1080}
       height={1920}
     />
