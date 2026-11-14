@@ -242,6 +242,7 @@ def score(mix, tl):
         put(l, click(2000 + i * 300), 0.14, 0.2 + i * 0.15)
     put(s6["word1"], whoosh(0.35, 500, 2800, peak=0.5), 0.12)
     put(s6["word2"], whoosh(0.35, 700, 3200, peak=0.5), 0.12)
+    put(s6["tag"], blip(587.33, dur=0.6), 0.1)
 
     # ---- scene 7: bubbles, CTA
     put(s7["dock"], whoosh(0.5, 2200, 600), 0.1)

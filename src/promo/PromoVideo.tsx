@@ -2,14 +2,14 @@ import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {Grain} from '../components/primitives';
 import {easeOut, prog} from '../lib';
-import {Backdrop, SpeedWipe, useCairo} from './kit';
+import {Backdrop, SpeedWipe, useBrandFonts} from './kit';
 import {Finale} from './scenes/Finale';
 import {Opening} from './scenes/Opening';
 import {Showcase} from './scenes/Showcase';
 import {FPS, TL} from './theme';
 
 export const PromoVideo: React.FC = () => {
-  useCairo();
+  useBrandFonts();
   const frame = useCurrentFrame();
   const t = frame / FPS;
   const glow = prog(t, TL.s3.tap, TL.s3.tap + 1, easeOut);

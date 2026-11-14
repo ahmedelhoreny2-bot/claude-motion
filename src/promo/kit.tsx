@@ -1,17 +1,22 @@
 import React, {useEffect, useState} from 'react';
 import {AbsoluteFill, continueRender, delayRender, interpolate} from 'remotion';
-import '@fontsource/cairo/arabic-600.css';
-import '@fontsource/cairo/arabic-700.css';
-import '@fontsource/cairo/arabic-900.css';
-import '@fontsource/cairo/latin-900.css';
+import '@fontsource/lalezar/arabic-400.css';
+import '@fontsource/lalezar/latin-400.css';
+import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
+import '@fontsource/ibm-plex-sans-arabic/arabic-700.css';
+import '@fontsource/ibm-plex-sans-arabic/latin-700.css';
 import {clamp01, easeIn, easeOut, prog, rand} from '../lib';
 import {F, FPS, H, P, W} from './theme';
 
-export const useCairo = () => {
+export const useBrandFonts = () => {
   const [handle] = useState(() => delayRender('cairo'));
   useEffect(() => {
     Promise.all(
-      ['600', '700', '900'].map((w) => document.fonts.load(`${w} 100px "Cairo"`, 'إبداع')),
+      [
+        '400 100px Lalezar',
+        '500 100px "IBM Plex Sans Arabic"',
+        '700 100px "IBM Plex Sans Arabic"',
+      ].map((f) => document.fonts.load(f, 'إبداع')),
     ).then(() => continueRender(handle));
   }, [handle]);
 };
@@ -108,10 +113,10 @@ export const Words: React.FC<{
     <div
       dir="rtl"
       style={{
-        fontFamily: F.ar,
-        fontWeight: weight,
+        fontFamily: weight >= 900 ? F.display : F.ar,
+        fontWeight: weight >= 900 ? 400 : weight,
         fontSize: size,
-        lineHeight: 1.25,
+        lineHeight: weight >= 900 ? 1.3 : 1.4,
         color,
         textAlign: 'center',
         display: 'flex',
@@ -190,23 +195,16 @@ export const SpeedWipe: React.FC<{t: number; at: number}> = ({t, at}) => {
 
 /* ---------- texture ---------- */
 
-export const Backdrop: React.FC<{t: number; tint?: string; glow?: number}> = ({t, tint = P.orange, glow = 0}) => (
+export const Backdrop: React.FC<{t: number; tint?: string; glow?: number}> = ({t}) => (
   <AbsoluteFill style={{background: P.bg}}>
     <AbsoluteFill
       style={{
         backgroundImage: `radial-gradient(${P.line} 2px, transparent 2.5px)`,
         backgroundSize: '48px 48px',
         backgroundPosition: `${-t * 9}px ${t * 4}px`,
-        opacity: 0.9,
+        opacity: 0.55,
       }}
     />
-    <AbsoluteFill
-      style={{
-        background: `radial-gradient(ellipse 70% 45% at 50% 46%, ${tint}, transparent 70%)`,
-        opacity: 0.22 * glow,
-      }}
-    />
-    <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 55%, rgba(0,0,0,0.55))'}} />
   </AbsoluteFill>
 );
 
@@ -217,7 +215,7 @@ export const Floaters: React.FC<{t: number; k: number; seed?: number; count?: nu
       const r = (n: number) => rand(seed * 100 + i * 7 + n);
       const depth = 0.4 + r(1) * 1.2;
       const kind = Math.floor(r(2) * 3);
-      const c = [P.orange, P.teal, P.cream][Math.floor(r(3) * 3)];
+      const c = [P.teal, P.teal, P.ink][Math.floor(r(3) * 3)];
       const size = 18 + 40 * depth;
       const x = r(4) * W + Math.sin(t * 0.6 + i) * 20 * depth - t * 14 * depth;
       const y = r(5) * H + Math.cos(t * 0.5 + i * 2) * 26 * depth;
@@ -254,9 +252,9 @@ export const Label: React.FC<{t: number; start: number; out: number; text: strin
       <div
         dir="rtl"
         style={{
-          fontFamily: F.ar,
-          fontWeight: 900,
-          fontSize: 84,
+          fontFamily: F.display,
+          fontWeight: 400,
+          fontSize: 88,
           color: P.cream,
           opacity: k * (1 - o),
           transform: `translateY(${(1 - k) * 40 - o * 30}px)`,
@@ -266,7 +264,7 @@ export const Label: React.FC<{t: number; start: number; out: number; text: strin
         }}
       >
         <span>{text}</span>
-        <div style={{width: 64 * k, height: 14, borderRadius: 7, background: P.orange}} />
+        <div style={{width: 64 * k, height: 14, borderRadius: 7, background: P.teal}} />
       </div>
     </div>
   );

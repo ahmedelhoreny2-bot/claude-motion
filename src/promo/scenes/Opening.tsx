@@ -1,8 +1,8 @@
 import React from 'react';
-import {AbsoluteFill, interpolate} from 'remotion';
+import {AbsoluteFill} from 'remotion';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, rand} from '../../lib';
 import {Floaters, Tri, Words} from '../kit';
-import {arNum, ELASTIC, F, FPS, H, HEAVY, P, POP, sp, TL, W} from '../theme';
+import {arNum, ELASTIC, F, FPS, H, HEAVY, P, POP, R, sp, TL, W} from '../theme';
 
 const {s1, s2, s3} = TL;
 
@@ -31,7 +31,7 @@ const Card: React.FC<{i: number; glow: number}> = ({i, glow}) => {
         top: 120 + i * STEP,
         width: CARD_W,
         height: CARD_H,
-        borderRadius: 40,
+        borderRadius: R.lg,
         background: P.card,
         padding: 36,
         boxSizing: 'border-box',
@@ -48,7 +48,7 @@ const Card: React.FC<{i: number; glow: number}> = ({i, glow}) => {
         style={{
           marginTop: 34,
           height: 720,
-          borderRadius: 26,
+          borderRadius: R.md,
           background: i === TARGET ? '#1A1918' : P.cardHi,
           position: 'relative',
           overflow: 'hidden',
@@ -64,7 +64,7 @@ const Card: React.FC<{i: number; glow: number}> = ({i, glow}) => {
           </>
         )}
         {i === TARGET ? (
-          <div style={{position: 'absolute', inset: 0, background: `radial-gradient(circle, ${P.orange}, transparent 65%)`, opacity: 0.35 * glow}} />
+          <div style={{position: 'absolute', inset: 0, border: `6px solid ${P.orange}`, borderRadius: R.md, opacity: glow}} />
         ) : null}
       </div>
       <div style={{display: 'flex', flexDirection: 'row-reverse', gap: 26, marginTop: 34}}>
@@ -123,7 +123,7 @@ const Paper: React.FC<{i: number; t: number; frame: number}> = ({i, t, frame}) =
   }
   const w = 290;
   const h = 370;
-  const radius = lerp(18, p.kind === 0 ? 200 : p.kind === 1 ? 70 : 30, morph);
+  const radius = lerp(R.md, p.kind === 0 ? 200 : p.kind === 1 ? 70 : 30, morph);
   const base = morph > 0 ? p.color : P.paper;
   const wiggle = 0; // stillness is the point of this scene
   void frame;
@@ -146,10 +146,10 @@ const Paper: React.FC<{i: number; t: number; frame: number}> = ({i, t, frame}) =
       }}
     >
       <div style={{opacity: 1 - morph}}>
-        <div style={{height: 150, borderRadius: 12, background: '#B4AFA5'}} />
-        <div style={{marginTop: 22, height: 20, width: '80%', marginLeft: 'auto', borderRadius: 10, background: '#A39E94'}} />
-        <div style={{marginTop: 14, height: 20, width: '55%', marginLeft: 'auto', borderRadius: 10, background: '#A39E94'}} />
-        <div style={{marginTop: 30, height: 44, width: 120, borderRadius: 22, background: '#A39E94'}} />
+        <div style={{height: 150, borderRadius: R.sm, background: P.muted}} />
+        <div style={{marginTop: 22, height: 20, width: '80%', marginLeft: 'auto', borderRadius: 10, background: P.muted}} />
+        <div style={{marginTop: 14, height: 20, width: '55%', marginLeft: 'auto', borderRadius: 10, background: P.muted}} />
+        <div style={{marginTop: 30, height: 44, width: 120, borderRadius: R.pill, background: P.muted}} />
       </div>
     </div>
   );
@@ -275,8 +275,8 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
           <div
             dir="rtl"
             style={{
-              fontFamily: F.ar,
-              fontWeight: 900,
+              fontFamily: F.display,
+              fontWeight: 400,
               fontSize: 300,
               lineHeight: 1.1,
               color: P.cream,
@@ -343,7 +343,6 @@ export const Opening: React.FC<{frame: number}> = ({frame}) => {
             top: tri.y,
             transform: `translate(-50%, -50%) rotate(${tri.rot}deg) scale(${tri.s * tri.sx}, ${tri.s * tri.sy})`,
             transformOrigin: '50% 100%',
-            filter: `drop-shadow(0 30px 60px rgba(255,94,31,${0.25 + 0.35 * interpolate(t, [s3.tap, s3.tap + 1], [1, 0.4], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}))`,
           }}
         >
           <Tri size={230} />

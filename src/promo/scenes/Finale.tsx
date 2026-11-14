@@ -1,8 +1,8 @@
 import React from 'react';
-import {AbsoluteFill} from 'remotion';
+import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile} from 'remotion';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, rand} from '../../lib';
-import {Floaters, Mark, Tri, Words} from '../kit';
-import {ELASTIC, F, FPS, H, HEAVY, P, POP, sp, TL, W} from '../theme';
+import {Tri, Words} from '../kit';
+import {ELASTIC, F, FPS, HEAVY, P, POP, R, sp, TL, W} from '../theme';
 
 const {s5, s6, s7} = TL;
 const BEAT = 60 / TL.bpm;
@@ -66,18 +66,18 @@ const Fields: React.FC<{t: number; frame: number}> = ({t, frame}) => {
           const o = prog(t, ends[i] - 0.15, ends[i] + 0.2, easeIn);
           if (k <= 0 || o >= 1) return null;
           return (
-            <div key={i} dir="rtl" style={{position: 'absolute', inset: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 900, fontSize: 210, lineHeight: '330px', color: P.cream, transform: `translateY(${(1 - k) * 100 - o * 100}%)`}}>
+            <div key={i} dir="rtl" style={{position: 'absolute', inset: 0, textAlign: 'center', fontFamily: F.display, fontSize: 210, lineHeight: '330px', color: P.ink, transform: `translateY(${(1 - k) * 100 - o * 100}%)`}}>
               {w}
             </div>
           );
         })}
         {t >= s5.final - 0.05 ? (
-          <div dir="rtl" style={{position: 'absolute', inset: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 900, fontSize: 210, lineHeight: '330px', color: P.orange, transform: `translateY(${(1 - finalK) * 100}%) scale(${1 + 0.05 * Math.exp(-(t - s5.final) * 4)})`}}>
+          <div dir="rtl" style={{position: 'absolute', inset: 0, textAlign: 'center', fontFamily: F.display, fontSize: 210, lineHeight: '330px', color: P.orange, transform: `translateY(${(1 - finalK) * 100}%) scale(${1 + 0.05 * Math.exp(-(t - s5.final) * 4)})`}}>
             شغلك إنت
           </div>
         ) : null}
       </div>
-      <Words text="وكل مجال… له حركة." t={t} start={s5.sub} size={84} weight={700} color={P.creamDim} style={{position: 'absolute', top: 1470, left: 0, right: 0}} />
+      <Words text="وكل مجال… له حركة." t={t} start={s5.sub} size={76} weight={700} color={P.muted} style={{position: 'absolute', top: 1470, left: 0, right: 0}} />
     </AbsoluteFill>
   );
 };
@@ -86,17 +86,17 @@ const Fields: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 
 const SHARDS = 16;
 const Converge: React.FC<{t: number}> = ({t}) => {
-  const k = prog(t, s6.converge, s6.hit, (x) => x * x * x);
+  const k = prog(t, s6.converge, s6.sting + 0.1, (x) => x * x * x);
   if (k <= 0 || k >= 1) return null;
   return (
     <AbsoluteFill>
       {Array.from({length: SHARDS}).map((_, i) => {
         const a = (i / SHARDS) * Math.PI * 2 + rand(i) * 0.4;
         const d = 1300 * (1 - k);
-        const c = [P.orange, P.teal, P.cream][i % 3];
+        const c = [P.teal, P.ink, P.teal][i % 3];
         const size = 40 + rand(i + 4) * 50;
         return (
-          <div key={i} style={{position: 'absolute', left: W / 2 + Math.cos(a) * d - size / 2, top: 820 + Math.sin(a) * d - size / 2, width: size, height: size, borderRadius: i % 2 ? '50%' : 14, background: c, transform: `rotate(${k * 400}deg) scale(${1 - k * 0.7})`}} />
+          <div key={i} style={{position: 'absolute', left: W / 2 + Math.cos(a) * d - size / 2, top: 840 + Math.sin(a) * d - size / 2, width: size, height: size, borderRadius: i % 2 ? '50%' : 14, background: c, transform: `rotate(${k * 400}deg) scale(${1 - k * 0.7})`}} />
         );
       })}
     </AbsoluteFill>
@@ -104,75 +104,82 @@ const Converge: React.FC<{t: number}> = ({t}) => {
 };
 
 const CHANNELS = [
-  {text: 'واتساب', bg: P.teal, fg: P.bg},
-  {text: 'رسايل الصفحة', bg: P.orange, fg: P.cream},
-  {text: '', bg: P.cardHi, fg: P.cream},
+  {text: 'واتساب', bg: P.teal, fg: P.onTeal},
+  {text: 'رسايل الصفحة', bg: P.surface, fg: P.ink},
+  {text: '', bg: P.surface, fg: P.ink},
 ];
-const LINE_Y = [-66, 0, 66];
-const LINE_LEN = [115, 127, 115];
+const LINE_COLORS = [P.teal, P.orange, P.teal];
+// the speed lines inside the logo file (720 × 466 px)
+const LOGO_LINES = [
+  {x: 213, y: 155, w: 58},
+  {x: 213, y: 190, w: 62},
+  {x: 213, y: 226, w: 58},
+];
+
+/** The real logo: the sting plays, then the still holds. Never redrawn. */
+const Logo: React.FC<{t: number}> = ({t}) => {
+  const from = Math.round(s6.sting * FPS);
+  return (
+    <>
+      <Sequence from={from} durationInFrames={Math.round(3.2 * FPS)} layout="none">
+        <OffthreadVideo src={staticFile('ibdaa-logo-sting.mp4')} muted style={{width: '100%', height: '100%'}} />
+      </Sequence>
+      {t >= s6.sting + 3.2 - 1 / FPS ? <Img src={staticFile('ibdaa-logo-dark.jpg')} style={{position: 'absolute', inset: 0, width: '100%', height: '100%'}} /> : null}
+    </>
+  );
+};
 
 const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
-  const hit = sp(frame, s6.hit, ELASTIC);
-  const lines = s6.lines.map((l) => prog(t, l, l + 0.35, easeOut));
   const dock = sp(frame, s7.dock, HEAVY);
-  const markScale = lerp(1.6, 0.75, dock);
-  const markY = lerp(800, 290, dock);
-  const markX = W / 2 + 21 * markScale;
+  const z = lerp(1, 0.62, dock);
+  const cy = lerp(840, 330, dock);
+  const LW = 1080 * z;
+  const LH = 699 * z;
+  const map = (px: number, py: number) => ({x: W / 2 + (px - 360) * 1.5 * z, y: cy + (py - 233) * 1.5 * z});
   const bubbleK = s7.bubbles.map((b) => sp(frame, b, {damping: 15, stiffness: 150, mass: 0.8}));
-  const lineDraw = lines.map((l, i) => (t >= s7.bubbles[i] ? 0 : l));
-  const shimmy = Math.sin(t * 9) * 4 * prog(t, s6.word2 + 0.6, s6.word2 + 1);
-  const wordOut = prog(t, s7.dock - 0.1, s7.dock + 0.3, easeIn);
   const ring = clamp01((t - s6.hit) / 0.8);
   const beat = t > s7.cta ? Math.exp(-(((t - s7.cta) % BEAT) / BEAT) * 5) : 0;
   const ctaK = sp(frame, s7.cta, POP);
-  const typing = (i: number) => Math.max(0, Math.sin((t * 6 - i * 0.9)));
+  const typing = (i: number) => Math.max(0, Math.sin(t * 6 - i * 0.9));
 
   return (
     <AbsoluteFill>
       <Converge t={t} />
       {t >= s6.hit && ring < 1 ? (
-        <div style={{position: 'absolute', left: W / 2 - 1400 * ring, top: 800 - 1400 * ring, width: 2800 * ring, height: 2800 * ring, borderRadius: '50%', border: `${50 * (1 - ring) + 2}px solid ${P.orange}`, opacity: 1 - ring}} />
+        <div style={{position: 'absolute', left: W / 2 - 1400 * ring, top: cy - 1400 * ring, width: 2800 * ring, height: 2800 * ring, borderRadius: '50%', border: `${50 * (1 - ring) + 2}px solid ${P.teal}`, opacity: 1 - ring}} />
       ) : null}
-      {t >= s6.hit ? <Floaters t={t} k={prog(t, s6.hit, s6.hit + 0.8, easeOut) * (1 - dock * 0.6)} seed={11} count={14} /> : null}
-      {t >= s6.hit - 0.02 ? (
-        <div style={{position: 'absolute', left: markX, top: markY}}>
-          <Mark scale={markScale} tri={hit} lines={lineDraw} />
-        </div>
-      ) : null}
-      {/* wordmark */}
-      {t > s6.word1 - 0.05 && wordOut < 1 ? (
-        <div dir="rtl" style={{position: 'absolute', top: 1130, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 36, fontFamily: F.ar, fontWeight: 900, fontSize: 150, lineHeight: 1.3, opacity: 1 - wordOut, transform: `translateY(${-wordOut * 60}px)`}}>
-          <Words text="إبداع" t={t} start={s6.word1} dur={0.6} size={150} />
-          <div style={{transform: `skewX(-12deg) translateX(${shimmy}px)`}}>
-            <Words text="بيتحرك" t={t} start={s6.word2} dur={0.6} size={150} color={P.orange} />
-          </div>
+      {t >= s6.sting ? (
+        <div style={{position: 'absolute', left: W / 2 - LW / 2, top: cy - LH / 2, width: LW, height: LH, mixBlendMode: 'lighten'}}>
+          <Logo t={t} />
         </div>
       ) : null}
 
-      {/* the three lines become chat bubbles */}
+      {/* the logo's three lines pull out into chat bubbles */}
       {CHANNELS.map((c, i) => {
         const k = bubbleK[i];
         if (k <= 0) return null;
-        const from = {x: markX + 44 * markScale, y: markY + (LINE_Y[i] - 13.5) * markScale, w: LINE_LEN[i] * markScale, h: 27 * markScale};
-        const to = {x: i === 1 ? 160 : 280, y: 560 + i * 170, w: 640, h: 132};
+        const a = map(LOGO_LINES[i].x, LOGO_LINES[i].y);
+        const from = {x: a.x, y: a.y - 6 * z, w: LOGO_LINES[i].w * 1.5 * z, h: 12 * z};
+        const to = {x: i === 1 ? 160 : 280, y: 620 + i * 170, w: 640, h: 132};
         const x = lerp(from.x, to.x, k);
         const y = lerp(from.y, to.y, k);
         const w = lerp(from.w, to.w, k);
         const h = lerp(from.h, to.h, k);
         const content = clamp01((k - 0.6) / 0.4);
+        const bg = k < 0.5 ? LINE_COLORS[i] : c.bg;
         return (
-          <div key={i} style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: Math.min(h / 2, 66), background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.35)'}}>
+          <div key={i} style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: R.pill, background: bg, border: i > 0 && k >= 0.5 ? `3px solid ${P.line}` : undefined, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.35)'}}>
             {i < 2 ? (
-              <div dir="rtl" style={{display: 'flex', alignItems: 'center', gap: 24, fontFamily: F.ar, fontWeight: 900, fontSize: 64, color: c.fg, opacity: content}}>
-                <div style={{width: 58, height: 58, borderRadius: 29, border: `8px solid ${c.fg}`, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                  <div style={{width: 16, height: 16, borderRadius: 8, background: c.fg}} />
-                </div>
+              <div dir="rtl" style={{display: 'flex', alignItems: 'center', gap: 24, fontFamily: F.ar, fontWeight: 700, fontSize: 60, color: c.fg, opacity: content}}>
+                <svg width={58} height={58} viewBox="0 0 58 58" style={{display: 'block'}}>
+                  <path d="M 29 6 A 23 23 0 1 1 13 45 L 7 52 L 9 40 A 23 23 0 0 1 29 6 Z" fill="none" stroke={i === 0 ? c.fg : P.teal} strokeWidth={5} strokeLinejoin="round" />
+                </svg>
                 {c.text}
               </div>
             ) : (
               <div style={{display: 'flex', gap: 22, opacity: content}}>
                 {[0, 1, 2].map((d) => (
-                  <div key={d} style={{width: 30, height: 30, borderRadius: 15, background: P.cream, opacity: 0.4 + 0.6 * typing(d), transform: `translateY(${-10 * typing(d)}px)`}} />
+                  <div key={d} style={{width: 30, height: 30, borderRadius: 15, background: P.ink, opacity: 0.4 + 0.6 * typing(d), transform: `translateY(${-10 * typing(d)}px)`}} />
                 ))}
               </div>
             )}
@@ -181,20 +188,20 @@ const Brand: React.FC<{t: number; frame: number}> = ({t, frame}) => {
       })}
       {t > s7.line1 - 0.05 ? (
         <>
-          <Words text="قولّنا مجالك…" t={t} start={s7.line1} size={140} style={{position: 'absolute', top: 1130, left: 0, right: 0}} />
-          <Words text="ونبعتلك الفكرة والتفاصيل كلها" t={t} start={s7.line2} size={70} weight={700} color={P.creamDim} style={{position: 'absolute', top: 1340, left: 40, right: 40}} />
+          <Words text="قولّنا مجالك…" t={t} start={s7.line1} size={150} style={{position: 'absolute', top: 1150, left: 0, right: 0}} />
+          <Words text="ونبعتلك الفكرة والتفاصيل كلها" t={t} start={s7.line2} size={58} weight={700} color={P.muted} style={{position: 'absolute', top: 1370, left: 40, right: 40}} />
         </>
       ) : null}
       {t > s7.cta ? (
         <div style={{position: 'absolute', top: 1540, left: 0, right: 0, display: 'flex', justifyContent: 'center'}}>
-          <div dir="rtl" style={{padding: '26px 70px', borderRadius: 80, background: P.orange, fontFamily: F.ar, fontWeight: 900, fontSize: 72, color: P.cream, transform: `scale(${ctaK * (1 + 0.04 * beat)})`, boxShadow: `0 0 ${40 + 60 * beat}px rgba(255,94,31,0.5)`}}>
-            ابعتلنا دلوقتي
+          <div dir="rtl" style={{padding: '24px 76px', borderRadius: R.pill, background: P.orange, fontFamily: F.ar, fontWeight: 700, fontSize: 66, color: P.onOrange, transform: `scale(${ctaK * (1 + 0.04 * beat)})`}}>
+            ابعتلنا رسالة
           </div>
         </div>
       ) : null}
       {t > s7.cta + 0.4 ? (
-        <div dir="rtl" style={{position: 'absolute', top: 1745, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 700, fontSize: 46, color: P.muted, opacity: prog(t, s7.cta + 0.4, s7.cta + 1)}}>
-          إبداع <span style={{color: P.orange}}>بيتحرك</span>
+        <div dir="rtl" style={{position: 'absolute', top: 1760, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 500, fontSize: 34, color: P.muted, opacity: prog(t, s7.cta + 0.4, s7.cta + 1)}}>
+          إعلان متعمل بالذكاء الاصطناعي
         </div>
       ) : null}
     </AbsoluteFill>

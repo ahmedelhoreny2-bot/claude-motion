@@ -6,26 +6,31 @@ export const FPS = TL.fps;
 export const W = 1080;
 export const H = 1920;
 
+/** Tokens from the إبداع بيتحرك design system (dark theme). */
 export const P = {
-  bg: '#111111',
-  bg2: '#1B1A19',
-  card: '#222120',
-  cardHi: '#2C2B29',
-  block: '#353331',
-  paper: '#CFCAC0',
-  paperDim: '#8E8A83',
-  orange: '#FF5E1F',
-  orangeHi: '#FF8A55',
-  teal: '#17C3B2',
-  tealHi: '#5FE0D2',
-  cream: '#F3EFE8',
-  creamDim: 'rgba(243,239,232,0.62)',
-  muted: 'rgba(243,239,232,0.32)',
-  line: 'rgba(243,239,232,0.08)',
+  bg: '#111111', // ground
+  surface: '#1C1E21',
+  line: '#2E3236',
+  ink: '#F4F1E8',
+  muted: '#A3A8AD',
+  orange: '#FF5A1F', // brand
+  onOrange: '#160803', // on-brand: text on orange, never white
+  teal: '#13C0AD', // accent: motion lines, labels, info
+  onTeal: '#111111',
+  // aliases used by the scenes
+  card: '#1C1E21',
+  cardHi: '#24272B',
+  block: '#2E3236',
+  paper: '#F4F1E8',
+  cream: '#F4F1E8',
+  creamDim: '#A3A8AD',
 };
 
+export const R = {sm: 8, md: 14, lg: 22, xl: 28, pill: 999};
+
 export const F = {
-  ar: '"Cairo", system-ui, sans-serif',
+  display: 'Lalezar, "IBM Plex Sans Arabic", system-ui, sans-serif',
+  ar: '"IBM Plex Sans Arabic", system-ui, sans-serif',
 };
 
 export const sp = (frame: number, startSec: number, config: Partial<SpringConfig> = {}) => {

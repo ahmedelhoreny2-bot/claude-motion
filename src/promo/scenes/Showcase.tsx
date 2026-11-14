@@ -2,7 +2,7 @@ import React from 'react';
 import {AbsoluteFill} from 'remotion';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog} from '../../lib';
 import {Floaters, Label, Words} from '../kit';
-import {arNum, ELASTIC, F, FPS, P, POP, sp, TL, W} from '../theme';
+import {arNum, ELASTIC, F, FPS, P, POP, R, sp, TL, W} from '../theme';
 
 const {s4} = TL;
 const [w0, w1, w2, w3, w4] = s4.wipes;
@@ -14,6 +14,15 @@ const pulse = (t: number, from: number) => {
   const ph = ((t - from) % BEAT) / BEAT;
   return Math.exp(-ph * 6);
 };
+
+/** Brand rule: fictional brands are marked as demos. */
+const Demo: React.FC<{t: number; at: number; top: number}> = ({t, at, top}) => (
+  <div style={{position: 'absolute', top, left: 0, right: 0, display: 'flex', justifyContent: 'center', opacity: prog(t, at, at + 0.4)}}>
+    <div dir="rtl" style={{padding: '6px 26px', borderRadius: R.pill, border: `3px solid ${P.orange}`, fontFamily: F.ar, fontWeight: 500, fontSize: 34, color: P.muted}}>
+      براند تخيلي · للعرض
+    </div>
+  </div>
+);
 
 /* 1. a logo is born: "مدار" */
 const LogoBuild: React.FC<{t: number; frame: number}> = ({t, frame}) => {
@@ -38,7 +47,8 @@ const LogoBuild: React.FC<{t: number; frame: number}> = ({t, frame}) => {
         <circle cx={cx} cy={cy - 40} r={46 * sp(frame, a + 1.0, POP)} fill={P.orange} />
       </svg>
       <Words text="مَدار" t={t} start={name} size={180} style={{position: 'absolute', top: 1220, left: 0, right: 0}} />
-      <Words text="كافيه وروستري" t={t} start={name + 0.3} size={58} weight={600} color={P.creamDim} style={{position: 'absolute', top: 1470, left: 0, right: 0}} />
+      <Words text="كافيه وروستري" t={t} start={name + 0.3} size={58} weight={500} color={P.muted} style={{position: 'absolute', top: 1470, left: 0, right: 0}} />
+      <Demo t={t} at={name + 0.8} top={1620} />
     </AbsoluteFill>
   );
 };
@@ -65,8 +75,8 @@ const Kinetic: React.FC<{t: number; frame: number}> = ({t, frame}) => {
               key={i}
               dir="rtl"
               style={{
-                fontFamily: F.ar,
-                fontWeight: 900,
+                fontFamily: F.display,
+                fontWeight: 400,
                 fontSize: l.size,
                 lineHeight: 1.15,
                 color: l.c,
@@ -109,19 +119,20 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
             transformStyle: 'preserve-3d',
             position: 'relative',
             overflow: 'hidden',
-            boxShadow: `0 40px 120px rgba(255,94,31,${0.25 * k})`,
+            boxShadow: '0 30px 70px rgba(0,0,0,0.5)',
           }}
         >
-          <div style={{position: 'absolute', inset: 0, background: `linear-gradient(160deg, ${P.orange}, #B83A0C 70%)`}} />
-          <div style={{position: 'absolute', left: 40, right: 40, top: 120, height: 400, borderRadius: 40, background: 'rgba(255,255,255,0.14)', transform: `translateZ(40px) translateY(${Math.sin(t * 2) * 8}px)`}} />
+          <div style={{position: 'absolute', inset: 0, background: P.orange}} />
+          <div style={{position: 'absolute', left: 40, right: 40, top: 120, height: 400, borderRadius: 40, background: 'rgba(22,8,3,0.16)', transform: `translateZ(40px) translateY(${Math.sin(t * 2) * 8}px)`}} />
           <div style={{position: 'absolute', left: 150, top: 220, width: 150, height: 200, borderRadius: 24, background: P.cream, transform: `rotate(${-8 + Math.sin(t * 1.5) * 4}deg)`}} />
-          <div dir="rtl" style={{position: 'absolute', right: 44, top: 560, fontFamily: F.ar, fontWeight: 900, fontSize: 64, color: P.cream}}>الجديد</div>
-          <div style={{position: 'absolute', right: 44, top: 670, width: 260, height: 22, borderRadius: 11, background: 'rgba(255,255,255,0.4)'}} />
-          <div style={{position: 'absolute', left: 44, right: 44, bottom: 60, height: 100, borderRadius: 50, background: P.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.ar, fontWeight: 700, fontSize: 44, color: P.cream}}>اطلب دلوقتي</div>
+          <div dir="rtl" style={{position: 'absolute', right: 44, top: 556, fontFamily: F.display, fontWeight: 400, fontSize: 70, color: P.onOrange}}>الجديد</div>
+          <div style={{position: 'absolute', right: 44, top: 670, width: 260, height: 22, borderRadius: 11, background: 'rgba(22,8,3,0.35)'}} />
+          <div style={{position: 'absolute', left: 44, right: 44, bottom: 60, height: 100, borderRadius: 50, background: P.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.ar, fontWeight: 700, fontSize: 44, color: P.ink}}>اطلب دلوقتي</div>
           {/* light sweep */}
-          <div style={{position: 'absolute', top: -200, bottom: -200, width: 160, left: lerp(-300, 700, shine), background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)', transform: 'rotate(18deg)'}} />
+          <div style={{position: 'absolute', top: -200, bottom: -200, width: 160, left: lerp(-300, 700, shine), background: 'rgba(255,255,255,0.28)', transform: 'rotate(18deg)'}} />
         </div>
       </div>
+      <Demo t={t} at={a + 1.2} top={1660} />
       <div
         dir="rtl"
         style={{
@@ -129,44 +140,49 @@ const Product: React.FC<{t: number; frame: number}> = ({t, frame}) => {
           left: 130,
           top: 640,
           padding: '18px 34px',
-          borderRadius: 40,
           background: P.teal,
-          color: P.bg,
+          color: P.onTeal,
+          borderRadius: R.pill,
           fontFamily: F.ar,
-          fontWeight: 900,
+          fontWeight: 700,
           fontSize: 52,
           transform: `scale(${badge}) rotate(-8deg)`,
         }}
       >
-        جديد ✦
+        جديد
       </div>
     </AbsoluteFill>
   );
 };
 
-/* 4. a number that convinces */
+/* 4. a number that convinces: an offer for a demo shop */
 const Data: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   const a = s4.data;
-  const bars = [0.32, 0.45, 0.4, 0.62, 1];
-  const n = Math.round(240 * prog(t, a + 0.5, a + 2.0, easeOut));
+  const n = Math.round(30 * prog(t, a + 0.5, a + 1.6, easeOut));
+  const tag = sp(frame, a + 0.35, POP);
+  const stamp = sp(frame, a + 1.7, ELASTIC);
+  const old = prog(t, a + 1.0, a + 1.4, easeOut);
   return (
     <AbsoluteFill>
       <Label t={t} start={a} out={w4} text="رقم بيقنع" />
-      <div dir="rtl" style={{position: 'absolute', top: 470, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 900, fontSize: 230, color: P.cream, opacity: prog(t, a + 0.4, a + 0.7)}}>
-        +{arNum(n)}٪
+      <div style={{position: 'absolute', left: W / 2 - 330, top: 560, width: 660, height: 820, borderRadius: R.xl, background: P.surface, border: `3px solid ${P.line}`, transform: `scale(${tag}) rotate(${(1 - tag) * 8}deg)`, boxShadow: '0 30px 70px rgba(0,0,0,0.5)'}}>
+        <div dir="rtl" style={{position: 'absolute', top: 60, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 700, fontSize: 56, color: P.ink}}>عرض الأسبوع</div>
+        <div dir="rtl" style={{position: 'absolute', top: 150, left: 0, right: 0, textAlign: 'center', fontFamily: F.display, fontSize: 300, lineHeight: 1.3, color: P.orange}}>
+          {arNum(n)}٪
+        </div>
+        <div dir="rtl" style={{position: 'absolute', top: 520, left: 0, right: 0, textAlign: 'center', fontFamily: F.display, fontSize: 110, color: P.ink, opacity: prog(t, a + 0.7, a + 1.0)}}>خصم</div>
+        <div dir="rtl" style={{position: 'absolute', top: 690, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 30, fontFamily: F.ar, fontWeight: 700, fontSize: 52}}>
+          <span style={{color: P.muted, position: 'relative'}}>
+            {arNum(400)} ج
+            <span style={{position: 'absolute', left: -8, width: `calc(${100 * old}% + 16px)`, top: '50%', height: 5, borderRadius: 3, background: P.orange, transform: 'rotate(-18deg)', transformOrigin: '0 50%'}} />
+          </span>
+          <span style={{color: P.teal, opacity: old}}>{arNum(280)} ج</span>
+        </div>
       </div>
-      <div dir="rtl" style={{position: 'absolute', top: 760, left: 0, right: 0, textAlign: 'center', fontFamily: F.ar, fontWeight: 600, fontSize: 54, color: P.creamDim, opacity: prog(t, a + 0.8, a + 1.2)}}>
-        تفاعل أكتر
+      <div style={{position: 'absolute', right: 150, top: 500, width: 170, height: 170, borderRadius: R.pill, background: P.teal, color: P.onTeal, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.display, fontSize: 52, transform: `scale(${stamp}) rotate(${12 - 12 * stamp + 10}deg)`}}>
+        لفترة
       </div>
-      <div style={{position: 'absolute', left: 150, right: 150, bottom: 330, height: 640, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexDirection: 'row'}}>
-        {bars.map((b, i) => {
-          const k = sp(frame, a + 0.5 + i * 0.16, {damping: 11, stiffness: 170, mass: 0.8});
-          return (
-            <div key={i} style={{width: 120, height: 640 * b * k, borderRadius: 26, background: i === bars.length - 1 ? P.orange : P.teal, opacity: i === bars.length - 1 ? 1 : 0.55 + i * 0.1}} />
-          );
-        })}
-      </div>
-      <div style={{position: 'absolute', left: 120, right: 120, bottom: 300, height: 8, borderRadius: 4, background: P.muted}} />
+      <Demo t={t} at={a + 1.4} top={1460} />
     </AbsoluteFill>
   );
 };
