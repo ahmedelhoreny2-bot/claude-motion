@@ -2,22 +2,173 @@
   "fps": 30,
   "duration": 73.5,
   "wipe": 0.42,
-  "s1": {"start": 0, "l1": 0.2, "l2": 0.9, "l3": 2.3, "exit": 5.0},
-  "s2": {"start": 5.42, "logo": 5.55, "tag": 6.6, "notJust": 7.4, "chips": [9.15, 10.5, 11.9], "exit": 13.8},
-  "s3": {"start": 14.22, "head": 14.35, "card": 14.5, "items": [16.6, 18.4, 20.65, 21.6, 22.95], "swap": 19.5, "exit": 25.3},
-  "s4": {"start": 25.72, "head": 25.85, "card": 26.0, "items": [28.95, 30.15, 31.25, 31.95, 32.5, 33.1], "exit": 34.9},
-  "s5": {"start": 35.32, "day": 35.5, "recite": 37.0, "play": 39.65, "collage": 42.6, "polas": [42.7, 43.1, 43.5], "line": 44.1, "exit": 45.4},
-  "s6": {"start": 45.82, "head": 45.95, "am": 47.4, "pm": 49.7, "exit": 52.1},
-  "s7": {"start": 52.52, "head": 52.6, "items": [52.85, 54.15, 55.75, 57.0, 58.3], "exit": 60.1},
-  "s8": {"start": 60.52, "logo": 60.65, "cta": 60.8, "phone": 61.6, "wa": 62.1, "addr": 62.75, "slogan": 68.25, "end": 73.5},
+  "s1": {
+    "start": 0,
+    "l1": 0.2,
+    "l2": 0.9,
+    "l3": 2.3,
+    "exit": 5.0
+  },
+  "s2": {
+    "start": 5.42,
+    "logo": 5.55,
+    "tag": 6.6,
+    "notJust": 7.4,
+    "chips": [
+      9.15,
+      10.5,
+      11.9
+    ],
+    "exit": 13.8
+  },
+  "s3": {
+    "start": 14.22,
+    "head": 14.35,
+    "card": 14.5,
+    "items": [
+      16.6,
+      18.4,
+      20.65,
+      21.6,
+      22.95
+    ],
+    "swap": 19.5,
+    "exit": 25.3
+  },
+  "s4": {
+    "start": 25.72,
+    "head": 25.85,
+    "card": 26.0,
+    "items": [
+      28.95,
+      30.15,
+      31.25,
+      31.95,
+      32.5,
+      33.1
+    ],
+    "exit": 34.9
+  },
+  "s5": {
+    "start": 35.32,
+    "day": 35.5,
+    "recite": 37.0,
+    "play": 39.65,
+    "collage": 42.6,
+    "polas": [
+      42.7,
+      43.1,
+      43.5
+    ],
+    "line": 44.1,
+    "exit": 45.4
+  },
+  "s6": {
+    "start": 45.82,
+    "head": 45.95,
+    "am": 47.4,
+    "pm": 49.7,
+    "exit": 52.1
+  },
+  "s7": {
+    "start": 52.52,
+    "head": 52.6,
+    "items": [
+      52.85,
+      54.15,
+      55.75,
+      57.0,
+      58.3
+    ],
+    "exit": 60.1
+  },
+  "s8": {
+    "start": 60.52,
+    "logo": 60.65,
+    "cta": 60.8,
+    "phone": 61.6,
+    "wa": 62.1,
+    "addr": 62.75,
+    "slogan": 68.33,
+    "end": 73.5
+  },
   "vo": [
-    {"src": "public/nursery/vo-full.mp3", "in": 0.0, "out": 4.5, "at": 0.25, "note": "hook"},
-    {"src": "public/nursery/vo-full.mp3", "in": 4.82, "out": 12.85, "at": 5.48, "note": "brand: speech 4.94 lands at 5.6"},
-    {"src": "public/nursery/vo-full.mp3", "in": 13.1, "out": 23.8, "at": 14.3, "note": "learning: speech 13.22 lands at 14.42"},
-    {"src": "public/nursery/vo-values.mp3", "in": 0.0, "out": 8.36, "at": 25.92, "note": "values, regenerated line"},
-    {"src": "public/nursery/vo-full.mp3", "in": 31.48, "out": 38.7, "at": 35.48, "note": "thursday: speech 31.60 lands at 35.6"},
-    {"src": "public/nursery/vo-full.mp3", "in": 38.77, "out": 44.65, "at": 45.93, "note": "hours: speech 38.89 lands at 46.05"},
-    {"src": "public/nursery/vo-full.mp3", "in": 44.76, "out": 52.0, "at": 52.63, "note": "why: speech 44.88 lands at 52.75"},
-    {"src": "public/nursery/vo-full.mp3", "in": 52.14, "out": 62.85, "at": 60.63, "note": "cta + slogan: speech 52.26 lands at 60.75"}
+    {
+      "src": "public/nursery/vo-full.mp3",
+      "in": 0.0,
+      "out": 4.5,
+      "at": 0.25,
+      "note": "hook"
+    },
+    {
+      "src": "public/nursery/vo-name.mp3",
+      "in": 0.0,
+      "out": 2.1,
+      "at": 5.2,
+      "note": "name (regenerated), ends where the old one did"
+    },
+    {
+      "src": "public/nursery/vo-full.mp3",
+      "in": 6.7,
+      "out": 12.85,
+      "at": 7.36,
+      "note": "brand rest: 'mish mugarrad' 6.815 lands at 7.475 as before"
+    },
+    {
+      "src": "public/nursery/vo-full.mp3",
+      "in": 13.1,
+      "out": 23.8,
+      "at": 14.3,
+      "note": "learning: speech 13.22 lands at 14.42"
+    },
+    {
+      "src": "public/nursery/vo-values.mp3",
+      "in": 0.0,
+      "out": 8.36,
+      "at": 25.92,
+      "note": "values, regenerated line"
+    },
+    {
+      "src": "public/nursery/vo-full.mp3",
+      "in": 31.48,
+      "out": 38.7,
+      "at": 35.48,
+      "note": "thursday: speech 31.60 lands at 35.6"
+    },
+    {
+      "src": "public/nursery/vo-full.mp3",
+      "in": 38.77,
+      "out": 44.65,
+      "at": 45.93,
+      "note": "hours: speech 38.89 lands at 46.05"
+    },
+    {
+      "src": "public/nursery/vo-full.mp3",
+      "in": 44.76,
+      "out": 52.0,
+      "at": 52.63,
+      "note": "why: speech 44.88 lands at 52.75"
+    },
+    {
+      "src": "public/nursery/vo-full.mp3",
+      "in": 52.14,
+      "out": 57.45,
+      "at": 60.63,
+      "note": "cta: speech 52.26 lands at 60.75"
+    },
+    {
+      "src": "public/nursery/vo-name.mp3",
+      "in": 0.0,
+      "out": 2.1,
+      "at": 65.98,
+      "note": "name (regenerated)"
+    },
+    {
+      "src": "public/nursery/vo-full.mp3",
+      "in": 59.55,
+      "out": 62.85,
+      "at": 68.09,
+      "note": "slogan: 'bidaya' 59.79 lands at 68.33"
+    }
   ]
 }
