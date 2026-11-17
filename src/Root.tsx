@@ -3,6 +3,8 @@ import {Composition, Still} from 'remotion';
 import {ArticleCover} from './ArticleCover';
 import {EffortVideo} from './EffortVideo';
 import {FPS, H, TL, W} from './lib';
+import {SEDRA_DURATION, SEDRA_H, SEDRA_W, SedraAd} from './sedra/SedraAd';
+import {FPS as SEDRA_FPS} from './sedra/kit';
 
 export const Root: React.FC = () => (
   <>
@@ -13,6 +15,14 @@ export const Root: React.FC = () => (
       fps={FPS}
       width={W}
       height={H}
+    />
+    <Composition
+      id="SedraAd"
+      component={SedraAd}
+      durationInFrames={SEDRA_DURATION}
+      fps={SEDRA_FPS}
+      width={SEDRA_W}
+      height={SEDRA_H}
     />
     <Still id="ArticleCover" component={ArticleCover} width={2000} height={800} />
   </>

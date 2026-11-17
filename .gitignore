@@ -7,3 +7,5 @@ __pycache__/
 .env
 drafts/
 sims/dist/
+public/sedra/
+public/sedra.wav
