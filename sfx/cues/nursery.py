@@ -6,6 +6,7 @@ Every time comes from src/nursery/timeline.json.
 
 import math
 import random
+import subprocess
 
 import numpy as np
 
@@ -199,10 +200,42 @@ def music(tl):
     return L, R
 
 
+def decode(path):
+    raw = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", path, "-f", "f32le", "-ac", "1", "-ar", str(SR), "-"],
+        check=True, capture_output=True,
+    ).stdout
+    return np.frombuffer(raw, dtype=np.float32).astype(np.float64)
+
+
+def voiceover(tl):
+    """Narration cut from the ElevenLabs takes at their pauses, placed per tl['vo']."""
+    n = int(tl["duration"] * SR)
+    vo = np.zeros(n)
+    duck = np.ones(n)
+    cache = {}
+    for c in tl["vo"]:
+        if c["src"] not in cache:
+            cache[c["src"]] = decode(c["src"])
+        x = cache[c["src"]][int(c["in"] * SR):int(c["out"] * SR)].copy()
+        f = int(0.012 * SR)
+        x[:f] *= np.linspace(0, 1, f)
+        x[-f:] *= np.linspace(1, 0, f)
+        add(vo, x, c["at"], 1.0)
+        a, b = int((c["at"] - 0.15) * SR), int((c["at"] + len(x) / SR + 0.1) * SR)
+        duck[max(a, 0):min(b, n)] = 0.32
+    # smooth the ducking so the bed breathes instead of switching
+    k = int(0.25 * SR)
+    duck = np.convolve(duck, np.ones(k) / k, mode="same")
+    return vo, duck
+
+
 def score(mix, tl):
     random.seed(3)
     L, R = music(tl)
-    mix.put_stereo(0, L.tolist(), R.tolist(), gain=0.55)
+    vo, duck = voiceover(tl)
+    mix.put_stereo(0, (L * duck).tolist(), (R * duck).tolist(), gain=0.55)
+    mix.put_stereo(0, vo.tolist(), vo.tolist(), gain=1.3)
 
     put = mix.put
     W = tl["wipe"]

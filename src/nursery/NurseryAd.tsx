@@ -238,7 +238,7 @@ const S4Values: React.FC<{f: number; t: number}> = ({f, t}) => (
     f={f}
     t={t}
     beat={NT.s4}
-    title="بناء ديني وأخلاقي"
+    title="تربية دينية وأخلاقية"
     color={N.green}
     cols={1}
     bg="nursery/uniform.jpg"

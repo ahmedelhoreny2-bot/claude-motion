@@ -1,13 +1,23 @@
 {
   "fps": 30,
-  "duration": 62,
+  "duration": 73.5,
   "wipe": 0.42,
   "s1": {"start": 0, "l1": 0.2, "l2": 0.9, "l3": 2.3, "exit": 5.0},
-  "s2": {"start": 5.42, "logo": 5.55, "tag": 7.2, "notJust": 8.5, "chips": [9.4, 9.9, 10.4], "exit": 12.4},
-  "s3": {"start": 12.82, "head": 12.95, "card": 13.1, "items": [14.0, 14.6, 15.2, 15.8, 16.4], "swap": 18.0, "exit": 21.4},
-  "s4": {"start": 21.82, "head": 21.95, "card": 22.1, "items": [23.0, 23.5, 24.0, 24.5, 25.0, 25.5], "exit": 29.6},
-  "s5": {"start": 30.02, "day": 30.15, "recite": 31.3, "play": 33.4, "collage": 36.0, "polas": [36.1, 36.5, 36.9], "line": 37.6, "exit": 40.6},
-  "s6": {"start": 41.02, "head": 41.15, "am": 41.8, "pm": 42.6, "exit": 46.4},
-  "s7": {"start": 46.82, "head": 46.95, "items": [47.6, 48.05, 48.5, 48.95, 49.4], "exit": 52.4},
-  "s8": {"start": 52.82, "logo": 52.95, "cta": 53.7, "phone": 54.5, "wa": 55.0, "addr": 55.7, "slogan": 56.7, "end": 62}
+  "s2": {"start": 5.42, "logo": 5.55, "tag": 6.6, "notJust": 7.4, "chips": [9.15, 10.5, 11.9], "exit": 13.8},
+  "s3": {"start": 14.22, "head": 14.35, "card": 14.5, "items": [16.6, 18.4, 20.65, 21.6, 22.95], "swap": 19.5, "exit": 25.3},
+  "s4": {"start": 25.72, "head": 25.85, "card": 26.0, "items": [28.95, 30.15, 31.25, 31.95, 32.5, 33.1], "exit": 34.9},
+  "s5": {"start": 35.32, "day": 35.5, "recite": 37.0, "play": 39.65, "collage": 42.6, "polas": [42.7, 43.1, 43.5], "line": 44.1, "exit": 45.4},
+  "s6": {"start": 45.82, "head": 45.95, "am": 47.4, "pm": 49.7, "exit": 52.1},
+  "s7": {"start": 52.52, "head": 52.6, "items": [52.85, 54.15, 55.75, 57.0, 58.3], "exit": 60.1},
+  "s8": {"start": 60.52, "logo": 60.65, "cta": 60.8, "phone": 61.6, "wa": 62.1, "addr": 62.75, "slogan": 68.25, "end": 73.5},
+  "vo": [
+    {"src": "public/nursery/vo-full.mp3", "in": 0.0, "out": 4.5, "at": 0.25, "note": "hook"},
+    {"src": "public/nursery/vo-full.mp3", "in": 4.82, "out": 12.85, "at": 5.48, "note": "brand: speech 4.94 lands at 5.6"},
+    {"src": "public/nursery/vo-full.mp3", "in": 13.1, "out": 23.8, "at": 14.3, "note": "learning: speech 13.22 lands at 14.42"},
+    {"src": "public/nursery/vo-values.mp3", "in": 0.0, "out": 8.36, "at": 25.92, "note": "values, regenerated line"},
+    {"src": "public/nursery/vo-full.mp3", "in": 31.48, "out": 38.7, "at": 35.48, "note": "thursday: speech 31.60 lands at 35.6"},
+    {"src": "public/nursery/vo-full.mp3", "in": 38.77, "out": 44.65, "at": 45.93, "note": "hours: speech 38.89 lands at 46.05"},
+    {"src": "public/nursery/vo-full.mp3", "in": 44.76, "out": 52.0, "at": 52.63, "note": "why: speech 44.88 lands at 52.75"},
+    {"src": "public/nursery/vo-full.mp3", "in": 52.14, "out": 62.85, "at": 60.63, "note": "cta + slogan: speech 52.26 lands at 60.75"}
+  ]
 }
