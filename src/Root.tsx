@@ -3,6 +3,8 @@ import {Composition, Still} from 'remotion';
 import {ArticleCover} from './ArticleCover';
 import {EffortVideo} from './EffortVideo';
 import {FPS, H, TL, W} from './lib';
+import {NurseryAd} from './nursery/NurseryAd';
+import {NFPS, NH, NT, NW} from './nursery/theme';
 
 export const Root: React.FC = () => (
   <>
@@ -13,6 +15,14 @@ export const Root: React.FC = () => (
       fps={FPS}
       width={W}
       height={H}
+    />
+    <Composition
+      id="NurseryAd"
+      component={NurseryAd}
+      durationInFrames={Math.round(NT.duration * NFPS)}
+      fps={NFPS}
+      width={NW}
+      height={NH}
     />
     <Still id="ArticleCover" component={ArticleCover} width={2000} height={800} />
   </>

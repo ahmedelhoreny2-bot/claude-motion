@@ -1,0 +1,42 @@
+# 02 · أكاديمية الملاك الصغير (nursery ad)
+
+62 s · 1080×1920 (9:16) · 30 fps · stereo, −14 LUFS · source: [`src/nursery/NurseryAd.tsx`](../../src/nursery/NurseryAd.tsx), timeline [`src/nursery/timeline.json`](../../src/nursery/timeline.json), sound [`sfx/cues/nursery.py`](../../sfx/cues/nursery.py)
+
+A Facebook/Instagram ad for a nursery in Zefta, Egypt, built from the client's own material: three phone screen recordings of Facebook reels, five photos, the logo poster, and their written description, phone numbers and address.
+
+## Prompt
+
+> مطلوب مننا فيديو ممكن نعمله دقيقة أو دقيقة ونص لحضانة اسمها الملاك الصغير … عايزك تعمل لهم فيديو ترويجي يكون دعاية للحضانة يجذب الناس ان هي تودي ابنائهم هناك.
+
+## Storyboard
+
+| Scene | Time | What's on screen |
+|---|---|---|
+| Hook | 0–5 s | Boy playing the cup game. «نفسك ابنك… يتعلّم وهو بيلعب؟ ويكبر بشخصية قوية» |
+| Brand | 5.4–12.4 s | Logo pops (hero moment), «هدفنا عقول مستنيرة», «مش مجرد حضانة.. إحنا بنبني عقل / بنزرع قيمة / بنصنع شخصية» |
+| Learning | 12.8–21.4 s | Drawing clip, then classroom photo; 5 curriculum chips |
+| Values | 21.8–29.6 s | Uniform group photo; 6 religious/moral chips |
+| Thursday | 30–40.6 s | Hand-and-foot game clip: «كل يوم خميس: تسميع ومراجعة.. وبعدها لعب ومرح ومسابقات», then a photo collage |
+| Hours | 41–46.4 s | Morning 8–1, evening 11–4 cards |
+| Why us | 46.8–52.4 s | Group photo, 5 stacked reasons |
+| Call to action | 52.8–62 s | Logo, «احجز مكان ابنك دلوقتي!», phone + WhatsApp, address, slogan |
+
+A rainbow iris (yellow, pink, blue rings from the logo) carries every scene change. A logo badge and a booking strip with the phone number stay on screen through the middle scenes.
+
+## Footage prep
+
+The clips were screen recordings with Facebook UI on top, so each was cropped to the clean area (`crop=618:1100:96:170`) and scaled to 1080×1920 with a light grade. The drawing clip was filmed sideways; it's rotated to landscape and shown inside a card.
+
+## Sound
+
+Procedural, from the same timeline: a 110 BPM ukulele + glockenspiel bed in D major (I–V–vi–IV) that thins out for the hook, comes in fully on the logo, and resolves on a ringing D chord exactly when the slogan appears. A whoosh plays on each iris and a pitched pop on each chip, with a bell chord on the logo and the slogan.
+
+## Rebuild
+
+```bash
+python3 -m sfx sfx/cues/nursery.py
+npx remotion render NurseryAd out/nursery-silent.mp4
+ffmpeg -y -i out/nursery-silent.mp4 -i public/nursery.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -movflags +faststart -shortest out/nursery.mp4
+```
+
+Optional voiceover script (Egyptian Arabic, ~50 s) is in [`voiceover.md`](voiceover.md).

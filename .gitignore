@@ -7,3 +7,7 @@ __pycache__/
 .env
 drafts/
 sims/dist/
+
+# client media for the nursery ad (photos of children): never commit
+public/nursery/
+public/nursery*.wav
