@@ -234,7 +234,7 @@ const Pillars: React.FC<{t: number}> = ({t}) => {
         if (t < a - 0.1 || t > b + 0.6) return null;
         const v = vis(t, a, b, 0.6, 0.5);
         const certs = i === 3 ? prog(t, s.certs, s.certs + 0.8, easeOut) : 0;
-        const titleTop = i === 3 ? lerp(1260, 1180, certs) : 1260;
+        const titleTop = i === 3 ? lerp(1260, 1110, certs) : 1260;
         return (
           <AbsoluteFill key={i}>
             <div style={{opacity: v}}>
@@ -259,7 +259,7 @@ const Pillars: React.FC<{t: number}> = ({t}) => {
               {['١', '٢', '٣', '٤'][i]} / ٤
             </div>
             <Center top={titleTop}>
-              <Words text={p.title} t={t} at={a + 0.35} exit={b} accent={p.accent} style={{...display, fontSize: i === 3 ? 92 : 80}} />
+              <Words text={p.title} t={t} at={a + 0.35} exit={b} accent={p.accent} style={{...display, fontSize: i === 3 ? 80 : 68}} />
               <Words text={p.sub} t={t} at={a + 0.8} exit={b} style={{...body, fontSize: 44}} />
             </Center>
             {i === 3 ? <Certs t={t} k={certs * (1 - prog(t, s.exit, s.exit + 0.4, easeIn))} /> : null}
@@ -332,7 +332,7 @@ const Services: React.FC<{t: number}> = ({t}) => {
         </div>
       </Center>
       <Center top={1050}>
-        <Words text="ومنتجات طبيعية من خير النحل" t={t} at={s.honeyText} exit={s.exit} accent={['طبيعية']} style={{...display, fontSize: 72}} />
+        <Words text="ومنتجات طبيعية من خير النحل" t={t} at={s.honeyText} exit={s.exit} accent={['طبيعية']} style={{...display, fontSize: 62}} />
       </Center>
       <Center top={1300} opacity={women}>
         <div
