@@ -187,3 +187,6 @@ def score(mix, tl):
         put(O[k], blip(SCALE[i + 3], dur=0.3, tau=0.08), 0.1, -0.3 + i * 0.2)
     put(O["team"], pop(1318.5, 659.25), 0.24)
     put(O["team"] + 0.05, chime(CHIME_HI, dur=3.2, tau=1.2), 0.14)
+    for i, nm in enumerate(O["names"]):
+        put(nm, pop(SCALE[i + 2], SCALE[i + 2] / 2), 0.16, -0.5 + i * 0.25)
+        put(nm + 0.01, blip(SCALE[i + 2] / 2, dur=0.4, tau=0.1), 0.08, -0.5 + i * 0.25)

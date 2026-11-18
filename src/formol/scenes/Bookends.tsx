@@ -378,6 +378,8 @@ export const CalcScene: React.FC<{t: number}> = ({t}) => {
 
 /* ---------------------------------------------------------------- outro */
 
+const NAMES = ['رقية أحمد عبدالعظيم', 'زينب ابراهيم عبدالفتاح', 'سهام مجدي سيد', 'شاهندا ياسر عبدالرحمن', 'شهد حماده احمد'];
+
 const STEPS: {n: string; s: string; c: string}[] = [
   {n: '1', s: 'معايرة الحموضة الطبيعية', c: P.cyan},
   {n: '2', s: 'إضافة 2 مل فورمالين', c: P.lime},
@@ -437,41 +439,67 @@ export const Outro: React.FC<{t: number}> = ({t}) => {
       ) : null}
       {t > O.logo - 0.1 ? (
         <>
-          <div style={{position: 'absolute', top: 190, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 44, direction: 'rtl'}}>
-            <div style={{width: 260, height: 260}}>
-              <LogoCard src="asu-logo.jpg" w={260} h={260} k={lk} />
+          <div style={{position: 'absolute', top: 56, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 36, direction: 'rtl'}}>
+            <div style={{width: 190, height: 190}}>
+              <LogoCard src="asu-logo.jpg" w={190} h={190} k={lk} />
             </div>
-            <div style={{width: 416, height: 260}}>
-              <LogoCard src="fst-logo.png" w={416} h={260} k={lk2} pad={12} />
+            <div style={{width: 304, height: 190}}>
+              <LogoCard src="fst-logo.png" w={304} h={190} k={lk2} pad={10} />
             </div>
           </div>
-          <div dir="rtl" style={{position: 'absolute', top: 500, left: 0, right: 0, textAlign: 'center', color: P.text}}>
-            <div style={{fontFamily: F.display, fontSize: 76, lineHeight: 1.35}}>
+          <div dir="rtl" style={{position: 'absolute', top: 268, left: 0, right: 0, textAlign: 'center', color: P.text}}>
+            <div style={{fontFamily: F.display, fontSize: 64, lineHeight: 1.3}}>
               <ArWords text="جامعة عين شمس" t={t} at={O.uni} />
             </div>
-            <div style={{fontFamily: F.body, fontWeight: 800, fontSize: 40, lineHeight: 1.6}}>
+            <div style={{fontFamily: F.body, fontWeight: 800, fontSize: 34, lineHeight: 1.6}}>
               <ArWords text="كلية الزراعة" t={t} at={O.fac} style={{color: P.lime}} />
-              <span style={{color: P.gold, margin: '0 18px', opacity: prog(t, O.dept, O.dept + 0.3)}}>◆</span>
+              <span style={{color: P.gold, margin: '0 16px', opacity: prog(t, O.dept, O.dept + 0.3)}}>◆</span>
               <ArWords text="قسم علوم الأغذية" t={t} at={O.dept} style={{color: P.cyan}} />
-            </div>
-            <div style={{fontFamily: F.body, fontWeight: 700, fontSize: 34, color: P.dim, lineHeight: 1.6}}>
-              <ArWords text="برنامج علوم وتكنولوجيا الأغذية" t={t} at={O.prog} />
+              <span style={{color: P.gold, margin: '0 16px', opacity: prog(t, O.prog, O.prog + 0.3)}}>◆</span>
+              <ArWords text="برنامج علوم وتكنولوجيا الأغذية" t={t} at={O.prog} style={{color: P.dim}} />
             </div>
             <div
               style={{
                 display: 'inline-block',
-                marginTop: 26,
-                padding: '10px 40px 16px',
+                marginTop: 20,
+                padding: '8px 36px 14px',
                 borderRadius: 999,
                 background: `linear-gradient(135deg, ${P.pink}, ${P.orange})`,
                 color: P.ink,
                 fontFamily: F.display,
-                fontSize: 42,
+                fontSize: 38,
                 transform: `scale(${sp(frame, O.team, {damping: 10, stiffness: 190})})`,
                 boxShadow: `0 14px 40px ${alpha(P.pink, 0.45)}`,
               }}
             >
               إعداد: طلاب المستوى الثاني
+            </div>
+            <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '18px 22px', width: 1500, margin: '30px auto 0'}}>
+              {NAMES.map((name, i) => {
+                const k = sp(frame, O.names[i], {damping: 12, stiffness: 170});
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 16,
+                      padding: '10px 28px 14px 20px',
+                      borderRadius: 22,
+                      background: 'linear-gradient(160deg, rgba(40,48,130,0.82), rgba(14,18,60,0.88))',
+                      border: `1.5px solid ${alpha(P.gold, 0.55)}`,
+                      boxShadow: `0 0 30px ${alpha(P.gold, 0.15)}`,
+                      opacity: clamp01(k * 1.5),
+                      transform: `translateY(${(1 - k) * 40}px) scale(${0.85 + 0.15 * k})`,
+                    }}
+                  >
+                    <div style={{width: 44, height: 44, borderRadius: 14, background: P.gold, color: P.ink, fontFamily: F.display, fontSize: 30, display: 'grid', placeItems: 'center'}}>
+                      <span style={{marginTop: 5}}>{i + 1}</span>
+                    </div>
+                    <div style={{fontFamily: F.body, fontWeight: 800, fontSize: 36, color: P.text, whiteSpace: 'nowrap'}}>{name}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>

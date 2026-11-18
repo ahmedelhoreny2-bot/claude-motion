@@ -31,7 +31,7 @@ def walk(o):
     return o
 tl = walk(orig)
 tl['fps'] = orig['fps']
-tl['duration'] = round(max(warp(orig['duration']), place[-1] + segs[-1]['dur'] + 1.2), 1)
+tl['duration'] = round(max(warp(orig['duration']), place[-1] + segs[-1]['dur'] + 3.5), 1)
 tl['outro']['end'] = tl['duration']
 tl['outro']['fade'] = round(tl['duration'] - 0.8, 2)
 json.dump(tl, open('formol.timeline.json', 'w'), indent=1, ensure_ascii=False)
