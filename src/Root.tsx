@@ -9,7 +9,7 @@ import explTL from './ibdaa2/timeline.json';
 import {IbdaaPromo, PROMO_DURATION} from './ibdaa3/Promo';
 import {IbdaaCover} from './ibdaa3/Cover';
 import {IbdaaBrand} from './ibdaa3/BrandSheet';
-import {IbdaaFbCover, IbdaaFbCover2, IbdaaProfile} from './ibdaa3/Facebook';
+import {IbdaaFbCover, IbdaaFbCover2, IbdaaFbCover3, IbdaaProfile} from './ibdaa3/Facebook';
 import {FPS, H, TL, W} from './lib';
 
 export const Root: React.FC = () => (
@@ -77,6 +77,8 @@ export const Root: React.FC = () => (
     <Still id="IbdaaProfileOrange" component={IbdaaProfile} width={1080} height={1080} defaultProps={{variant: 'orange' as const}} />
     <Still id="IbdaaFbCover" component={IbdaaFbCover} width={1640} height={624} />
     <Still id="IbdaaFbCover2" component={IbdaaFbCover2} width={1640} height={624} />
+    <Still id="IbdaaFbCover3" component={IbdaaFbCover3} width={1640} height={624} defaultProps={{dark: false}} />
+    <Still id="IbdaaFbCover3Dark" component={IbdaaFbCover3} width={1640} height={624} defaultProps={{dark: true}} />
     <Still id="ArticleCover" component={ArticleCover} width={2000} height={800} />
   </>
 );
