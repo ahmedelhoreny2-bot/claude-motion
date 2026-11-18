@@ -930,11 +930,11 @@ const CtaScene: React.FC = () => {
               <Pop t={t} at={ph.start - 0.05} slam>
                 <span style={{...txt(54 * s, P.orange, 900), background: P.white, width: 80 * s, height: 80 * s, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1}}>{i + 1}</span>
               </Pop>
-              <div style={{maxWidth: W - 220 * s}}><Words t={t} ph={ph} size={(tall ? 84 : 74) * s} color={P.white} /></div>
+              <div style={{maxWidth: W - 200 * s}}><Words t={t} ph={ph} size={(tall ? 96 : 74) * s} color={P.white} /></div>
             </div>
           ))}
           <div style={{marginTop: 18 * s}}>
-            <Words t={t} ph={c} size={(tall ? 76 : 68) * s} color={P.ink} />
+            <Words t={t} ph={c} size={(tall ? 88 : 68) * s} color={P.ink} />
           </div>
           <div style={{marginTop: 26 * s, background: P.white, borderRadius: 100 * s, padding: `${20 * s}px ${48 * s}px ${26 * s}px`, display: 'flex', alignItems: 'center', gap: 22 * s, transform: `scale(${(0.5 + 0.5 * wa) * pulse})`, opacity: clamp01(wa * 2), boxShadow: '0 20px 50px rgba(120,30,0,0.3)', direction: 'rtl'}}>
             <span style={txt(40 * s, P.inkSoft, 700)}>واتساب</span>

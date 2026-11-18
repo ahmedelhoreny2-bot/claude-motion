@@ -1,11 +1,11 @@
 """SFX for the Ibdaa promo, driven by the voiceover word timings in src/ibdaa3/vo.json.
-No music bed here: music comes from a separate track mixed under the voice.
+No music and nothing tonal: no drums, bells, chimes or note blips. Only air, hits, paper and clicks.
 
     python3 -m sfx sfx/cues/promo.py
 """
 
-from sfx.synth import blip, chime, click, impact, key, pop, riser, scratch, whoosh
-from sfx.cues.ibdaa import kick, rip
+from sfx.synth import click, impact, key, pop, riser, scratch, whoosh
+from sfx.cues.ibdaa import rip
 
 TIMELINE = "src/ibdaa3/vo.json"
 OUT = "public/ibdaa/promo/sfx.wav"
@@ -28,8 +28,8 @@ def score(mix, tl):
         return [w["t"] for x in ph for w in x["words"]]
 
     def thud(t, g=0.22):
-        put(t, kick(), g)
-        put(t, pop(220, 80, dur=0.18), g * 0.7)
+        put(t, impact(0.45), g * 0.8)
+        put(t, whoosh(0.12, 1800, 400, peak=0.1), g * 0.5)
 
     # hook: stitched cuts + slammed words
     h = lines["hook"]
@@ -73,7 +73,6 @@ def score(mix, tl):
     df = lines["diff"]
     put(df["phrases"][0]["start"], pop(1500, 800), 0.24)
     put(df["phrases"][1]["start"], click(2200), 0.28)
-    put(df["phrases"][1]["start"], chime([N[0], N[2], N[4]], dur=1.0, tau=0.35), 0.12)
 
     # work sections: whip in, cut on phrase 2, title slams
     for n, i in enumerate(["w1", "w2", "w3", "w4", "w5", "w6", "w7"]):
@@ -84,7 +83,6 @@ def score(mix, tl):
         for t in words(i, 0):
             thud(t, 0.14)
         put(l["phrases"][1]["start"] - 0.06, whoosh(0.2, 3000, 900, peak=0.2), 0.14)
-        put(l["phrases"][1]["start"] - 0.06, blip(N[n % 8], dur=0.25, tau=0.07), 0.1)
 
     # word / story / shape
     w = lines["word"]
@@ -125,14 +123,12 @@ def score(mix, tl):
     for j in range(19):
         put(sa + j * (sb - sa) / 19, click(2400 + (j % 4) * 150, dur=0.025), 0.16, (j % 2 - 0.5) * 0.6)
     put(sb, whoosh(0.9, 2600, 300, peak=0.4, q=0.6), 0.26)
-    put(sb + 0.05, chime([N[0], N[2], N[4]], dur=1.4, tau=0.5), 0.12)
 
     # skins
     sks = lines["skins"]
     for j, ph in enumerate(sks["phrases"]):
         put(ph["start"] - 0.1, whoosh(0.3, 600, 3000, peak=0.6), 0.2)
         put(ph["start"], pop(900 + j * 150, 500), 0.22)
-        put(ph["start"] + 0.04, blip(N[j + 2], dur=0.35), 0.12)
     y = lines["yours"]
     for j in range(4):
         put(y["start"] - 0.1 + j * 0.07, pop(1100 + j * 140, 600), 0.16, [-0.4, 0.4, -0.4, 0.4][j])
@@ -157,10 +153,8 @@ def score(mix, tl):
     for j, ph in enumerate(ct["phrases"]):
         put(ph["start"] - 0.05, pop(1100 + j * 200, 600), 0.22)
     put(ct["phrases"][2]["start"] + 0.2, pop(1600, 800), 0.26)
-    put(ct["phrases"][2]["start"] + 0.22, blip(N[5], dur=0.5), 0.12)
     e = lines["end"]
     put(e["start"] - 0.15, whoosh(0.5, 400, 2600, peak=0.6), 0.2)
     for j in range(3):
         put(e["start"] + 0.1 + j * 0.07, pop(900 + j * 200, 500), 0.18, -0.2 + j * 0.2)
     thud(e["phrases"][1]["start"], 0.28)
-    put(e["phrases"][1]["start"] + 0.05, chime([N[0] / 2, N[2] / 2, N[4] / 2, N[0], N[4]], dur=2.6, tau=1.0), 0.18)
