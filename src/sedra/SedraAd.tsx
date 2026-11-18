@@ -648,7 +648,7 @@ const SCENE_MAP: Record<string, React.FC<{t: number; frame: number}>> = {
   reveal: Reveal,
   p1: (p) => <Pillar {...p} img="sedra/backcups.jpg" start={SCENES[6].start} end={sceneEnd(6)} icon="shield" label="أدوات معقّمة" n={0} focusY={70} inset={{w: 960, h: 720}} />,
   p2: (p) => <Pillar {...p} img="sedra/selfie.jpg" start={SCENES[7].start} end={sceneEnd(7)} icon="glove" label="جوانتي جديد" n={1} focusY={40} />,
-  p3: (p) => <Pillar {...p} img="sedra/consult.jpg" start={SCENES[8].start} end={sceneEnd(8)} icon="clip" label="سؤال قبل البدء" n={2} focusY={55} inset={{w: 860, h: 760}} />,
+  p3: (p) => <Pillar {...p} img="sedra/checkup.jpg" start={SCENES[8].start} end={sceneEnd(8)} icon="clip" label="سؤال قبل البدء" n={2} focusY={50} inset={{w: 940, h: 500}} />,
   sheikh: Sheikh,
   services: Services,
   women: Women,
