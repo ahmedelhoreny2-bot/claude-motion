@@ -300,7 +300,7 @@ const Certs: React.FC<{t: number; k: number}> = ({k}) => {
   );
 };
 
-const SERVICES = ['الحجامة النبوية', 'الحجامة النارية', 'الغوطة النارية', 'مصل النحل', 'الإبر الصينية', 'المساج'];
+const SERVICES = ['الحجامة النبوية', 'الحجامة النارية', 'الفوطة النارية', 'مصل النحل', 'الإبر الصينية', 'المساج'];
 
 const Services: React.FC<{t: number}> = ({t}) => {
   const s = T.s8;
@@ -348,7 +348,7 @@ const Services: React.FC<{t: number}> = ({t}) => {
             transform: `scale(${0.85 + 0.15 * women})`,
           }}
         >
-          خدمة خاصة للسيدات بخصوصية تامة
+          قسم مخصص للسيدات
         </div>
       </Center>
     </>

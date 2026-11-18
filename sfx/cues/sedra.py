@@ -8,7 +8,7 @@ D minor while the risk is on screen, D major from the moment the cup is cleaned.
 from sfx.synth import blip, chime, click, envelope, impact, pad, pop, riser, whoosh
 
 TIMELINE = "src/sedra/timeline.json"
-OUT = "public/sedra.wav"
+OUT = "public/sedra.wav"  # music + sfx only; the voice is mixed in by scripts/sedra-mix.sh
 TARGET_LUFS = -14.0
 
 Dm = [146.83, 220.0, 293.66, 349.23, 440.0]
