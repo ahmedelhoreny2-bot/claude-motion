@@ -1,459 +1,549 @@
 import React from 'react';
 import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import type {SpringConfig} from 'remotion';
 import {Grain} from '../components/primitives';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, sp as sp60} from '../lib';
-import type {SpringConfig} from 'remotion';
-import {Chip, Cup, FPS, H, Logo, Photo, S, SedraBackground, SF, T, useSedraFonts, vis, W, Words} from './kit';
+import {Cup, FPS, H, Logo, S, SF, T, useSedraFonts, W} from './kit';
+import WORDS from './words.json';
 
-const PAD = 80;
-const sp = (frame: number, at: number, cfg: Partial<SpringConfig> = {}) => sp60(frame, at, cfg, FPS);
-const display: React.CSSProperties = {
-  fontFamily: SF.ar,
-  fontWeight: 900,
-  color: S.cream,
-  textAlign: 'center',
-};
-const body: React.CSSProperties = {fontFamily: SF.ar, fontWeight: 700, color: S.creamDim, textAlign: 'center'};
-const Center: React.FC<{top: number; children: React.ReactNode; opacity?: number}> = ({top, children, opacity = 1}) => (
-  <div style={{position: 'absolute', left: PAD, right: PAD, top, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity}}>
+type Word = {w: string; s: number; e: number; para: number};
+const WD = WORDS as Word[];
+const B = T.beats;
+/** Time of a beat (a word index into words.json). */
+const at = (i: number) => WD[i].s;
+const sp = (frame: number, t0: number, cfg: Partial<SpringConfig> = {}) => sp60(frame, t0, cfg, FPS);
+const clean = (w: string) => w.replace(/[،.…:؟]/g, '');
+
+// ---------------------------------------------------------------- scenes
+const SCENES: {id: string; start: number}[] = [
+  {id: 'hook', start: 0},
+  {id: 'risk', start: at(B.risk)},
+  {id: 'pivot', start: at(B.pivot)},
+  {id: 'sunnah', start: at(B.sunnah)},
+  {id: 'science', start: at(B.science)},
+  {id: 'reveal', start: at(B.rise)},
+  {id: 'p1', start: at(B.p1)},
+  {id: 'p2', start: at(B.p2)},
+  {id: 'p3', start: at(B.p3)},
+  {id: 'sheikh', start: at(B.sheikh)},
+  {id: 'services', start: at(B.services[0]) - 0.15},
+  {id: 'women', start: at(B.women) - 0.2},
+  {id: 'contra', start: at(B.contra) - 0.2},
+  {id: 'days', start: at(B.days) - 0.2},
+  {id: 'cta', start: at(B.cta) - 0.15},
+];
+const sceneEnd = (i: number) => (i + 1 < SCENES.length ? SCENES[i + 1].start : T.duration + 1);
+
+/** Captions are hidden where the scene itself writes the spoken words. */
+const NO_CAPTIONS: [number, number][] = [
+  [B.hadith, B.science - 1],
+  [B.sheikh, B.certs - 1],
+  [B.services[0], B.days + 200],
+];
+const captionsOn = (wi: number) => !NO_CAPTIONS.some(([a, b]) => wi >= a && wi <= b);
+
+const IMPACTS = [B.punch, 28, B.hit, B.cta];
+const FLASHES = [B.risk, B.sunnah, B.science, B.hit, B.p1, B.p2, B.p3, B.sheikh, ...B.services, B.women, B.contra, B.days, B.cta];
+
+// ---------------------------------------------------------------- pieces
+const Center: React.FC<{top: number; children: React.ReactNode; style?: React.CSSProperties}> = ({top, children, style}) => (
+  <div style={{position: 'absolute', left: 70, right: 70, top, display: 'flex', flexDirection: 'column', alignItems: 'center', ...style}}>
     {children}
   </div>
 );
-const Source: React.FC<{k: number; children: React.ReactNode}> = ({k, children}) => (
-  <div style={{...body, fontWeight: 500, fontSize: 28, color: S.muted, direction: 'rtl', opacity: k, transform: `translateY(${(1 - k) * 12}px)`}}>
-    {children}
-  </div>
+
+const Pattern: React.FC<{t: number; opacity?: number; color?: string}> = ({t, opacity = 0.14, color = S.orange}) => {
+  const star = (cx: number, cy: number, r: number) => {
+    const sq = (rot: number) =>
+      [0, 1, 2, 3].map((k) => {
+        const a = rot + (k * Math.PI) / 2 + Math.PI / 4;
+        return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
+      }).join(' ');
+    return (
+      <g key={`${cx}-${cy}`}>
+        <polygon points={sq(0)} fill="none" stroke={color} strokeWidth={2} />
+        <polygon points={sq(Math.PI / 4)} fill="none" stroke={color} strokeWidth={2} />
+        <circle cx={cx} cy={cy} r={r * 0.32} fill="none" stroke={color} strokeWidth={1.5} />
+      </g>
+    );
+  };
+  const cells = [];
+  for (let y = -1; y < 9; y++) for (let x = -1; x < 6; x++) cells.push(star(x * 240 + (y % 2) * 120, y * 240, 96));
+  return (
+    <svg width={W} height={H} style={{position: 'absolute', inset: 0, opacity}}>
+      <g transform={`translate(${-t * 6} ${-t * 10}) rotate(${t * 0.6} ${W / 2} ${H / 2})`}>{cells}</g>
+    </svg>
+  );
+};
+
+const Bg: React.FC<{t: number; tint?: string; pattern?: number}> = ({t, tint, pattern = 0}) => (
+  <AbsoluteFill style={{background: `radial-gradient(ellipse 90% 60% at 50% 38%, ${S.navy2} 0%, ${S.navy} 70%)`}}>
+    {tint ? <AbsoluteFill style={{background: tint}} /> : null}
+    {pattern > 0 ? <Pattern t={t} opacity={pattern} /> : null}
+  </AbsoluteFill>
 );
 
-/** The cup is one object travelling from the hook to the logo reveal. */
-const cupState = (t: number, frame: number) => {
-  const toTop = prog(t, T.s2.enter - 0.2, T.s2.enter + 0.6, easeInOut);
-  const toEmblem = prog(t, T.s3.exit, T.s3.exit + 0.7, easeInOut);
-  const toHero = prog(t, T.s6.rise, T.s6.hit, easeIn);
-  const y = lerp(lerp(lerp(560, 470, toTop), 400, toEmblem), 760, toHero);
-  const size = lerp(lerp(lerp(400, 300, toTop), 170, toEmblem), 520, toHero);
-  const dirty = prog(t, T.s2.dirty, T.s2.dirty + 1.6, easeOut) * (1 - prog(t, T.s3.clean, T.s3.clean + 0.6, easeInOut));
-  const shine = prog(t, T.s3.clean, T.s3.clean + 0.7, easeInOut);
-  const pop = sp(frame, 0.0, {damping: 13, stiffness: 160});
-  const opacity = (0.25 + 0.75 * pop) * (1 - prog(t, T.s6.hit - 0.12, T.s6.hit, easeIn));
-  const bob = Math.sin(t * 1.4) * 8;
-  return {y: y + bob, size, dirty, shine, opacity, glow: toHero};
-};
-
-const Hook: React.FC<{t: number}> = ({t}) => {
-  const x = T.s1.exit;
-  if (t > x + 0.6) return null;
+const FullPhoto: React.FC<{src: string; t: number; from: number; dur: number; focusY?: number; zoomFrom?: number; zoomTo?: number; panX?: number}> = ({
+  src, t, from, dur, focusY = 45, zoomFrom = 1.18, zoomTo = 1.02, panX = 0,
+}) => {
+  const k = clamp01((t - from) / dur);
   return (
-    <>
-      <Center top={900}>
-        <Words text="الكاسة دي…" t={t} at={T.s1.l1} exit={x} style={{...display, fontSize: 96, color: S.creamDim}} />
-        <Words text="اتحطت على ضهر" t={t} at={T.s1.l2} exit={x} style={{...display, fontSize: 112}} />
-        <Words text="مين قبلك؟" t={t} at={T.s1.l3} exit={x} stagger={0.12} style={{...display, fontSize: 150, color: S.orange}} />
-      </Center>
-      <Center top={1440} opacity={prog(t, T.s1.sub, T.s1.sub + 0.6, easeOut) * (1 - prog(t, x, x + 0.4, easeIn))}>
-        <div style={{...body, fontSize: 40, direction: 'rtl'}}>سؤال لازم تسأله قبل أي حجامة</div>
-      </Center>
-    </>
-  );
-};
-
-const Risk: React.FC<{t: number}> = ({t}) => {
-  const s = T.s2;
-  if (t < s.enter - 0.1 || t > s.exit + 0.6) return null;
-  const chip = prog(t, s.chip, s.chip + 0.6, easeOut) * (1 - prog(t, s.exit, s.exit + 0.35, easeIn));
-  return (
-    <>
-      <Center top={640}>
-        <Chip k={chip}>⚠ تحذير من المعاهد الوطنية للصحة الأمريكية</Chip>
-      </Center>
-      <Center top={800}>
-        <Words text="أدوات الحجامة" t={t} at={s.lines[0]} exit={s.exit} style={{...display, fontSize: 80, color: S.creamDim}} />
-        <Words text="لو اتعاد استخدامها" t={t} at={s.lines[1]} exit={s.exit} style={{...display, fontSize: 80, color: S.creamDim}} />
-        <Words text="من غير تعقيم…" t={t} at={s.lines[2]} exit={s.exit} style={{...display, fontSize: 80, color: S.creamDim}} />
-        <div style={{height: 40}} />
-        <Words text="ممكن تنقل" t={t} at={s.big[0]} exit={s.exit} style={{...display, fontSize: 116}} />
-        <Words text="فيروس C و B" t={t} at={s.big[1]} exit={s.exit} accent={['C', 'B']} style={{...display, fontSize: 132}} />
-      </Center>
-      <Center top={1560}>
-        <Source k={prog(t, s.source, s.source + 0.6, easeOut) * (1 - prog(t, s.exit, s.exit + 0.35, easeIn))}>
-          المصدر: NCCIH · المعاهد الوطنية للصحة الأمريكية (NIH)
-        </Source>
-      </Center>
-    </>
-  );
-};
-
-const Pivot: React.FC<{t: number}> = ({t}) => {
-  const s = T.s3;
-  if (t < s.l1 - 0.1 || t > s.exit + 0.6) return null;
-  const first = prog(t, s.l3 - 0.4, s.l3, easeIn);
-  return (
-    <>
-      <Center top={830} opacity={1 - first}>
-        <Words text="يبقى المشكلة" t={t} at={s.l1} style={{...display, fontSize: 96, color: S.creamDim}} />
-        <Words text="مش في الحجامة…" t={t} at={s.l2} style={{...display, fontSize: 118}} />
-      </Center>
-      <Center top={830}>
-        <Words text="المشكلة في" t={t} at={s.l3} exit={s.exit} style={{...display, fontSize: 96, color: S.creamDim}} />
-        <Words text="مين بيعملها" t={t} at={s.l3 + 0.2} exit={s.exit} accent={['مين']} style={{...display, fontSize: 132}} />
-        <Words text="وإزاي." t={t} at={s.l4} exit={s.exit} style={{...display, fontSize: 132, color: S.orange}} />
-      </Center>
-    </>
-  );
-};
-
-const Sunnah: React.FC<{t: number}> = ({t}) => {
-  const s = T.s4;
-  if (t < s.chip - 0.1 || t > s.exit + 0.6) return null;
-  const o = 1 - prog(t, s.exit, s.exit + 0.4, easeIn);
-  const frame = prog(t, s.h1 - 0.3, s.h1 + 0.9, easeOut);
-  return (
-    <>
-      <Center top={600} opacity={o}>
-        <Chip k={prog(t, s.chip, s.chip + 0.6, easeOut)} color={S.skyHi} fill="rgba(58,160,220,0.12)">
-          سنة نبوية
-        </Chip>
-      </Center>
-      <div
+    <AbsoluteFill style={{overflow: 'hidden'}}>
+      <Img
+        src={staticFile(src)}
         style={{
-          position: 'absolute',
-          left: PAD,
-          right: PAD,
-          top: 760,
-          height: 450,
-          borderRadius: 36,
-          border: `2px solid ${S.line}`,
-          background: S.glass,
-          opacity: frame * o,
-          transform: `scale(${0.96 + 0.04 * frame})`,
+          width: '100%', height: '100%', objectFit: 'cover', objectPosition: `50% ${focusY}%`,
+          transform: `scale(${lerp(zoomFrom, zoomTo, easeOut(k))}) translateX(${panX * k}px)`,
         }}
       />
-      <Center top={830}>
-        <div style={{...display, fontFamily: SF.quote, fontWeight: 700, fontSize: 120, color: S.orange, opacity: frame * o, lineHeight: 0.6}}>❝</div>
-        <Words text="إنَّ أمثلَ ما تداويتم به" t={t} at={s.h1} exit={s.exit} style={{...display, fontFamily: SF.quote, fontWeight: 700, fontSize: 82}} />
-        <Words text="الحِجامة" t={t} at={s.h2} exit={s.exit} style={{...display, fontFamily: SF.quote, fontWeight: 700, fontSize: 140, color: S.orange}} />
-        <div style={{height: 20}} />
-        <Source k={prog(t, s.source, s.source + 0.6, easeOut) * o}>رواه البخاري (٥٦٩٦)</Source>
-      </Center>
+    </AbsoluteFill>
+  );
+};
+
+const Shade: React.FC<{strength?: number}> = ({strength = 1}) => (
+  <AbsoluteFill
+    style={{
+      background: `linear-gradient(180deg, rgba(7,23,53,${0.55 * strength}) 0%, rgba(7,23,53,0) 22%, rgba(7,23,53,0) 48%, rgba(7,23,53,${0.92 * strength}) 78%, ${S.navy} 100%)`,
+    }}
+  />
+);
+
+const Pill: React.FC<{k: number; children: React.ReactNode; bg?: string; color?: string; size?: number; border?: string}> = ({
+  k, children, bg = S.orange, color = S.navy, size = 40, border,
+}) => (
+  <div
+    style={{
+      display: 'inline-flex', alignItems: 'center', gap: 16, direction: 'rtl', padding: '10px 34px 16px', borderRadius: 999,
+      background: bg, color, fontFamily: SF.ar, fontWeight: 900, fontSize: size, border,
+      opacity: clamp01(k * 2), transform: `scale(${0.6 + 0.4 * k})`, boxShadow: '0 16px 40px rgba(0,0,0,0.35)',
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Icon: React.FC<{kind: 'shield' | 'glove' | 'clip' | 'warn' | 'pin' | 'phone' | 'check' | 'women'; size?: number; color?: string}> = ({
+  kind, size = 64, color = S.navy,
+}) => {
+  const p: Record<string, React.ReactNode> = {
+    shield: <><path d="M32 4 L56 13 V31 C56 46 45 56 32 60 C19 56 8 46 8 31 V13 Z" fill="none" stroke={color} strokeWidth={5} strokeLinejoin="round" /><path d="M21 32 L29 40 L44 24" fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" /></>,
+    glove: <path d="M18 58 V30 L14 20 C12 15 18 13 20 17 L23 25 V10 C23 5 30 5 30 10 V24 V7 C30 2 37 2 37 7 V24 V10 C37 5 44 5 44 10 V27 V16 C44 11 51 11 51 16 V40 C51 50 45 58 38 58 Z" fill="none" stroke={color} strokeWidth={4.5} strokeLinejoin="round" />,
+    clip: <><rect x="12" y="10" width="40" height="50" rx="5" fill="none" stroke={color} strokeWidth={5} /><rect x="22" y="5" width="20" height="10" rx="3" fill={color} /><path d="M21 36 L29 44 L44 27" fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" /></>,
+    warn: <><path d="M32 6 L60 56 H4 Z" fill="none" stroke={color} strokeWidth={5} strokeLinejoin="round" /><path d="M32 24 V40" stroke={color} strokeWidth={6} strokeLinecap="round" /><circle cx="32" cy="48" r="3.5" fill={color} /></>,
+    pin: <><path d="M32 60 C32 60 12 38 12 25 A20 20 0 0 1 52 25 C52 38 32 60 32 60 Z" fill={color} /><circle cx="32" cy="25" r="7" fill={S.orange} /></>,
+    phone: <path d="M18 6 L28 18 L22 26 C26 34 30 38 38 42 L46 36 L58 46 L52 56 C30 58 6 34 8 12 Z" fill={color} />,
+    check: <><circle cx="32" cy="32" r="27" fill={color} /><path d="M20 33 L28 41 L45 24" fill="none" stroke={S.cream} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" /></>,
+    women: <><circle cx="32" cy="18" r="11" fill="none" stroke={color} strokeWidth={5} /><path d="M12 60 C12 42 20 34 32 34 C44 34 52 42 52 60" fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" /></>,
+  };
+  return <svg width={size} height={size} viewBox="0 0 64 64">{p[kind]}</svg>;
+};
+
+/** Spoken words revealed in sync with the voice (word i appears when it is said). */
+const Synced: React.FC<{t: number; from: number; to: number; size: number; color?: string; accent?: number[]; font?: string; weight?: number; lineHeight?: number}> = ({
+  t, from, to, size, color = S.cream, accent = [], font = SF.ar, weight = 900, lineHeight = 1.3,
+}) => (
+  <div style={{direction: 'rtl', textAlign: 'center', fontFamily: font, fontWeight: weight, fontSize: size, lineHeight, color}}>
+    {WD.slice(from, to + 1).map((w, j) => {
+      const i = from + j;
+      const k = prog(t, w.s - 0.08, w.s + 0.22, easeOut);
+      return (
+        <React.Fragment key={i}>
+          <span
+            style={{
+              display: 'inline-block',
+              opacity: 0.12 + 0.88 * k,
+              transform: `translateY(${(1 - k) * 18}px)`,
+              color: accent.includes(i) ? S.orange : undefined,
+            }}
+          >
+            {clean(w.w)}
+          </span>{' '}
+        </React.Fragment>
+      );
+    })}
+  </div>
+);
+
+const VirusBadge: React.FC<{k: number; letter: string; t: number}> = ({k, letter, t}) => (
+  <div style={{transform: `scale(${k}) rotate(${(1 - k) * -40 + Math.sin(t * 2) * 4}deg)`, opacity: clamp01(k * 2)}}>
+    <svg width={250} height={250} viewBox="-125 -125 250 250">
+      {Array.from({length: 12}, (_, i) => {
+        const a = (i / 12) * Math.PI * 2;
+        return (
+          <g key={i}>
+            <line x1={Math.cos(a) * 78} y1={Math.sin(a) * 78} x2={Math.cos(a) * 108} y2={Math.sin(a) * 108} stroke={S.orange} strokeWidth={7} />
+            <circle cx={Math.cos(a) * 112} cy={Math.sin(a) * 112} r={10} fill={S.orange} />
+          </g>
+        );
+      })}
+      <circle r={82} fill="rgba(242,140,40,0.16)" stroke={S.orange} strokeWidth={8} />
+      <text y={36} textAnchor="middle" fontFamily={SF.ar} fontWeight={900} fontSize={110} fill={S.cream}>
+        {letter}
+      </text>
+    </svg>
+  </div>
+);
+
+// ---------------------------------------------------------------- scenes
+const Hook: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const punch = sp(frame, at(B.punch), {damping: 9, stiffness: 220});
+  const end = at(B.risk);
+  return (
+    <>
+      <AbsoluteFill style={{filter: `saturate(${0.55 + 0.45 * punch}) brightness(${0.62 + 0.18 * punch})`}}>
+        <FullPhoto src="sedra/cups.jpg" t={t} from={0} dur={end} focusY={58} zoomFrom={1.75} zoomTo={1.3} />
+      </AbsoluteFill>
+      <AbsoluteFill style={{background: `radial-gradient(ellipse 75% 55% at 50% 42%, rgba(242,140,40,${0.25 * punch}) 0%, rgba(7,23,53,0) 60%, rgba(7,23,53,0.85) 100%)`}} />
+      <Shade strength={0.9} />
     </>
   );
 };
 
-const Science: React.FC<{t: number}> = ({t}) => {
-  const s = T.s5;
-  if (t < s.chip - 0.1 || t > s.exit + 0.6) return null;
-  const o = 1 - prog(t, s.exit, s.exit + 0.4, easeIn);
-  const card = prog(t, s.card, s.card + 0.8, easeOut);
+const Risk: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const s0 = at(B.risk);
+  const chip = sp(frame, s0 + 0.1);
+  const dirty = prog(t, at(B.dirty), at(B.dirty) + 2.2, easeOut);
+  const red = prog(t, at(B.virus), at(B.virus) + 0.4, easeOut);
+  const c = sp(frame, at(B.virC), {damping: 10, stiffness: 200});
+  const b = sp(frame, at(B.virB), {damping: 10, stiffness: 200});
+  const cupOut = prog(t, at(B.virus) - 0.2, at(B.virus) + 0.3, easeIn);
   return (
     <>
-      <Center top={600} opacity={o}>
-        <Chip k={prog(t, s.chip, s.chip + 0.6, easeOut)} color={S.skyHi} fill="rgba(58,160,220,0.12)">
-          والعلم الحديث بيدرسها
-        </Chip>
+      <Bg t={t} tint={`rgba(120,20,10,${0.35 * red * (0.8 + 0.2 * Math.sin(t * 9))})`} />
+      <Center top={250}>
+        <Pill k={chip} size={36}>
+          <Icon kind="warn" size={42} /> تحذير رسمي · NIH
+        </Pill>
+      </Center>
+      <div style={{position: 'absolute', left: W / 2 - 220, top: 430, opacity: 1 - cupOut, transform: `scale(${1 - 0.3 * cupOut})`}}>
+        <Cup size={440} t={t} dirty={dirty} />
+      </div>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 480, display: 'flex', justifyContent: 'center', gap: 60, direction: 'ltr'}}>
+        <VirusBadge k={c} letter="C" t={t} />
+        <VirusBadge k={b} letter="B" t={t + 1} />
+      </div>
+    </>
+  );
+};
+
+const Pivot: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const shine = prog(t, at(B.clean), at(B.clean) + 0.8, easeInOut);
+  const dirty = 1 - prog(t, at(B.clean), at(B.clean) + 0.6, easeInOut);
+  const glow = sp(frame, at(B.how), {damping: 10, stiffness: 180});
+  return (
+    <>
+      <Bg t={t} tint={`radial-gradient(ellipse 60% 40% at 50% 34%, rgba(58,160,220,${0.35 * shine}) 0%, rgba(58,160,220,0) 70%)`} />
+      <div style={{position: 'absolute', left: W / 2 - 240, top: 280, transform: `scale(${1 + 0.08 * glow})`}}>
+        <Cup size={480} t={t} dirty={dirty} shine={shine} glow={shine} />
+      </div>
+      {shine > 0
+        ? Array.from({length: 10}, (_, i) => {
+            const a = (i / 10) * Math.PI * 2;
+            const r = 200 + 160 * shine;
+            return (
+              <div key={i} style={{position: 'absolute', left: W / 2 + Math.cos(a) * r - 8, top: 560 + Math.sin(a) * r - 8, width: 16, height: 16, borderRadius: 8, background: S.skyHi, opacity: Math.sin(Math.PI * shine) * 0.9}} />
+            );
+          })
+        : null}
+    </>
+  );
+};
+
+const Sunnah: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const chip = sp(frame, at(B.sunnah) + 0.05);
+  const card = sp(frame, at(B.hadith) - 0.35, {damping: 15, stiffness: 140});
+  return (
+    <>
+      <Bg t={t} pattern={0.16} />
+      <Center top={300}>
+        <Pill k={chip} bg={S.cream} size={42}>
+          سُنّة نبوية
+        </Pill>
+        <div style={{marginTop: 40, fontFamily: SF.quote, fontWeight: 700, fontSize: 64, color: S.creamDim, opacity: prog(t, at(45), at(45) + 0.4, easeOut)}}>
+          قال رسول الله ﷺ
+        </div>
       </Center>
       <div
         style={{
-          position: 'absolute',
-          left: PAD + 40,
-          right: PAD + 40,
-          top: 780,
-          padding: '40px 48px',
-          borderRadius: 32,
-          background: S.cream,
-          opacity: card * o,
-          transform: `translateY(${(1 - card) * 60}px) rotate(${(1 - card) * -3}deg)`,
-          boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
+          position: 'absolute', left: 70, right: 70, top: 640, padding: '50px 40px 60px', borderRadius: 40,
+          background: 'rgba(7,23,53,0.75)', border: `3px solid ${S.orange}`, opacity: card, transform: `translateY(${(1 - card) * 80}px)`,
         }}
       >
-        <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 64, color: S.navy, direction: 'ltr', textAlign: 'left'}}>
+        <div style={{textAlign: 'center', fontFamily: SF.quote, fontSize: 120, color: S.orange, lineHeight: 0.5, height: 60}}>❝</div>
+        <Synced t={t} from={B.hadith} to={B.science - 1} size={96} font={SF.quote} weight={700} accent={[B.science - 1]} lineHeight={1.5} />
+        <div style={{textAlign: 'center', fontFamily: SF.ar, fontWeight: 700, fontSize: 32, color: S.muted, marginTop: 16}}>رواه البخاري</div>
+      </div>
+    </>
+  );
+};
+
+const Science: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const chip = sp(frame, at(B.science) + 0.05);
+  const card = sp(frame, at(B.card), {damping: 14, stiffness: 150});
+  const n = Math.round(18 * prog(t, at(B.count), at(B.count) + 0.7, easeOut));
+  const big = sp(frame, at(B.count), {damping: 9, stiffness: 200});
+  return (
+    <>
+      <Bg t={t} />
+      <Center top={260}>
+        <Pill k={chip} bg={S.sky} color={S.navy} size={40}>
+          والعلم الحديث بيدرسها
+        </Pill>
+      </Center>
+      <div
+        style={{
+          position: 'absolute', left: 100, right: 100, top: 420, padding: '40px 50px 46px', borderRadius: 34, background: S.cream,
+          boxShadow: '0 40px 90px rgba(0,0,0,0.5)', opacity: clamp01(card * 1.5), transform: `translateY(${(1 - card) * 120}px) rotate(${(1 - card) * -6}deg)`,
+        }}
+      >
+        <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 70, color: S.navy, direction: 'ltr'}}>
           BMJ <span style={{color: S.blue}}>Open</span>
         </div>
-        <div style={{fontFamily: SF.ar, fontWeight: 700, fontSize: 30, color: 'rgba(7,23,53,0.55)', direction: 'ltr', textAlign: 'left'}}>
-          Systematic review &amp; meta-analysis · 2018
+        <div style={{fontFamily: SF.ar, fontWeight: 700, fontSize: 30, color: 'rgba(7,23,53,0.55)', direction: 'ltr'}}>Systematic review &amp; meta-analysis · 2018</div>
+        <div style={{height: 3, background: 'rgba(7,23,53,0.12)', margin: '26px 0'}} />
+        <div style={{display: 'flex', alignItems: 'center', gap: 30, direction: 'rtl'}}>
+          <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 200, lineHeight: 1, color: S.orange, transform: `scale(${0.6 + 0.4 * big})`, minWidth: 220, textAlign: 'center'}}>{n}</div>
+          <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 54, color: S.navy, lineHeight: 1.3}}>
+            دراسة عن الحجامة
+            <br />
+            <span style={{opacity: prog(t, at(B.neck) + 0.6, at(B.neck) + 1, easeOut)}}>وآلام الرقبة</span>
+          </div>
         </div>
-        <div style={{height: 2, background: 'rgba(7,23,53,0.12)', margin: '26px 0'}} />
-        <Words text="مراجعة علمية جمعت ١٨ دراسة" t={t} at={s.l1} exit={s.exit} accent={['١٨']} accentColor={S.orange} style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 50, color: S.navy, textAlign: 'right'}} />
-        <Words text="عن الحجامة وآلام الرقبة" t={t} at={s.l2} exit={s.exit} style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 50, color: S.navy, textAlign: 'right'}} />
       </div>
-      <Center top={1300}>
-        <Source k={prog(t, s.source, s.source + 0.6, easeOut) * o}>المصدر: BMJ Open 2018 · PubMed 30397006</Source>
-      </Center>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 1040, textAlign: 'center', fontFamily: SF.ar, fontWeight: 500, fontSize: 28, color: S.muted, opacity: card}}>
+        المصدر: BMJ Open 2018 · PubMed 30397006
+      </div>
     </>
   );
 };
 
 const Reveal: React.FC<{t: number; frame: number}> = ({t, frame}) => {
-  const s = T.s6;
-  if (t < s.hit - 0.2 || t > s.exit + 0.6) return null;
-  const k = sp(frame, s.hit, {damping: 8, stiffness: 200});
-  const o = 1 - prog(t, s.exit, s.exit + 0.45, easeIn);
-  const ring = prog(t, s.hit, s.hit + 0.9, easeOut);
+  const hit = at(B.hit);
+  const k = sp(frame, hit, {damping: 8, stiffness: 200});
+  const ring = prog(t, hit, hit + 1.1, easeOut);
+  const build = prog(t, at(B.rise), hit, easeIn);
+  const pin = sp(frame, at(B.place));
   return (
     <>
-      <div
-        style={{
-          position: 'absolute',
-          left: W / 2 - 400,
-          top: 760 - 400,
-          width: 800,
-          height: 800,
-          borderRadius: '50%',
-          border: `6px solid ${S.orange}`,
-          opacity: (1 - ring) * 0.8,
-          transform: `scale(${0.4 + ring * 1.2})`,
-        }}
-      />
-      <Center top={760 - 300} opacity={o}>
-        <div style={{transform: `scale(${0.6 + 0.4 * k})`, opacity: clamp01(k * 2)}}>
-          <Logo size={520} />
-        </div>
-      </Center>
-      <Center top={1260}>
-        <Words text="مركز سدرة للحجامة" t={t} at={s.name} exit={s.exit} accent={['سدرة']} style={{...display, fontSize: 96}} />
-        <Words text="زفتى · الغربية" t={t} at={s.place} exit={s.exit} style={{...body, fontSize: 44}} />
-      </Center>
-    </>
-  );
-};
-
-const PILLARS = [
-  {img: 'sedra/cups.jpg', focus: 45, title: 'أدوات معقمة لكل عميل', sub: 'نظافة وتعقيم قبل أي جلسة', accent: ['معقمة']},
-  {img: 'sedra/selfie.jpg', focus: 40, title: 'جوانتي جديد وسرير متغلف', sub: 'في كل جلسة… من غير استثناء', accent: ['جديد']},
-  {img: 'sedra/training.jpg', focus: 30, title: 'بنسأل عن حالتك قبل ما نبدأ', sub: 'لأن مش كل الناس الحجامة تناسبهم', accent: ['بنسأل']},
-  {img: 'sedra/sheikh.jpg', focus: 22, title: 'الشيخ أحمد أبو يوسف', sub: 'أخصائي الحجامة', accent: ['أبو', 'يوسف']},
-];
-
-const Pillars: React.FC<{t: number}> = ({t}) => {
-  const s = T.s7;
-  if (t < s.pillars[0] - 0.1 || t > s.exit + 0.6) return null;
-  return (
-    <>
-      {PILLARS.map((p, i) => {
-        const a = s.pillars[i];
-        const b = i < 3 ? s.pillars[i + 1] : s.exit;
-        if (t < a - 0.1 || t > b + 0.6) return null;
-        const v = vis(t, a, b, 0.6, 0.5);
-        const certs = i === 3 ? prog(t, s.certs, s.certs + 0.8, easeOut) : 0;
-        const titleTop = i === 3 ? lerp(1260, 1110, certs) : 1260;
+      <Bg t={t} tint={`radial-gradient(ellipse 70% 45% at 50% 40%, rgba(242,140,40,${0.1 + 0.3 * build + 0.2 * k}) 0%, rgba(242,140,40,0) 70%)`} pattern={0.08 * k} />
+      {Array.from({length: 16}, (_, i) => {
+        const a = (i / 16) * 360 + t * 12;
         return (
-          <AbsoluteFill key={i}>
-            <div style={{opacity: v}}>
-              <Photo src={p.img} t={t} from={a} dur={b - a + 0.5} height={1500} focusY={p.focus} fade={0.4} />
-            </div>
-            <div
-              style={{
-                position: 'absolute',
-                right: PAD,
-                top: 270,
-                fontFamily: SF.ar,
-                fontWeight: 900,
-                fontSize: 40,
-                color: S.navy,
-                background: S.orange,
-                borderRadius: 999,
-                padding: '4px 26px 10px',
-                opacity: v,
-                transform: `scale(${0.8 + 0.2 * v})`,
-              }}
-            >
-              {['١', '٢', '٣', '٤'][i]} / ٤
-            </div>
-            <Center top={titleTop}>
-              <Words text={p.title} t={t} at={a + 0.35} exit={b} accent={p.accent} style={{...display, fontSize: i === 3 ? 80 : 68}} />
-              <Words text={p.sub} t={t} at={a + 0.8} exit={b} style={{...body, fontSize: 44}} />
-            </Center>
-            {i === 3 ? <Certs t={t} k={certs * (1 - prog(t, s.exit, s.exit + 0.4, easeIn))} /> : null}
-          </AbsoluteFill>
+          <div key={i} style={{position: 'absolute', left: W / 2 - 4, top: 760 - 700, width: 8, height: 700, transformOrigin: '50% 100%', transform: `rotate(${a}deg)`, background: `linear-gradient(180deg, rgba(255,180,94,0) 0%, rgba(255,180,94,${0.25 * build * (1 - k * 0.6)}) 100%)`}} />
         );
       })}
+      <div style={{position: 'absolute', left: W / 2 - 420, top: 760 - 420, width: 840, height: 840, borderRadius: '50%', border: `8px solid ${S.orange}`, opacity: (1 - ring) * (ring > 0 ? 0.9 : 0), transform: `scale(${0.3 + ring * 1.4})`}} />
+      <Center top={380}>
+        <div style={{transform: `scale(${0.4 + 0.6 * k})`, opacity: clamp01(k * 2)}}>
+          <Logo size={560} />
+        </div>
+      </Center>
+      <Center top={1060}>
+        <Pill k={pin} bg={S.cream} size={44}>
+          <Icon kind="pin" size={46} color={S.orange} /> زفتى · الغربية
+        </Pill>
+      </Center>
     </>
   );
 };
 
-const Certs: React.FC<{t: number; k: number}> = ({k}) => {
-  if (k <= 0) return null;
-  const card = (src: string, x: number, r: number, label: string, delay: number) => {
-    const kk = clamp01(k * 1.4 - delay);
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          left: x,
-          top: 1420,
-          width: 400,
-          opacity: kk,
-          transform: `translateY(${(1 - kk) * 80}px) rotate(${r * kk}deg)`,
-        }}
-      >
-        <div style={{background: '#fff', padding: 10, borderRadius: 14, boxShadow: '0 20px 50px rgba(0,0,0,0.5)', height: 250, overflow: 'hidden'}}>
-          <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 30%'}} />
+const Pillar: React.FC<{t: number; frame: number; img: string; start: number; end: number; icon: 'shield' | 'glove' | 'clip'; label: string; n: number; focusY: number}> = ({
+  t, frame, img, start, end, icon, label, n, focusY,
+}) => {
+  const badge = sp(frame, start + 0.25, {damping: 11, stiffness: 190});
+  return (
+    <>
+      <FullPhoto src={img} t={t} from={start} dur={end - start + 0.4} focusY={focusY} panX={n % 2 ? 30 : -30} />
+      <Shade />
+      <div style={{position: 'absolute', right: 70, top: 260, display: 'flex', alignItems: 'center', gap: 20, direction: 'rtl', opacity: clamp01(badge * 2), transform: `translateX(${(1 - badge) * 120}px)`}}>
+        <div style={{width: 110, height: 110, borderRadius: 30, background: S.orange, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.4)'}}>
+          <Icon kind={icon} size={72} />
         </div>
-        <div style={{...body, fontSize: 28, marginTop: 14, color: S.cream, direction: 'rtl'}}>{label}</div>
+        <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 56, color: S.cream, textShadow: '0 4px 20px rgba(0,0,0,0.6)'}}>{label}</div>
+      </div>
+    </>
+  );
+};
+
+const Sheikh: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const s0 = at(B.sheikh);
+  const name = sp(frame, s0 + 0.15, {damping: 14, stiffness: 150});
+  const certs = sp(frame, at(B.certs), {damping: 13, stiffness: 150});
+  const card = (src: string, x: number, r: number, label: string, delay: number) => {
+    const kk = sp(frame, at(B.certs) + delay, {damping: 12, stiffness: 160});
+    return (
+      <div style={{position: 'absolute', left: x, top: 330, width: 420, opacity: clamp01(kk * 2), transform: `translateY(${(1 - kk) * -200}px) rotate(${r * kk}deg)`}}>
+        <div style={{background: '#fff', padding: 10, borderRadius: 16, boxShadow: '0 24px 60px rgba(0,0,0,0.55)', height: 290, overflow: 'hidden'}}>
+          <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 28%'}} />
+        </div>
+        <div style={{fontFamily: SF.ar, fontWeight: 700, fontSize: 28, marginTop: 12, color: S.cream, textAlign: 'center', textShadow: '0 3px 12px rgba(0,0,0,0.8)'}}>{label}</div>
       </div>
     );
   };
   return (
     <>
-      {card('sedra/cert1.jpg', W / 2 + 20, 3, 'دبلومة الطب الآمن والتكميلي', 0)}
-      {card('sedra/cert2.jpg', W / 2 - 420, -3, 'العلاج بمنتجات ومصل النحل', 0.25)}
+      <FullPhoto src="sedra/sheikh.jpg" t={t} from={s0} dur={sceneEnd(9) - s0} focusY={22} zoomFrom={1.2} zoomTo={1.04} />
+      <Shade />
+      <AbsoluteFill style={{background: `rgba(7,23,53,${0.45 * certs})`}} />
+      {card('sedra/cert1.jpg', W / 2 + 10, 4, 'دبلومة الطب الآمن والتكميلي', 0)}
+      {card('sedra/cert2.jpg', W / 2 - 430, -4, 'العلاج بمنتجات ومصل النحل', 0.3)}
+      <div style={{position: 'absolute', right: 70, left: 70, top: lerp(1180, 1000, certs), direction: 'rtl', opacity: clamp01(name * 2), transform: `translateX(${(1 - name) * 160}px)`}}>
+        <div style={{display: 'inline-block', background: S.orange, color: S.navy, fontFamily: SF.ar, fontWeight: 900, fontSize: 36, padding: '6px 26px 12px', borderRadius: 14}}>أخصائي الحجامة</div>
+        <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 84, color: S.cream, lineHeight: 1.25, whiteSpace: 'nowrap', textShadow: '0 6px 30px rgba(0,0,0,0.7)'}}>الشيخ أحمد أبو يوسف</div>
+      </div>
     </>
   );
 };
 
-const SERVICES = ['الحجامة النبوية', 'الحجامة النارية', 'الفوطة النارية', 'مصل النحل', 'الإبر الصينية', 'المساج'];
+const SERVICE_SHOTS: {img?: string; video?: number; label: string; focusY?: number}[] = [
+  {img: 'sedra/cups.jpg', label: 'حجامة نبوية', focusY: 45},
+  {video: 0, label: 'حجامة نارية'},
+  {video: 2.4, label: 'فوطة نارية'},
+  {img: 'sedra/honey.jpg', label: 'مصل النحل', focusY: 30},
+  {img: 'sedra/training.jpg', label: 'إبر صيني', focusY: 40},
+  {img: 'sedra/selfie.jpg', label: 'مساج', focusY: 45},
+  {img: 'sedra/honey.jpg', label: 'منتجات طبيعية', focusY: 55},
+];
 
-const Services: React.FC<{t: number}> = ({t}) => {
-  const s = T.s8;
-  if (t < s.enter - 0.1 || t > s.exit + 0.6) return null;
-  const v = vis(t, s.enter, s.exit, 0.5, 0.45);
-  const toHoney = prog(t, s.honey, s.honey + 0.8, easeInOut);
+const Services: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const starts = B.services.map(at);
+  let i = 0;
+  for (let k = 0; k < starts.length; k++) if (t >= starts[k] - 0.12) i = k;
+  const shot = SERVICE_SHOTS[i];
+  const s0 = starts[i] - 0.12;
+  const end = i + 1 < starts.length ? starts[i + 1] : sceneEnd(10);
+  const k = sp(frame, s0, {damping: 10, stiffness: 230});
   return (
     <>
-      <AbsoluteFill style={{opacity: v * (1 - toHoney)}}>
-        <Sequence from={Math.round(s.enter * FPS)} durationInFrames={Math.round((s.honey - s.enter + 1) * FPS)} layout="none">
-          <div style={{position: 'absolute', left: 0, top: 0, width: W, height: 1400, overflow: 'hidden'}}>
-            <OffthreadVideo src={staticFile('sedra/fire.mp4')} muted style={{width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.15) brightness(0.8)'}} />
-            <div style={{position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(7,23,53,0.5) 0%, rgba(7,23,53,0) 30%, ${S.navy} 100%)`}} />
-          </div>
+      <AbsoluteFill style={{background: S.navy}} />
+      {shot.video !== undefined ? (
+        <Sequence from={Math.round(s0 * FPS)} layout="none">
+          <AbsoluteFill style={{transform: `scale(${lerp(1.25, 1.05, prog(t, s0, end, easeOut))})`}}>
+            <OffthreadVideo src={staticFile('sedra/fire.mp4')} startFrom={Math.round(shot.video * FPS)} muted style={{width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.2) contrast(1.05)'}} />
+          </AbsoluteFill>
         </Sequence>
-      </AbsoluteFill>
-      <AbsoluteFill style={{opacity: v * toHoney}}>
-        <Photo src="sedra/honey.jpg" t={t} from={s.honey} dur={s.exit - s.honey + 0.5} height={1400} focusY={40} fade={0.45} />
-      </AbsoluteFill>
-      <Center top={830} opacity={1 - toHoney}>
-        <Words text="خدمات كاملة في مكان واحد" t={t} at={s.title} accent={['كاملة']} style={{...display, fontSize: 64}} />
-        <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 18, marginTop: 36, direction: 'rtl', width: 920}}>
-          {SERVICES.map((n, i) => (
-            <Chip key={n} k={prog(t, s.chips[i], s.chips[i] + 0.5, easeOut)} color={S.cream} fill="rgba(7,23,53,0.6)" size={40}>
-              {n}
-            </Chip>
-          ))}
+      ) : (
+        <FullPhoto src={shot.img!} t={t} from={s0} dur={end - s0 + 0.3} focusY={shot.focusY} zoomFrom={1.3} zoomTo={1.06} />
+      )}
+      <Shade />
+      <Center top={1060}>
+        <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: i === 6 ? 110 : 140, color: S.cream, textShadow: '0 8px 40px rgba(0,0,0,0.8)', transform: `scale(${0.7 + 0.3 * k})`, opacity: clamp01(k * 2)}}>
+          {shot.label}
         </div>
+        {i === 6 ? (
+          <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 64, color: S.orange, opacity: prog(t, at(146), at(146) + 0.3, easeOut)}}>من خير النحل</div>
+        ) : null}
       </Center>
-      <Center top={1050}>
-        <Words text="ومنتجات طبيعية من خير النحل" t={t} at={s.honeyText} exit={s.exit} accent={['طبيعية']} style={{...display, fontSize: 62}} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 1420, display: 'flex', justifyContent: 'center', gap: 14}}>
+        {SERVICE_SHOTS.map((_, j) => (
+          <div key={j} style={{width: j === i ? 46 : 14, height: 14, borderRadius: 7, background: j <= i ? S.orange : 'rgba(246,242,233,0.35)'}} />
+        ))}
+      </div>
+    </>
+  );
+};
+
+const Women: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const k = sp(frame, at(B.women), {damping: 14, stiffness: 140});
+  return (
+    <>
+      <Bg t={t} pattern={0.12} />
+      <Center top={420}>
+        <div style={{width: 230, height: 230, borderRadius: 115, background: S.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `scale(${k})`, boxShadow: '0 20px 60px rgba(0,0,0,0.4)'}}>
+          <Icon kind="women" size={140} color={S.navy} />
+        </div>
+        <div style={{height: 60}} />
+        <Synced t={t} from={B.women} to={B.contra - 1} size={88} accent={[151, 152, 153]} />
       </Center>
     </>
   );
 };
 
-const CONTRA = ['الأنيميا', 'أدوية السيولة', 'أمراض القلب والكلى والكبد', 'منظم ضربات القلب'];
-
-const Safety: React.FC<{t: number}> = ({t}) => {
-  const s = T.s9;
-  if (t < s.enter - 0.1 || t > s.exit + 0.6) return null;
-  const o = 1 - prog(t, s.exit, s.exit + 0.4, easeIn);
+const Contra: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const items: {at: number; text: string}[] = [
+    {at: at(B.items[0]), text: 'الأنيميا'},
+    {at: at(B.items[1]), text: 'أدوية السيولة'},
+    {at: at(B.items[2]), text: 'القلب · الكلى · الكبد'},
+  ];
+  const tail = sp(frame, at(B.tail), {damping: 12, stiffness: 170});
   return (
     <>
-      <Center top={340}>
-        <Words text="الحجامة مش مناسبة" t={t} at={s.title} exit={s.exit} style={{...display, fontSize: 90}} />
-        <Words text="لكل الناس" t={t} at={s.title + 0.3} exit={s.exit} style={{...display, fontSize: 112, color: S.orange}} />
-        <div style={{...body, fontSize: 38, marginTop: 10, opacity: prog(t, s.items[0] - 0.4, s.items[0], easeOut) * o, direction: 'rtl'}}>
-          لازم استشارة قبلها لأصحاب:
-        </div>
+      <Bg t={t} />
+      <Center top={250}>
+        <Synced t={t} from={B.contra} to={158} size={86} accent={[157, 158]} />
       </Center>
-      <div style={{position: 'absolute', left: PAD + 60, right: PAD + 60, top: 740, direction: 'rtl'}}>
-        {CONTRA.map((c, i) => {
-          const k = prog(t, s.items[i], s.items[i] + 0.6, easeOut) * o;
+      <div style={{position: 'absolute', left: 90, right: 90, top: 560, direction: 'rtl'}}>
+        {items.map((it, i) => {
+          const kk = sp(frame, it.at - 0.05, {damping: 13, stiffness: 190});
           return (
-            <div
-              key={c}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 26,
-                padding: '22px 34px 28px',
-                marginBottom: 18,
-                borderRadius: 22,
-                background: S.glass,
-                border: `2px solid ${S.line}`,
-                opacity: k,
-                transform: `translateX(${(1 - k) * 60}px)`,
-              }}
-            >
-              <div style={{width: 18, height: 18, borderRadius: 9, background: S.orange, flexShrink: 0}} />
-              <div style={{fontFamily: SF.ar, fontWeight: 700, fontSize: 50, color: S.cream}}>{c}</div>
+            <div key={i} style={{display: 'flex', alignItems: 'center', gap: 28, padding: '26px 36px 32px', marginBottom: 22, borderRadius: 26, background: 'rgba(246,242,233,0.08)', border: `2px solid ${S.line}`, opacity: clamp01(kk * 2), transform: `translateX(${(1 - kk) * 140}px)`}}>
+              <Icon kind="warn" size={56} color={S.orange} />
+              <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 58, color: S.cream}}>{it.text}</div>
             </div>
           );
         })}
       </div>
-      <Center top={1400}>
-        <Words text="وعشان كده… بنسأل قبل ما نبدأ" t={t} at={s.tail} exit={s.exit} accent={['بنسأل']} style={{...display, fontSize: 62}} />
-        <div style={{height: 18}} />
-        <Source k={prog(t, s.note, s.note + 0.6, easeOut) * o}>الحجامة لا تغني عن استشارة الطبيب</Source>
+      <Center top={1080}>
+        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, opacity: clamp01(tail * 2), transform: `scale(${0.8 + 0.2 * tail})`}}>
+          <Icon kind="check" size={90} color={S.orange} />
+          <div style={{whiteSpace: 'nowrap'}}>
+            <Synced t={t} from={B.tail} to={174} size={68} accent={[171]} />
+          </div>
+        </div>
+        <div style={{marginTop: 26, fontFamily: SF.ar, fontWeight: 500, fontSize: 28, color: S.muted, opacity: tail}}>الحجامة لا تغني عن استشارة الطبيب</div>
       </Center>
     </>
   );
 };
 
+const Days: React.FC<{t: number; frame: number}> = ({t, frame}) => (
+  <>
+    <Bg t={t} pattern={0.12} />
+    <Center top={340}>
+      <Synced t={t} from={B.days} to={177} size={84} />
+      <div style={{display: 'flex', gap: 34, marginTop: 70, direction: 'rtl'}}>
+        {['١٧', '١٩', '٢١'].map((d, i) => {
+          const k = sp(frame, at(B.dayCards[i]) - 0.05, {damping: 9, stiffness: 230, mass: 0.7});
+          return (
+            <div key={d} style={{width: 260, height: 300, borderRadius: 36, background: S.cream, overflow: 'hidden', transform: `scale(${k}) rotate(${(1 - k) * 12}deg)`, boxShadow: '0 30px 70px rgba(0,0,0,0.45)'}}>
+              <div style={{height: 60, background: S.orange}} />
+              <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 150, color: S.navy, textAlign: 'center', lineHeight: 1.45}}>{d}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{marginTop: 60}}>
+        <Synced t={t} from={B.month} to={185} size={70} accent={[185]} />
+      </div>
+    </Center>
+  </>
+);
+
 const Cta: React.FC<{t: number; frame: number}> = ({t, frame}) => {
-  const s = T.s10;
-  if (t < s.label - 0.1) return null;
-  const daysOut = prog(t, s.cta - 0.5, s.cta, easeIn);
-  const logo = sp(frame, s.cta, {damping: 12, stiffness: 160});
+  const logo = sp(frame, at(B.cta) - 0.1, {damping: 11, stiffness: 170});
+  const phone = sp(frame, at(B.call), {damping: 10, stiffness: 200});
+  const pulse = 1 + 0.035 * Math.sin((t - at(B.call)) * 6) * (t > at(B.call) + 0.5 ? 1 : 0);
   return (
     <>
-      <Center top={560} opacity={1 - daysOut}>
-        <Words text="الأيام المستحبة للحجامة" t={t} at={s.label} style={{...display, fontSize: 70, color: S.creamDim}} />
-        <div style={{display: 'flex', gap: 34, marginTop: 50, direction: 'rtl'}}>
-          {['١٧', '١٩', '٢١'].map((d, i) => {
-            const k = sp(frame, s.days[i], {damping: 10, stiffness: 220, mass: 0.7});
-            return (
-              <div
-                key={d}
-                style={{
-                  width: 240,
-                  height: 270,
-                  borderRadius: 34,
-                  background: S.cream,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transform: `scale(${k}) rotate(${(1 - k) * 8}deg)`,
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-                }}
-              >
-                <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 140, color: S.orange, lineHeight: 1.1}}>{d}</div>
-              </div>
-            );
-          })}
+      <Bg t={t} tint={`radial-gradient(ellipse 70% 40% at 50% 45%, rgba(242,140,40,0.22) 0%, rgba(242,140,40,0) 70%)`} pattern={0.1} />
+      <Center top={250}>
+        <div style={{transform: `scale(${0.5 + 0.5 * logo})`, opacity: clamp01(logo * 2)}}>
+          <Logo size={330} />
         </div>
-        <Words text="من كل شهر هجري" t={t} at={s.month} style={{...display, fontSize: 64, marginTop: 40}} />
+        <div style={{height: 30}} />
+        <Synced t={t} from={B.cta} to={188} size={100} accent={[188]} />
       </Center>
-      <Center top={380} opacity={clamp01(logo * 2)}>
-        <div style={{transform: `scale(${0.7 + 0.3 * logo})`}}>
-          <Logo size={300} />
+      <Center top={900}>
+        <div style={{display: 'flex', alignItems: 'center', gap: 22, direction: 'ltr', background: S.orange, borderRadius: 34, padding: '14px 46px 20px', transform: `scale(${(0.6 + 0.4 * phone) * pulse})`, opacity: clamp01(phone * 2), boxShadow: '0 24px 60px rgba(242,140,40,0.35)'}}>
+          <Icon kind="phone" size={70} />
+          <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 104, color: S.navy, letterSpacing: '0.02em'}}>01148470010</div>
         </div>
-      </Center>
-      <Center top={760}>
-        <Words text="احجز مكانك دلوقتي" t={t} at={s.cta + 0.15} accent={['دلوقتي']} style={{...display, fontSize: 100}} />
-      </Center>
-      <Center top={960} opacity={prog(t, s.phone, s.phone + 0.6, easeOut)}>
-        <div
-          style={{
-            fontFamily: SF.ar,
-            fontWeight: 900,
-            fontSize: 104,
-            color: S.navy,
-            background: S.orange,
-            borderRadius: 30,
-            padding: '6px 50px 18px',
-            letterSpacing: '0.02em',
-            direction: 'ltr',
-            transform: `scale(${0.9 + 0.1 * prog(t, s.phone, s.phone + 0.6, easeOut)})`,
-          }}
-        >
-          01148470010
+        <div style={{marginTop: 30}}>
+          <Pill k={sp(frame, at(192))} bg="#25D366" color="#fff" size={44}>
+            اتصال أو واتساب
+          </Pill>
         </div>
-      </Center>
-      <Center top={1170} opacity={prog(t, s.wa, s.wa + 0.6, easeOut)}>
-        <Chip k={prog(t, s.wa, s.wa + 0.6, easeOut)} color="#3DDC84" fill="rgba(61,220,132,0.12)" size={42}>
-          اتصال أو واتساب
-        </Chip>
-      </Center>
-      <Center top={1310} opacity={prog(t, s.addr, s.addr + 0.6, easeOut)}>
-        <div style={{...body, fontSize: 40, direction: 'rtl', lineHeight: 1.5}}>
+        <div style={{marginTop: 34, fontFamily: SF.ar, fontWeight: 700, fontSize: 40, color: S.creamDim, textAlign: 'center', direction: 'rtl', lineHeight: 1.5, opacity: prog(t, at(194), at(194) + 0.5, easeOut)}}>
           زفتى · شارع الجيش · كوبري المصرف
           <br />
           بجوار سوبر ماركت بشرة خير
@@ -463,31 +553,117 @@ const Cta: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   );
 };
 
+// ---------------------------------------------------------------- captions
+type Group = {from: number; to: number};
+const GROUPS: Group[] = (() => {
+  const out: Group[] = [];
+  let cur: number[] = [];
+  WD.forEach((w, i) => {
+    cur.push(i);
+    const letters = cur.reduce((n, j) => n + clean(WD[j].w).length, 0);
+    const brk = /[،.…:؟]$/.test(w.w) || cur.length >= 3 || letters >= 16 || (i + 1 < WD.length && WD[i + 1].s - w.e > 0.25);
+    if (brk) {
+      out.push({from: cur[0], to: cur[cur.length - 1]});
+      cur = [];
+    }
+  });
+  return out;
+})();
+
+const Captions: React.FC<{t: number}> = ({t}) => {
+  const g = GROUPS.find((gr, i) => {
+    const next = GROUPS[i + 1];
+    const end = next ? Math.min(next.from !== undefined ? WD[next.from].s - 0.02 : 1e9, WD[gr.to].e + 0.6) : WD[gr.to].e + 0.6;
+    return t >= WD[gr.from].s - 0.06 && t < end;
+  });
+  if (!g || !captionsOn(g.from)) return null;
+  const k = prog(t, WD[g.from].s - 0.06, WD[g.from].s + 0.12, easeOut);
+  const hook = g.to < B.risk;
+  return (
+    <div style={{position: 'absolute', left: 50, right: 50, top: hook ? 1100 : 1240, display: 'flex', justifyContent: 'center'}}>
+      <div style={{direction: 'rtl', textAlign: 'center', transform: `scale(${0.85 + 0.15 * k}) translateY(${(1 - k) * 20}px)`, opacity: k}}>
+        {WD.slice(g.from, g.to + 1).map((w, j) => {
+          const i = g.from + j;
+          const on = t >= w.s - 0.03;
+          const active = on && t < w.e + 0.05;
+          return (
+            <React.Fragment key={i}>
+              <span
+                style={{
+                  display: 'inline-block', fontFamily: SF.ar, fontWeight: 900, fontSize: hook ? 118 : 84, lineHeight: 1.3,
+                  color: active ? S.orange : S.cream, opacity: on ? 1 : 0.45,
+                  transform: `scale(${active ? 1.08 : 1})`,
+                  textShadow: '0 4px 0 rgba(7,23,53,0.9), 0 8px 30px rgba(0,0,0,0.7)',
+                  WebkitTextStroke: '2px rgba(7,23,53,0.6)',
+                  margin: '0 0.14em',
+                }}
+              >
+                {clean(w.w)}
+              </span>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------- composition
+const SCENE_MAP: Record<string, React.FC<{t: number; frame: number}>> = {
+  hook: Hook,
+  risk: Risk,
+  pivot: Pivot,
+  sunnah: Sunnah,
+  science: Science,
+  reveal: Reveal,
+  p1: (p) => <Pillar {...p} img="sedra/cups.jpg" start={SCENES[6].start} end={sceneEnd(6)} icon="shield" label="أدوات معقّمة" n={0} focusY={50} />,
+  p2: (p) => <Pillar {...p} img="sedra/selfie.jpg" start={SCENES[7].start} end={sceneEnd(7)} icon="glove" label="جوانتي جديد" n={1} focusY={40} />,
+  p3: (p) => <Pillar {...p} img="sedra/training.jpg" start={SCENES[8].start} end={sceneEnd(8)} icon="clip" label="سؤال قبل البدء" n={2} focusY={30} />,
+  sheikh: Sheikh,
+  services: Services,
+  women: Women,
+  contra: Contra,
+  days: Days,
+  cta: Cta,
+};
+
 export const SedraAd: React.FC = () => {
   useSedraFonts();
   const frame = useCurrentFrame();
   const t = frame / FPS;
-  const cup = cupState(t, frame);
-  const warm = prog(t, T.s2.dirty, T.s2.big[1], easeOut) * (1 - prog(t, T.s3.clean, T.s3.clean + 0.8, easeOut)) + prog(t, T.s6.rise, T.s6.hit, easeIn) * (1 - prog(t, T.s6.exit, T.s6.exit + 1, easeOut));
+  const shake = IMPACTS.reduce((acc, i) => {
+    const d = t - at(i);
+    return d >= 0 && d < 0.6 ? acc + Math.exp(-d * 9) * 14 : acc;
+  }, 0);
+  const flash = FLASHES.reduce((acc, i) => {
+    const d = t - at(i) + (i === B.hit ? 0 : 0.03);
+    return d >= 0 && d < 0.3 ? Math.max(acc, Math.exp(-d * 16) * (i === B.hit ? 0.9 : 0.35)) : acc;
+  }, 0);
   return (
     <AbsoluteFill style={{background: S.navy, overflow: 'hidden'}}>
-      <SedraBackground t={t} warm={clamp01(warm)} />
-      {cup.opacity > 0.001 ? (
-        <div style={{position: 'absolute', left: W / 2 - cup.size / 2, top: cup.y - cup.size * 0.6, opacity: cup.opacity}}>
-          <Cup size={cup.size} t={t} dirty={cup.dirty} shine={cup.shine} glow={cup.glow} />
+      <AbsoluteFill style={{transform: `translate(${Math.sin(t * 71) * shake}px, ${Math.cos(t * 53) * shake}px)`}}>
+        {SCENES.map((s, i) => {
+          const end = sceneEnd(i);
+          if (t < s.start - 0.01 || t > end + 0.35) return null;
+          const k = i === 0 ? 1 : prog(t, s.start, s.start + 0.3, easeOut);
+          const Comp = SCENE_MAP[s.id];
+          return (
+            <AbsoluteFill key={s.id} style={{opacity: k, transform: `scale(${1.06 - 0.06 * k})`}}>
+              <Comp t={t} frame={frame} />
+            </AbsoluteFill>
+          );
+        })}
+        <Captions t={t} />
+      </AbsoluteFill>
+      <AbsoluteFill style={{background: '#fff', opacity: flash, pointerEvents: 'none'}} />
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse 85% 75% at 50% 45%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.45) 100%)'}} />
+      <div style={{position: 'absolute', left: 0, top: 0, height: 10, width: `${(t / T.duration) * 100}%`, background: S.orange}} />
+      {t > at(B.hit) + 1.5 && t < at(B.cta) - 0.3 ? (
+        <div style={{position: 'absolute', left: 50, top: 60, opacity: 0.9}}>
+          <Logo size={110} />
         </div>
       ) : null}
-      <Hook t={t} />
-      <Risk t={t} />
-      <Pivot t={t} />
-      <Sunnah t={t} />
-      <Science t={t} />
-      <Reveal t={t} frame={frame} />
-      <Pillars t={t} />
-      <Services t={t} />
-      <Safety t={t} />
-      <Cta t={t} frame={frame} />
-      <Grain frame={frame} opacity={0.07} />
+      <Grain frame={frame} opacity={0.06} />
     </AbsoluteFill>
   );
 };
