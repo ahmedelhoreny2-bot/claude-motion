@@ -6,6 +6,7 @@ import {IbdaaShowreel} from './ibdaa/Showreel';
 import ibdaaTL from './ibdaa/timeline.json';
 import {IbdaaExplainer} from './ibdaa2/Explainer';
 import explTL from './ibdaa2/timeline.json';
+import {IbdaaPromo, PROMO_DURATION} from './ibdaa3/Promo';
 import {FPS, H, TL, W} from './lib';
 
 export const Root: React.FC = () => (
@@ -47,6 +48,22 @@ export const Root: React.FC = () => (
       component={IbdaaExplainer}
       durationInFrames={Math.round(explTL.duration * explTL.fps)}
       fps={explTL.fps}
+      width={1080}
+      height={1920}
+    />
+    <Composition
+      id="IbdaaPromo"
+      component={IbdaaPromo}
+      durationInFrames={Math.round(PROMO_DURATION * 30)}
+      fps={30}
+      width={1080}
+      height={1350}
+    />
+    <Composition
+      id="IbdaaPromo916"
+      component={IbdaaPromo}
+      durationInFrames={Math.round(PROMO_DURATION * 30)}
+      fps={30}
       width={1080}
       height={1920}
     />
