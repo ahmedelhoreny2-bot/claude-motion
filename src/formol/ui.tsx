@@ -148,14 +148,14 @@ export const Captions: React.FC<{t: number}> = ({t}) => {
         style={{
           fontFamily: F.body,
           fontWeight: 700,
-          fontSize: 36,
+          fontSize: 32,
           color: P.text,
           padding: '8px 34px 12px',
           borderRadius: 22,
           background: 'rgba(6,10,34,0.72)',
           border: `1.5px solid ${P.faint}`,
           boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
-          maxWidth: 1500,
+          maxWidth: 1780,
           textAlign: 'center',
           lineHeight: 1.5,
         }}

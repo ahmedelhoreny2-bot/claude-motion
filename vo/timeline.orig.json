@@ -1,0 +1,15 @@
+{
+  "fps": 30,
+  "duration": 182,
+  "intro": {"drop": 0.3, "splash": 1.0, "logo": 1.25, "uni": 1.9, "fac": 2.25, "dept": 2.6, "title": 3.9, "title2": 4.7, "en": 5.3, "exit": 9.6},
+  "protein": {"enter": 9.8, "glass": 10.0, "lens": 12.0, "chain": 13.4, "head": 13.8, "unfold": 15.6, "bead": 17.6, "sub": 18.0, "idea": 21.0, "exit": 25.6},
+  "amino": {"enter": 25.6, "mol": 25.9, "amine": 28.4, "carboxyl": 31.0, "seesaw": 33.6, "cancel": 35.4, "note": 37.2, "exit": 43.4},
+  "react": {"hcho": 43.8, "approach": 46.0, "hit": 48.0, "water": 48.2, "lock": 49.8, "acid": 51.0, "eq": 53.0, "chips": [57.2, 58.4, 59.6], "exit": 64.6},
+  "lab": {"enter": 65.0, "burette": 65.2, "flask": 65.9, "pour": 67.4, "pourEnd": 69.6, "milkTag": 69.9, "drops": [71.2, 71.75, 72.3], "indTag": 72.8, "naohTag": 74.4, "guide": 76.4, "sw": [77.0, 77.6, 78.2], "guideOut": 84.6},
+  "t1": {"step": 85.0, "start": 87.2, "end": 92.8, "vol": 1.6, "stop": 93.0, "calc": 94.6, "result": 97.6, "exit": 103.2},
+  "form": {"step": 103.6, "pipette": 104.4, "pour": 105.6, "pourEnd": 107.4, "vanish": 107.6, "inset": 109.4, "note": 112.4, "exit": 116.6},
+  "t2": {"step": 117.0, "refill": 117.4, "start": 119.2, "end": 125.2, "vol": 2.0, "stop": 125.4, "tag": 126.6, "exit": 130.6},
+  "blank": {"step": 131.0, "swap": 131.6, "water": 133.0, "refill": 133.4, "start": 135.6, "end": 137.2, "vol": 0.2, "stop": 137.4, "formula": 139.2, "values": 141.4, "result": 143.8, "exit": 148.6},
+  "calc": {"enter": 149.0, "cow": 149.4, "mult": 151.0, "count": 152.4, "countEnd": 154.4, "result": 154.5, "buff": 157.0, "range": 159.0, "exit": 167.6},
+  "outro": {"enter": 168.0, "chips": [168.6, 169.0, 169.4, 169.8, 170.2], "chipsOut": 173.0, "logo": 173.4, "uni": 174.0, "fac": 174.35, "dept": 174.7, "prog": 175.05, "team": 175.6, "fade": 181.2, "end": 182}
+}

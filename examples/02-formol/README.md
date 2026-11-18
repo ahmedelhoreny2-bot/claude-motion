@@ -1,6 +1,6 @@
 # 02 · Protein in milk by formol titration
 
-182 s · 1920×1080 · 30 fps · stereo, −14 LUFS · Arabic (RTL) · source: [`src/formol/`](../../src/formol/)
+196 s · 1920×1080 · 30 fps · stereo, −14 LUFS · Arabic (RTL) · MSA voice-over · source: [`src/formol/`](../../src/formol/)
 
 An educational explainer for second-year Food Science students (Faculty of Agriculture, Ain Shams University): why formaldehyde makes amino acids titratable, then the full lab procedure — natural acidity titration, adding formalin, the second titration, the blank, and the protein calculation.
 
@@ -32,10 +32,20 @@ Colour is semantic throughout: cyan = basic, red = acidic, pink = phenolphthalei
 - `src/formol/glass.tsx` — burette, stand, Erlenmeyer flask with liquid/swirl/drop blooms, pipette, dropper.
 - `sfx/cues/formol.py` — 220 sounds + a C-major pad.
 
+## Voice-over
+
+The narration was recorded as one take (ElevenLabs, "Muafaq – Calm Saudi Teacher") from [`narration-fusha.txt`](narration-fusha.txt) and saved as `vo/full.mp3`.
+
+1. `vo/split.py`, `vo/align.py`: find the pauses (`silencedetect`) and pick the 29 cut points that give every sentence the same speaking rate (≈ 10 letters/s), so each of the 30 sentences is cut on a real pause.
+2. `vo/retime.py`: warps `formol.timeline.json` piecewise-linearly so every sentence starts with its scene (the original timeline is kept in `vo/timeline.orig.json`), and regenerates `src/formol/captions.ts` from the same placements, so the captions, the voice, the picture and the effects stay in sync.
+3. `vo/build_vo.py`: lays each sentence at its new time → `public/formol-vo.wav`.
+
 ## Build
 
 ```bash
 python3 -m sfx sfx/cues/formol.py
 npx remotion render FormolVideo out/formol-silent.mp4
-ffmpeg -y -i out/formol-silent.mp4 -i public/formol-sfx.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -movflags +faststart -shortest out/formol.mp4
+python3 vo/build_vo.py
+ffmpeg -y -i public/formol-sfx.wav -i public/formol-vo.wav -filter_complex "[1:a]aformat=channel_layouts=stereo,volume=3dB,asplit=2[vo][sc];[0:a]volume=-8dB[bed];[bed][sc]sidechaincompress=threshold=0.02:ratio=5:attack=25:release=400[duck];[duck][vo]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[out]" -map "[out]" public/formol-mix.wav
+ffmpeg -y -i out/formol-silent.mp4 -i public/formol-mix.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -movflags +faststart -shortest out/formol.mp4
 ```
