@@ -98,3 +98,41 @@ export const IbdaaFbCover: React.FC = () => {
     </AbsoluteFill>
   );
 };
+
+/**
+ * Facebook page cover v2, 1640×624: the old cover's calm layout in the light identity.
+ * Content sits in the upper middle; the bottom band (profile picture on desktop and mobile) stays empty.
+ */
+export const IbdaaFbCover2: React.FC = () => {
+  useArabicFonts();
+  const chips = ['موشن جرافيك', 'Vox', 'HUD', 'أخبار عاجلة', 'جيمنج', 'ذكاء اصطناعي'];
+  const bar = (w: number, c: string) => <div style={{width: w, height: 24, borderRadius: 24, background: c}} />;
+  return (
+    <AbsoluteFill style={{background: P.cream, overflow: 'hidden'}}>
+      <AbsoluteFill style={{backgroundImage: `radial-gradient(${P.inkFaint} 1.6px, transparent 1.8px)`, backgroundSize: '34px 34px', opacity: 0.55}} />
+      <AbsoluteFill style={{background: 'radial-gradient(70% 90% at 50% 25%, rgba(255,255,255,0.55), transparent 70%)'}} />
+      {/* headline */}
+      <div style={{position: 'absolute', left: 0, right: 0, top: 118, display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 26, direction: 'rtl'}}>
+        <span style={txt(58, P.ink)}>فكرتك على الشاشة…</span>
+        <span style={txt(58, P.orange)}>بتتحرك وتبيع</span>
+      </div>
+      {/* services */}
+      <div style={{position: 'absolute', left: 0, right: 0, top: 240, display: 'flex', justifyContent: 'center', gap: 12, direction: 'rtl'}}>
+        {chips.map((c) => (
+          <span key={c} style={{...txt(22, P.teal, 700), lineHeight: 1.2, border: `3px solid ${P.teal}`, borderRadius: 40, padding: '6px 20px 10px', background: 'rgba(255,253,248,0.6)'}}>
+            {c}
+          </span>
+        ))}
+      </div>
+      {/* the logo's speed bars, as on the original cover */}
+      <div style={{position: 'absolute', left: 350, top: 390, display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'flex-start'}}>
+        {bar(200, P.teal)}
+        {bar(130, P.orange)}
+      </div>
+      <div style={{position: 'absolute', right: 350, top: 390, display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'flex-end'}}>
+        {bar(130, P.orange)}
+        {bar(200, P.teal)}
+      </div>
+    </AbsoluteFill>
+  );
+};
