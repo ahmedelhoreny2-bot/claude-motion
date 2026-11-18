@@ -7,6 +7,8 @@ import ibdaaTL from './ibdaa/timeline.json';
 import {IbdaaExplainer} from './ibdaa2/Explainer';
 import explTL from './ibdaa2/timeline.json';
 import {IbdaaPromo, PROMO_DURATION} from './ibdaa3/Promo';
+import {IbdaaCover} from './ibdaa3/Cover';
+import {IbdaaBrand} from './ibdaa3/BrandSheet';
 import {FPS, H, TL, W} from './lib';
 
 export const Root: React.FC = () => (
@@ -67,6 +69,9 @@ export const Root: React.FC = () => (
       width={1080}
       height={1920}
     />
+    <Still id="IbdaaCover" component={IbdaaCover} width={1080} height={1350} />
+    <Still id="IbdaaCover916" component={IbdaaCover} width={1080} height={1920} />
+    <Still id="IbdaaBrand" component={IbdaaBrand} width={1240} height={1754} />
     <Still id="ArticleCover" component={ArticleCover} width={2000} height={800} />
   </>
 );
