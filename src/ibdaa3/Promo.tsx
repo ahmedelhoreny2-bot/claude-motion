@@ -337,33 +337,60 @@ const BrandScene: React.FC = () => {
 
 /* ───────────────────────── 3. Before / after: a flat post, scrolled past, rewound, alive ── */
 
-const DullPost: React.FC<{w: number; label?: boolean}> = ({w, label = true}) => {
+/** Fictional sponsored posts: real Facebook look, flat static ads. Names are made up. */
+const ADS: {page: string; av: string; bg: string; fg: string; acc: string; head: string; sub: string; badge: string; likes: string; icon: (c: string) => React.ReactNode}[] = [
+  {page: 'مطعم بيتي', av: '#C0392B', bg: '#F3E3C3', fg: '#5A3A1A', acc: '#C0392B', head: 'أكل بيتي', sub: 'اطلب دلوقتي · توصيل لحد البيت', badge: 'وجبة 99ج', likes: '12',
+    icon: (c) => <><ellipse cx="50" cy="62" rx="40" ry="10" fill={c} opacity={0.25} /><path d="M 14 58 C 14 30, 86 30, 86 58 Z" fill={c} /><rect x="46" y="20" width="8" height="12" rx="4" fill={c} /></>},
+  {page: 'صيدلية الشفاء', av: '#1E8E5A', bg: '#E2F1E8', fg: '#1E5E3E', acc: '#1E8E5A', head: 'خصم 20%', sub: 'على كل الفيتامينات · لفترة محدودة', badge: 'عرض', likes: '8',
+    icon: (c) => <><rect x="38" y="14" width="24" height="72" rx="6" fill={c} /><rect x="14" y="38" width="72" height="24" rx="6" fill={c} /></>},
+  {page: 'محل الأناقة', av: '#6C3483', bg: '#ECE3F0', fg: '#4A2360', acc: '#6C3483', head: 'تشكيلة الشتا وصلت', sub: 'تيشرتات · جواكت · بناطيل', badge: 'جديد', likes: '23',
+    icon: (c) => <path d="M 30 18 L 14 30 L 22 44 L 30 40 L 30 84 L 70 84 L 70 40 L 78 44 L 86 30 L 70 18 C 64 26, 36 26, 30 18 Z" fill={c} />},
+  {page: 'شقق للبيع', av: '#2E4A7D', bg: '#E3E9F3', fg: '#22385E', acc: '#2E4A7D', head: 'شقة 3 غرف', sub: 'تشطيب سوبر لوكس · مقدم بسيط', badge: 'تقسيط', likes: '5',
+    icon: (c) => <><path d="M 12 48 L 50 16 L 88 48 Z" fill={c} /><rect x="22" y="46" width="56" height="40" fill={c} /><rect x="42" y="60" width="16" height="26" fill="#fff" /></>},
+  {page: 'مدرسة النور', av: '#B9770E', bg: '#F6ECD7', fg: '#6B4508', acc: '#B9770E', head: 'التقديم مفتوح', sub: 'للعام الدراسي الجديد · أماكن محدودة', badge: 'سجّل', likes: '17',
+    icon: (c) => <><path d="M 50 20 L 92 40 L 50 60 L 8 40 Z" fill={c} /><path d="M 26 50 V 70 C 38 80, 62 80, 74 70 V 50 L 50 62 Z" fill={c} /></>},
+  {page: 'موبايلات المعادي', av: '#34495E', bg: '#E6E9EC', fg: '#2C3E50', acc: '#34495E', head: 'أحدث الموبايلات', sub: 'بأقل سعر · ضمان سنة', badge: 'قسّط', likes: '9',
+    icon: (c) => <><rect x="30" y="10" width="40" height="80" rx="8" fill={c} /><rect x="35" y="18" width="30" height="58" rx="3" fill="#fff" /></>},
+];
+
+const FbPost: React.FC<{w: number; i: number}> = ({w, i}) => {
   const u = w / 800;
+  const a = ADS[i % ADS.length];
+  const meta: React.CSSProperties = {fontFamily: FONT, fontSize: 24 * u, fontWeight: 500, color: '#65676B', whiteSpace: 'nowrap'};
   return (
-    <div style={{width: w, background: P.white, borderRadius: 24 * u, overflow: 'hidden', boxShadow: `0 ${20 * u}px ${50 * u}px ${P.shadow}`}}>
-      <div style={{display: 'flex', alignItems: 'center', gap: 16 * u, padding: 24 * u, direction: 'rtl'}}>
-        <div style={{width: 64 * u, height: 64 * u, borderRadius: '50%', background: '#D9D4CB'}} />
-        <div style={{display: 'flex', flexDirection: 'column', gap: 10 * u}}>
-          <div style={{width: 220 * u, height: 16 * u, borderRadius: 8 * u, background: '#D9D4CB'}} />
-          <div style={{width: 130 * u, height: 12 * u, borderRadius: 6 * u, background: '#E6E1D8'}} />
+    <div style={{width: w, background: '#FFFFFF', borderRadius: 22 * u, overflow: 'hidden', boxShadow: `0 ${16 * u}px ${40 * u}px ${P.shadow}`, direction: 'rtl'}}>
+      <div style={{display: 'flex', alignItems: 'center', gap: 16 * u, padding: `${20 * u}px ${24 * u}px`}}>
+        <div style={{width: 66 * u, height: 66 * u, borderRadius: '50%', background: a.av, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <span style={{fontFamily: FONT, fontSize: 30 * u, fontWeight: 800, color: '#fff'}}>{a.page[0]}</span>
         </div>
+        <div style={{display: 'flex', flexDirection: 'column', gap: 2 * u, flex: 1}}>
+          <span style={{fontFamily: FONT, fontSize: 30 * u, fontWeight: 700, color: '#050505', whiteSpace: 'nowrap'}}>{a.page}</span>
+          <span style={meta}>ممول · 🌐</span>
+        </div>
+        <span style={{...meta, fontSize: 40 * u, letterSpacing: 2 * u}}>···</span>
       </div>
-      <div style={{height: w * 0.72, background: '#E7E2D8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 * u, direction: 'rtl'}}>
-        {label ? (
-          <>
-            <span style={txt(58 * u, '#8D877E', 400)}>مطعم أبو علي</span>
-            <span style={txt(46 * u, '#8D877E', 400)}>أكل بيتي · اطلب دلوقتي</span>
-          </>
-        ) : (
-          <>
-            <div style={{width: 300 * u, height: 22 * u, borderRadius: 11 * u, background: '#D5CFC4'}} />
-            <div style={{width: 200 * u, height: 18 * u, borderRadius: 9 * u, background: '#DDD7CC'}} />
-          </>
-        )}
+      <div style={{padding: `0 ${24 * u}px ${14 * u}px`, fontFamily: FONT, fontSize: 25 * u, color: '#050505', whiteSpace: 'nowrap', overflow: 'hidden'}}>
+        {a.sub.split(' · ')[0]} 👇
       </div>
-      <div style={{display: 'flex', justifyContent: 'space-around', padding: 22 * u}}>
-        {[0, 1, 2].map((i) => (
-          <div key={i} style={{width: 100 * u, height: 16 * u, borderRadius: 8 * u, background: '#E6E1D8'}} />
+      <div style={{position: 'relative', height: w * 0.6, background: a.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 30 * u}}>
+        <svg width={190 * u} height={190 * u} viewBox="0 0 100 100">{a.icon(a.acc)}</svg>
+        <div style={{display: 'flex', flexDirection: 'column', gap: 6 * u}}>
+          <span style={{fontFamily: FONT, fontSize: 62 * u, fontWeight: 800, color: a.fg, whiteSpace: 'nowrap', lineHeight: 1.25}}>{a.head}</span>
+          <span style={{fontFamily: FONT, fontSize: 26 * u, fontWeight: 500, color: a.fg, opacity: 0.75, whiteSpace: 'nowrap'}}>{a.sub}</span>
+        </div>
+        <span style={{position: 'absolute', left: 24 * u, top: 22 * u, fontFamily: FONT, fontSize: 26 * u, fontWeight: 700, color: '#fff', background: a.acc, borderRadius: 10 * u, padding: `${4 * u}px ${16 * u}px ${8 * u}px`}}>{a.badge}</span>
+      </div>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${12 * u}px ${24 * u}px`, background: '#F0F2F5'}}>
+        <span style={{fontFamily: FONT, fontSize: 24 * u, fontWeight: 600, color: '#050505'}}>اطلب الآن</span>
+        <span style={{fontFamily: FONT, fontSize: 22 * u, fontWeight: 700, color: '#050505', background: '#E4E6EB', borderRadius: 10 * u, padding: `${6 * u}px ${18 * u}px ${10 * u}px`}}>أرسل رسالة</span>
+      </div>
+      <div style={{display: 'flex', justifyContent: 'space-between', padding: `${12 * u}px ${24 * u}px`, borderBottom: `${2 * u}px solid #E4E6EB`}}>
+        <span style={meta}>👍❤️ {a.likes}</span>
+        <span style={meta}>تعليقان</span>
+      </div>
+      <div style={{display: 'flex', justifyContent: 'space-around', padding: `${12 * u}px 0 ${16 * u}px`}}>
+        {['👍 أعجبني', '💬 تعليق', '↗ مشاركة'].map((x) => (
+          <span key={x} style={{...meta, fontWeight: 600}}>{x}</span>
         ))}
       </div>
     </div>
@@ -381,7 +408,7 @@ const BeforeAfter: React.FC = () => {
   const {W, H, tall} = useFrameBox();
   const s = W / 1080;
   const cw = (tall ? 820 : 700) * s;
-  const pitch = cw * 1.12;
+  const pitch = cw * 1.2;
   // feed: flicks on "بتعدّيه" and "كده", rewinds on "استنى"
   const flick1 = prog(t, sk.phrases[0].words[1].t - 0.05, sk.phrases[0].words[1].t + 0.35, easeInOut);
   const flick2 = prog(t, sk.phrases[1].start - 0.05, sk.phrases[1].start + 0.3, easeInOut);
@@ -407,10 +434,10 @@ const BeforeAfter: React.FC = () => {
       {!alive ? (
         <>
           <div style={{position: 'absolute', left: (W - cw) / 2, top: (tall ? 420 : 300) * s}}>
-            <div style={{transform: `translateY(${-scroll + (1 - enter) * H}px)`, filter: blur > 0.6 ? `blur(${blur}px)` : undefined, display: 'flex', flexDirection: 'column', gap: pitch - cw * 1.0}}>
+            <div style={{transform: `translateY(${-scroll + (1 - enter) * H}px)`, filter: blur > 0.6 ? `blur(${blur}px)` : undefined, display: 'flex', flexDirection: 'column', gap: pitch - cw * 1.1}}>
               {[0, 1, 2, 3, 4, 5].map((i) => (
-                <div key={i} style={{height: cw * 1.0, display: 'flex', alignItems: 'center'}}>
-                  <DullPost w={cw} label={i === 0} />
+                <div key={i} style={{height: cw * 1.1, display: "flex", alignItems: "center"}}>
+                  <FbPost w={cw} i={i} />
                 </div>
               ))}
             </div>
