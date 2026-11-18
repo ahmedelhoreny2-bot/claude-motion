@@ -307,7 +307,6 @@ const Services: React.FC<{t: number}> = ({t}) => {
   if (t < s.enter - 0.1 || t > s.exit + 0.6) return null;
   const v = vis(t, s.enter, s.exit, 0.5, 0.45);
   const toHoney = prog(t, s.honey, s.honey + 0.8, easeInOut);
-  const women = prog(t, s.women, s.women + 0.7, easeOut) * (1 - prog(t, s.exit, s.exit + 0.4, easeIn));
   return (
     <>
       <AbsoluteFill style={{opacity: v * (1 - toHoney)}}>
@@ -333,23 +332,6 @@ const Services: React.FC<{t: number}> = ({t}) => {
       </Center>
       <Center top={1050}>
         <Words text="ومنتجات طبيعية من خير النحل" t={t} at={s.honeyText} exit={s.exit} accent={['طبيعية']} style={{...display, fontSize: 62}} />
-      </Center>
-      <Center top={1300} opacity={women}>
-        <div
-          style={{
-            direction: 'rtl',
-            fontFamily: SF.ar,
-            fontWeight: 900,
-            fontSize: 46,
-            color: S.navy,
-            background: S.orange,
-            borderRadius: 24,
-            padding: '20px 44px 26px',
-            transform: `scale(${0.85 + 0.15 * women})`,
-          }}
-        >
-          قسم مخصص للسيدات
-        </div>
       </Center>
     </>
   );

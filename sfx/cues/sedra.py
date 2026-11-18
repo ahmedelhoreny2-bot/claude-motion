@@ -112,8 +112,6 @@ def score(mix, tl):
     for i, c in enumerate(s8["chips"]):
         put(c, pop(900 + i * 110, 450 + i * 50), 0.18, -0.5 + i * 0.2)
     put(s8["honey"], whoosh(0.8, 300, 2400, peak=0.5), 0.12)
-    put(s8["women"], pop(800, 400), 0.24)
-    put(s8["women"] + 0.02, blip(739.99, dur=0.5), 0.10)
 
     # safety list
     put(s9["title"], whoosh(0.35, 600, 2400), 0.10)
