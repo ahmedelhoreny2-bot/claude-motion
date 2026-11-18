@@ -7,9 +7,9 @@ speed it up a touch, butt lines together, and write per-word timings for the pic
 import json, math, os, re, struct, subprocess, wave
 
 SRC = {"a": "public/ibdaa/vo-src/showreel.mp3", "b": "public/ibdaa/vo-src/explainer.mp3"}
-TEMPO = 1.07
-GAP = 0.08          # between phrases inside a line
-LINE_GAP = 0.14     # between lines
+TEMPO = 1.03
+GAP = 0.22          # between phrases inside a line (a breath)
+LINE_GAP = 0.4      # between lines (a beat)
 STUT = 0.22         # length of the stuttered first word
 STUTTER = False     # "دي… دي… دي إشارة" (off: the hook now opens on a scroll-stop)
 PRE = 0.55          # silent scroll before the first word

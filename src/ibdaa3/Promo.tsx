@@ -67,7 +67,7 @@ const Words: React.FC<{t: number; ph: Phrase; size: number; color?: string; weig
   hiColor = P.orange,
   shadow,
   slam,
-  gap = 0.28,
+  gap = 0.42,
 }) => (
   <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', direction: 'rtl', columnGap: size * gap, rowGap: 0, padding: `0 ${size * 0.5}px`}}>
     {ph.words.map((w, i) => (
@@ -208,7 +208,7 @@ const Hook: React.FC = () => {
           <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', background: 'linear-gradient(180deg, rgba(10,8,6,0) 0%, rgba(10,8,6,0.82) 45%, rgba(10,8,6,0.9) 100%)'}} />
           <div style={{position: 'absolute', left: 50 * s, right: 50 * s, bottom: (tall ? 330 : 150) * s, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 * s, direction: 'rtl'}}>
             {rows.map((ln, i) => (
-              <div key={i} style={{display: 'flex', gap: 28 * s, position: 'relative', padding: i ? `0 ${30 * s}px` : 0}}>
+              <div key={i} style={{display: 'flex', gap: (i ? 52 : 44) * s, position: 'relative', padding: i ? `0 ${34 * s}px` : 0}}>
                 {i === 1 ? <div style={{position: 'absolute', inset: `${10 * s}px 0 ${4 * s}px`, background: P.orange, borderRadius: 22 * s, transform: `scaleX(${boxK})`, transformOrigin: '100% 50%'}} /> : null}
                 {ln.map((w, j) => (
                   <Pop key={j} t={t} at={w.t} slam>
@@ -486,7 +486,7 @@ const Alive: React.FC<{t: number; df: Line}> = ({t, df}) => {
     <AbsoluteFill style={{background: P.orange}}>
       <AbsoluteFill style={{backgroundImage: 'radial-gradient(rgba(255,255,255,0.18) 1.6px, transparent 1.8px)', backgroundSize: '36px 36px', backgroundPosition: `${(t * 10) % 36}px 0`}} />
       <Center style={{gap: 30 * s}}>
-        <div style={{display: 'flex', gap: 50 * s, alignItems: 'flex-end', direction: 'rtl'}}>
+        <div style={{display: 'flex', gap: 70 * s, alignItems: 'flex-end', direction: 'rtl'}}>
           <span style={{...txt(230 * s, P.white), transform: `translateY(${(1 - w1) * -H * 0.7}px)`}}>أكل</span>
           <span style={{...txt(180 * s, P.ink), transform: `translateX(${(1 - w2) * -W}px)`}}>بيتي</span>
         </div>
@@ -655,7 +655,7 @@ const StoryScene: React.FC = () => {
           );
         })}
       </AbsoluteFill>
-      <div style={{position: 'absolute', left: 0, right: 0, top: (tall ? 190 : 70) * s, display: 'flex', justifyContent: 'center', gap: 26 * s, direction: 'rtl'}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: (tall ? 190 : 70) * s, display: 'flex', justifyContent: 'center', gap: 42 * s, direction: 'rtl'}}>
         {l.phrases.map((ph, i) => (
           <Pop key={i} t={t} at={ph.start} slam>
             <span style={txt(76 * s, i === 2 ? P.orange : P.ink)}>{ph.text}{i < 2 ? '…' : ''}</span>
@@ -909,7 +909,7 @@ const SkinScene: React.FC = () => {
               })}
             </div>
           </Center>
-          <div style={{position: 'absolute', left: 0, right: 0, top: (tall ? 160 : 40) * s, display: 'flex', justifyContent: 'center', gap: 24 * s, direction: 'rtl'}}>
+          <div style={{position: 'absolute', left: 0, right: 0, top: (tall ? 160 : 40) * s, display: 'flex', justifyContent: 'center', gap: 40 * s, direction: 'rtl'}}>
             {y.phrases.map((ph, i) => (
               <Pop key={i} t={t} at={ph.start} slam>
                 <span style={txt(78 * s, i ? P.orange : P.ink)}>{ph.text}</span>
@@ -946,7 +946,7 @@ const PriceScene: React.FC = () => {
         <Pop t={t} at={a.start}>
           <span style={txt(76 * s, P.inkSoft, 800)}>{a.text}</span>
         </Pop>
-        <div style={{display: 'flex', gap: 24 * s, direction: 'rtl'}}>
+        <div style={{display: 'flex', gap: 44 * s, direction: 'rtl'}}>
           {b.words.slice(0, 2).map((w, i) => (
             <Pop key={i} t={t} at={w.t}>
               <span style={txt(110 * s, P.ink, 900)}>{w.w}</span>
@@ -954,7 +954,7 @@ const PriceScene: React.FC = () => {
           ))}
         </div>
         <div style={{...txt(420 * s, P.orange, 900), lineHeight: 1.1, direction: 'ltr', transform: `scale(${t < at300 - 0.06 ? 0 : 2.2 - 1.2 * slam})`, opacity: t < at300 - 0.06 ? 0 : 1}}>300</div>
-        <div style={{display: 'flex', gap: 26 * s, direction: 'rtl'}}>
+        <div style={{display: 'flex', gap: 50 * s, direction: 'rtl'}}>
           <Pop t={t} at={atEgp} slam>
             <span style={txt(130 * s, P.ink, 900)}>جنيه</span>
           </Pop>
@@ -1020,7 +1020,7 @@ const CtaScene: React.FC = () => {
             <span style={txt(110 * s, P.ink, 900)}>بيتحرك</span>
             <Logo size={140 * s} k={barsK} triColor={P.white} colors={[P.white, P.ink, P.white]} />
           </div>
-          <div style={{display: 'flex', gap: 18 * s, direction: 'rtl'}}>
+          <div style={{display: 'flex', gap: 30 * s, direction: 'rtl'}}>
             {e.phrases.map((ph, i) => (
               <Pop key={i} t={t} at={ph.start} slam>
                 <span style={txt(64 * s, i ? P.ink : P.white, 900)}>{ph.text}{i ? '' : '…'}</span>
