@@ -156,7 +156,7 @@ for k, (lid, word) in enumerate(ECHO):
     j = next(i for i, w in enumerate(ws) if w["w"] == word)
     a = ws[j]["t"] - 0.03
     b = ws[j + 1]["t"] - 0.02 if j + 1 < len(ws) else max(p["end"] for p in l["phrases"])
-    for r, (d, g) in enumerate(((0.16, 0.32), (0.32, 0.14))):
+    for r, (d, g) in enumerate(((0.16, 0.2), (0.32, 0.08))):
         lab = f"e{k}{r}"
         parts.append(f"[0:a]atrim={a:.3f}:{b:.3f},asetpts=PTS-STARTPTS,highpass=f=300,volume={g},adelay={int((a + d) * 1000)}[{lab}]")
         labels.append(f"[{lab}]")
