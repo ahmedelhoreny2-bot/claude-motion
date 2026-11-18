@@ -108,6 +108,30 @@ const Shade: React.FC<{strength?: number}> = ({strength = 1}) => (
   />
 );
 
+/** A small or off-ratio photo shown as a card (or circle) over a blurred copy of itself. */
+const Inset: React.FC<{src: string; t: number; from: number; dur: number; shape?: 'card' | 'circle'; w?: number; h?: number; top?: number; focusY?: number; zoom?: number}> = ({
+  src, t, from, dur, shape = 'card', w = 900, h = 900, top = 330, focusY = 50, zoom = 1.25,
+}) => {
+  const k = clamp01((t - from) / dur);
+  const pop = prog(t, from, from + 0.35, easeOut);
+  return (
+    <AbsoluteFill>
+      <AbsoluteFill style={{overflow: 'hidden'}}>
+        <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(36px) brightness(0.45) saturate(1.2)', transform: 'scale(1.25)'}} />
+      </AbsoluteFill>
+      <div
+        style={{
+          position: 'absolute', left: (W - w) / 2, top, width: w, height: shape === 'circle' ? w : h, overflow: 'hidden',
+          borderRadius: shape === 'circle' ? '50%' : 40, border: `6px solid ${shape === 'circle' ? S.orange : 'rgba(246,242,233,0.9)'}`,
+          boxShadow: '0 40px 90px rgba(0,0,0,0.55)', transform: `scale(${0.85 + 0.15 * pop}) rotate(${(1 - pop) * -3}deg)`, opacity: clamp01(pop * 2),
+        }}
+      >
+        <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: `50% ${focusY}%`, transform: `scale(${lerp(zoom, 1.02, easeOut(k)) * (shape === 'circle' ? 1.12 : 1)})`}} />
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 const Pill: React.FC<{k: number; children: React.ReactNode; bg?: string; color?: string; size?: number; border?: string}> = ({
   k, children, bg = S.orange, color = S.navy, size = 40, border,
 }) => (
@@ -347,14 +371,18 @@ const Reveal: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   );
 };
 
-const Pillar: React.FC<{t: number; frame: number; img: string; start: number; end: number; icon: 'shield' | 'glove' | 'clip'; label: string; n: number; focusY: number}> = ({
-  t, frame, img, start, end, icon, label, n, focusY,
+const Pillar: React.FC<{t: number; frame: number; img: string; start: number; end: number; icon: 'shield' | 'glove' | 'clip'; label: string; n: number; focusY: number; inset?: {w: number; h: number}}> = ({
+  t, frame, img, start, end, icon, label, n, focusY, inset,
 }) => {
   const badge = sp(frame, start + 0.25, {damping: 11, stiffness: 190});
   return (
     <>
-      <FullPhoto src={img} t={t} from={start} dur={end - start + 0.4} focusY={focusY} panX={n % 2 ? 30 : -30} />
-      <Shade />
+      {inset ? (
+        <Inset src={img} t={t} from={start} dur={end - start + 0.4} w={inset.w} h={inset.h} top={420} focusY={focusY} />
+      ) : (
+        <FullPhoto src={img} t={t} from={start} dur={end - start + 0.4} focusY={focusY} panX={n % 2 ? 30 : -30} />
+      )}
+      <Shade strength={inset ? 0.6 : 1} />
       <div style={{position: 'absolute', right: 70, top: 260, display: 'flex', alignItems: 'center', gap: 20, direction: 'rtl', opacity: clamp01(badge * 2), transform: `translateX(${(1 - badge) * 120}px)`}}>
         <div style={{width: 110, height: 110, borderRadius: 30, background: S.orange, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.4)'}}>
           <Icon kind={icon} size={72} />
@@ -395,13 +423,13 @@ const Sheikh: React.FC<{t: number; frame: number}> = ({t, frame}) => {
   );
 };
 
-const SERVICE_SHOTS: {img?: string; video?: number; label: string; focusY?: number}[] = [
-  {img: 'sedra/cups.jpg', label: 'حجامة نبوية', focusY: 45},
-  {video: 0, label: 'حجامة نارية'},
-  {video: 2.4, label: 'فوطة نارية'},
-  {img: 'sedra/honey.jpg', label: 'مصل النحل', focusY: 30},
+const SERVICE_SHOTS: {img?: string; video?: number; label: string; focusY?: number; inset?: 'card' | 'circle'; w?: number; h?: number}[] = [
+  {img: 'sedra/chest.jpg', label: 'حجامة نبوية', focusY: 40, inset: 'card', w: 620, h: 760},
+  {img: 'sedra/firecups.jpg', label: 'حجامة نارية', inset: 'circle', w: 700},
+  {video: 0.6, label: 'فوطة نارية'},
+  {img: 'sedra/bee.jpg', label: 'مصل النحل', inset: 'circle', w: 700},
   {img: 'sedra/training.jpg', label: 'إبر صيني', focusY: 40},
-  {img: 'sedra/selfie.jpg', label: 'مساج', focusY: 45},
+  {img: 'sedra/massage.jpg', label: 'مساج', focusY: 40, inset: 'card', w: 900, h: 780},
   {img: 'sedra/honey.jpg', label: 'منتجات طبيعية', focusY: 55},
 ];
 
@@ -422,6 +450,8 @@ const Services: React.FC<{t: number; frame: number}> = ({t, frame}) => {
             <OffthreadVideo src={staticFile('sedra/fire.mp4')} startFrom={Math.round(shot.video * FPS)} muted style={{width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.2) contrast(1.05)'}} />
           </AbsoluteFill>
         </Sequence>
+      ) : shot.inset ? (
+        <Inset src={shot.img!} t={t} from={s0} dur={end - s0 + 0.3} shape={shot.inset} w={shot.w} h={shot.h} top={shot.inset === 'circle' ? 250 : 230} focusY={shot.focusY} />
       ) : (
         <FullPhoto src={shot.img!} t={t} from={s0} dur={end - s0 + 0.3} focusY={shot.focusY} zoomFrom={1.3} zoomTo={1.06} />
       )}
@@ -616,9 +646,9 @@ const SCENE_MAP: Record<string, React.FC<{t: number; frame: number}>> = {
   sunnah: Sunnah,
   science: Science,
   reveal: Reveal,
-  p1: (p) => <Pillar {...p} img="sedra/cups.jpg" start={SCENES[6].start} end={sceneEnd(6)} icon="shield" label="أدوات معقّمة" n={0} focusY={50} />,
+  p1: (p) => <Pillar {...p} img="sedra/backcups.jpg" start={SCENES[6].start} end={sceneEnd(6)} icon="shield" label="أدوات معقّمة" n={0} focusY={70} inset={{w: 960, h: 720}} />,
   p2: (p) => <Pillar {...p} img="sedra/selfie.jpg" start={SCENES[7].start} end={sceneEnd(7)} icon="glove" label="جوانتي جديد" n={1} focusY={40} />,
-  p3: (p) => <Pillar {...p} img="sedra/training.jpg" start={SCENES[8].start} end={sceneEnd(8)} icon="clip" label="سؤال قبل البدء" n={2} focusY={30} />,
+  p3: (p) => <Pillar {...p} img="sedra/consult.jpg" start={SCENES[8].start} end={sceneEnd(8)} icon="clip" label="سؤال قبل البدء" n={2} focusY={55} inset={{w: 860, h: 760}} />,
   sheikh: Sheikh,
   services: Services,
   women: Women,
