@@ -11,6 +11,8 @@ TEMPO = 1.07
 GAP = 0.08          # between phrases inside a line
 LINE_GAP = 0.14     # between lines
 STUT = 0.22         # length of the stuttered first word
+STUTTER = False     # "دي… دي… دي إشارة" (off: the hook now opens on a scroll-stop)
+PRE = 0.55          # silent scroll before the first word
 ECHO = [("brand", "بيتحرك"), ("price", "تلتمية")]  # words that get a short echo tail
 LINES = [
     ("hook", "a", 0.00, 2.84, "دي إشارة|إن إعلانك محتاج يتحرك"),
@@ -102,13 +104,13 @@ def split_phrases(src, a, b, phrases):
     return out
 
 
-pieces, meta, t = [], [], 0.0
+pieces, meta, t = [], [], PRE
 for k, (lid, src, a, b, text) in enumerate(LINES):
     phrases = text.split("|")
     spans = split_phrases(src, a, b, phrases)
     line = {"id": lid, "start": round(t, 3), "phrases": []}
     stutter = []
-    if lid == "hook":
+    if lid == "hook" and STUTTER:
         # "دي… دي… دي إشارة": the first word twice more, quick, before the line
         s0 = spans[0][0]
         f = f"{TMP}/stutter.wav"

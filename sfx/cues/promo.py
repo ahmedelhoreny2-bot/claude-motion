@@ -52,14 +52,19 @@ def score(mix, tl):
         t += 0.5 - 0.39 * x ** 1.4
         k += 1
 
-    # ── hook: a shot per word, stutter slams
+    # ── hook: the feed races up, slams to a stop on "دي", the signal rings out, then a shot per word
     h = lines["hook"]
-    hw = [w["t"] for p in h["phrases"] for w in p["words"]]
-    for j, w in enumerate(hw[:-1]):
-        put(max(0, w - 0.06), whoosh(0.18, 2000, 600, peak=0.2), 0.08, (-1) ** j * 0.4)
-    for w in hw[:3] + hw[-1:]:
-        thud(w, 0.14)
-    put(hw[-2] + 0.15, impact(0.9), 0.16)
+    p1, p2 = h["phrases"]
+    stop = p1["words"][0]["t"]
+    put(0.0, whoosh(stop + 0.05, 600, 3200, peak=0.25, q=0.7), 0.2)
+    put(stop, impact(0.9), 0.24)
+    put(stop, click(1400, dur=0.04), 0.14)
+    for j in range(3):
+        put(stop + 0.05 + j * 0.42, whoosh(0.5, 300, 1400, peak=0.05), 0.06)
+    thud(p1["words"][1]["t"], 0.18)
+    for j, w in enumerate(p2["words"]):
+        put(max(0, w["t"] - 0.06), whoosh(0.18, 2000, 600, peak=0.2), 0.08, (-1) ** j * 0.4)
+    thud(p2["words"][-1]["t"], 0.16)
 
     # ── brand: stamp the logo on kraft, rip it, the phone pushes through onto a sizzling burger
     b = lines["brand"]

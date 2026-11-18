@@ -124,61 +124,102 @@ const Shade: React.FC<{top?: number; bottom?: number}> = ({top = 0.55, bottom = 
   />
 );
 
-/* ───────────────────────── 1. Hook: stitched visuals, stacked words ── */
+/* ───────────────────────── 1. Hook: a racing feed slams to a stop, the signal rings out, then a shot per word ── */
+
+const FEED = ['stills/b01.jpg', 'posters/p03.jpg', 'stills/b04.jpg', 'posters/p05.jpg', 'stills/b09.jpg', 'posters/p01.jpg', 'stills/b15.jpg', 'posters/p07.jpg', 'stills/b11.jpg', 'posters/p09.jpg', 'stills/b06.jpg', 'posters/p02.jpg', 'stills/b18.jpg', 'posters/p04.jpg', 'stills/b13.jpg', 'posters/p06.jpg', 'stills/b02.jpg', 'posters/p10.jpg'];
+
+const Feed: React.FC<{y: number; blur: number}> = ({y, blur}) => {
+  const {W, H} = useFrameBox();
+  const s = W / 1080;
+  const gap = 18 * s;
+  const cw = (W - gap * 4) / 3;
+  const ch = cw * 1.25;
+  const rows = Math.ceil((H * 4) / (ch + gap)) + 2;
+  return (
+    <AbsoluteFill style={{filter: blur > 0.4 ? `blur(${blur}px)` : undefined}}>
+      {[0, 1, 2].map((c) => (
+        <div key={c} style={{position: 'absolute', left: gap + c * (cw + gap), top: -y + (c === 1 ? -ch * 0.45 : 0), display: 'flex', flexDirection: 'column', gap}}>
+          {Array.from({length: rows}, (_, r) => (
+            <div key={r} style={{width: cw, height: ch, borderRadius: 22 * s, overflow: 'hidden', background: P.paper, boxShadow: `0 ${8 * s}px ${20 * s}px ${P.shadow}`}}>
+              <Img src={img(FEED[(r * 3 + c * 5) % FEED.length])} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+            </div>
+          ))}
+        </div>
+      ))}
+    </AbsoluteFill>
+  );
+};
 
 const Hook: React.FC = () => {
   const l = L('hook');
-  const t0 = 0;
-  const t = useT(t0);
+  const t = useT(0);
   const {W, H, tall} = useFrameBox();
   const s = W / 1080;
-  const srcs = [
-    {src: 'ho2', from: 0.9},
-    {src: 'az2', from: 0.4},
-    {src: 'kf1', from: 1.2},
-    {src: 'as3', from: 0.6},
-    {src: 'ho1', from: 0.3},
-    {src: 'kd3', from: 0.8},
-    {src: 'az3', from: 1.2},
-  ];
-  const all = [...l.phrases[0].words, ...l.phrases[1].words];
-  const nStut = all.findIndex((w, i) => i > 0 && w.w !== all[0].w);
-  const rest = all.slice(nStut);
-  // a new shot on every spoken word (the last word holds)
-  const cuts = all.slice(0, -1).map((w, i) => ({...srcs[i % srcs.length], at: i === 0 ? 0 : w.t - 0.03}));
-  const hit = Math.max(...all.slice(0, nStut).filter((w) => w.t - 0.05 <= t).map((w) => w.t), all[0].t);
-  const lines: Wd[][] = [[{w: all[0].w, t: hit}], [rest[0]], [rest[1], rest[2]], [rest[3], rest[4]]];
-  const sizes = [130, 190, 120, 150];
-  const offs = [0, 120, 30, 0];
-  const last = lines[3][0].t;
-  const boxK = sp(fr(t), last + 0.15, {damping: 14, stiffness: 200});
+  const [p1, p2] = l.phrases;
+  const stop = p1.words[0].t;
+  const D = H * 2.6;
+  const posAt = (tt: number) => {
+    if (tt < stop) {
+      const k = Math.max(0, tt) / stop;
+      return D * (1 - (1 - k) ** 2.4);
+    }
+    const u = tt - stop;
+    return D - 46 * s * Math.sin(u * 26) * Math.exp(-u * 11);
+  };
+  const y = posAt(t);
+  const vel = Math.abs(posAt(t) - posAt(t - 1 / FPS)) * FPS;
+  const blur = Math.min(12, vel / 900);
+  const dim = prog(t, stop, stop + 0.12, easeOut);
+  const flash = t >= stop ? 1 - clamp01((t - stop) / 0.12) : 0;
+  const phaseC = t >= p2.start - 0.04;
+  const cuts = p2.words.map((w, i) => ({...[{src: 'az2', from: 0.4}, {src: 'ho2', from: 1.6}, {src: 'as3', from: 0.6}, {src: 'az3', from: 0.2}][i % 4], at: w.t - 0.04}));
+  const boxK = sp(fr(t), p2.words[2].t + 0.05, {damping: 14, stiffness: 220});
+  const rows: Wd[][] = [[p2.words[0], p2.words[1]], [p2.words[2], p2.words[3]]];
   return (
-    <AbsoluteFill style={{background: P.ink}}>
-      <Cuts t0={t0} t={t} cuts={cuts} punch={0.16} />
-      <Shade top={0.5} bottom={0.4} />
-      <div style={{position: 'absolute', right: 70 * s, top: (tall ? 330 : 170) * s, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', direction: 'rtl'}}>
-        {lines.map((ln, i) => (
-          <div key={i} style={{marginRight: offs[i] * s, display: 'flex', gap: 26 * s, position: 'relative'}}>
-            {i === 3 ? (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: `${8 * s}px ${-24 * s}px ${0 * s}px`,
-                  background: P.orange,
-                  borderRadius: 18 * s,
-                  transform: `scaleX(${boxK})`,
-                  transformOrigin: '100% 50%',
-                }}
-              />
-            ) : null}
-            {ln.map((w, j) => (
-              <Pop key={`${j}-${w.t}`} t={t} at={w.t} slam>
-                <span style={{...txt(sizes[i] * s, P.white, 900), textShadow: i === 3 ? 'none' : SHADOW, position: 'relative'}}>{w.w}</span>
-              </Pop>
+    <AbsoluteFill style={{background: P.cream, overflow: 'hidden'}}>
+      {!phaseC ? (
+        <>
+          <Paper t={t} />
+          <Feed y={y} blur={blur} />
+          <AbsoluteFill style={{background: P.ink, opacity: dim * 0.62}} />
+          {/* the signal: rings pulsing out from the centre */}
+          {t >= stop
+            ? [0, 1, 2, 3].map((i) => {
+                const k = ((t - stop) / 0.75 - i * 0.25) % 1;
+                if (t - stop < i * 0.19 || k < 0) return null;
+                const r = (0.12 + k * 0.9) * W;
+                return <div key={i} style={{position: 'absolute', left: W / 2 - r, top: H / 2 - r, width: r * 2, height: r * 2, borderRadius: '50%', border: `${(10 - 7 * k) * s}px solid ${P.orange}`, opacity: (1 - k) * 0.9}} />;
+              })
+            : null}
+          <AbsoluteFill style={{background: P.white, opacity: flash * 0.6}} />
+          <Center style={{gap: 0}}>
+            <Pop t={t} at={p1.words[0].t} slam>
+              <span style={{...txt(120 * s, P.white, 900), textShadow: SHADOW}}>{p1.words[0].w}</span>
+            </Pop>
+            <Pop t={t} at={p1.words[1].t} slam>
+              <span style={{...txt((tall ? 300 : 270) * s, P.orange, 900), lineHeight: 1.15, textShadow: '0 10px 40px rgba(0,0,0,0.45)'}}>{p1.words[1].w}</span>
+            </Pop>
+          </Center>
+        </>
+      ) : (
+        <>
+          <Cuts t0={0} t={t} cuts={cuts} punch={0.16} />
+          <Shade top={0.35} bottom={0.75} />
+          <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', background: 'linear-gradient(180deg, rgba(10,8,6,0) 0%, rgba(10,8,6,0.82) 45%, rgba(10,8,6,0.9) 100%)'}} />
+          <div style={{position: 'absolute', left: 50 * s, right: 50 * s, bottom: (tall ? 330 : 150) * s, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 * s, direction: 'rtl'}}>
+            {rows.map((ln, i) => (
+              <div key={i} style={{display: 'flex', gap: 28 * s, position: 'relative', padding: i ? `0 ${30 * s}px` : 0}}>
+                {i === 1 ? <div style={{position: 'absolute', inset: `${10 * s}px 0 ${4 * s}px`, background: P.orange, borderRadius: 22 * s, transform: `scaleX(${boxK})`, transformOrigin: '100% 50%'}} /> : null}
+                {ln.map((w, j) => (
+                  <Pop key={j} t={t} at={w.t} slam>
+                    <span style={{...txt((i ? 150 : 130) * s, P.white, 900), textShadow: i ? 'none' : SHADOW, position: 'relative'}}>{w.w}</span>
+                  </Pop>
+                ))}
+              </div>
             ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </AbsoluteFill>
   );
 };

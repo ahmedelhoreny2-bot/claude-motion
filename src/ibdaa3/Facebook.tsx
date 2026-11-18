@@ -25,13 +25,13 @@ export const IbdaaProfile: React.FC<{variant?: 'light' | 'orange'}> = ({variant 
       )}
       <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 34, paddingTop: 30}}>
         <Logo
-          size={360}
+          size={orange ? 360 : 320}
           triColor={orange ? P.white : P.orange}
           colors={orange ? [P.white, P.ink, P.white] : [P.teal, P.orange, P.teal]}
         />
         <div style={{display: 'flex', gap: 26, direction: 'rtl'}}>
-          <span style={txt(128, orange ? P.white : P.ink)}>إبداع</span>
-          <span style={txt(128, orange ? P.ink : P.orange)}>بيتحرك</span>
+          <span style={txt(orange ? 128 : 114, orange ? P.white : P.ink)}>إبداع</span>
+          <span style={txt(orange ? 128 : 114, orange ? P.ink : P.orange)}>بيتحرك</span>
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
@@ -125,11 +125,11 @@ export const IbdaaFbCover2: React.FC = () => {
         ))}
       </div>
       {/* the logo's speed bars, as on the original cover */}
-      <div style={{position: 'absolute', left: 350, top: 390, display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'flex-start'}}>
+      <div style={{position: 'absolute', left: 170, top: 380, display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'flex-start'}}>
         {bar(200, P.teal)}
         {bar(130, P.orange)}
       </div>
-      <div style={{position: 'absolute', right: 350, top: 390, display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'flex-end'}}>
+      <div style={{position: 'absolute', right: 170, top: 380, display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'flex-end'}}>
         {bar(130, P.orange)}
         {bar(200, P.teal)}
       </div>
