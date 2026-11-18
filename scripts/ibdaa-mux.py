@@ -32,7 +32,7 @@ for k, (t, _) in enumerate(vos):
     parts.append(f"[{k + 2}:a]aresample=48000,aformat=channel_layouts=stereo,adelay={ms}|{ms}[v{k}]")
 parts.append("".join(f"[v{k}]" for k in range(len(vos))) + f"amix=inputs={len(vos)}:normalize=0,volume=1.6,asplit[vo][sc]")
 parts.append("[1:a][sc]sidechaincompress=threshold=0.03:ratio=6:attack=15:release=350[duck]")
-parts.append("[duck][vo]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[a]")
+parts.append("[duck][vo]amix=inputs=2:normalize=0,alimiter=limit=0.7:level=false,loudnorm=I=-14:TP=-2:LRA=11,aresample=48000[a]")
 args += ["-filter_complex", ";".join(parts), "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "256k",
          "-movflags", "+faststart", "-t", str(tl["duration"]), f"out/{prefix}-{fmt}.mp4"]
 subprocess.run(args, check=True)
