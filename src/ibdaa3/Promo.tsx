@@ -141,11 +141,14 @@ const Hook: React.FC = () => {
     {src: 'kd3', from: 0.8},
     {src: 'az3', from: 1.2},
   ];
-  const step = (l.end - l.start) / 6;
-  const cuts = srcs.map((c, i) => ({...c, at: i * step}));
-  const words = [...l.phrases[0].words, ...l.phrases[1].words];
-  const lines: Wd[][] = [[words[0]], [words[1]], [words[2], words[3]], [words[4], words[5]]];
-  const sizes = [110, 190, 120, 150];
+  const all = [...l.phrases[0].words, ...l.phrases[1].words];
+  const nStut = all.findIndex((w, i) => i > 0 && w.w !== all[0].w);
+  const rest = all.slice(nStut);
+  // a new shot on every spoken word (the last word holds)
+  const cuts = all.slice(0, -1).map((w, i) => ({...srcs[i % srcs.length], at: i === 0 ? 0 : w.t - 0.03}));
+  const hit = Math.max(...all.slice(0, nStut).filter((w) => w.t - 0.05 <= t).map((w) => w.t), all[0].t);
+  const lines: Wd[][] = [[{w: all[0].w, t: hit}], [rest[0]], [rest[1], rest[2]], [rest[3], rest[4]]];
+  const sizes = [130, 190, 120, 150];
   const offs = [0, 120, 30, 0];
   const last = lines[3][0].t;
   const boxK = sp(fr(t), last + 0.15, {damping: 14, stiffness: 200});
@@ -169,7 +172,7 @@ const Hook: React.FC = () => {
               />
             ) : null}
             {ln.map((w, j) => (
-              <Pop key={j} t={t} at={w.t} slam>
+              <Pop key={`${j}-${w.t}`} t={t} at={w.t} slam>
                 <span style={{...txt(sizes[i] * s, P.white, 900), textShadow: i === 3 ? 'none' : SHADOW, position: 'relative'}}>{w.w}</span>
               </Pop>
             ))}

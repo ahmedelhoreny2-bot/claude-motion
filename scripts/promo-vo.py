@@ -10,6 +10,8 @@ SRC = {"a": "public/ibdaa/vo-src/showreel.mp3", "b": "public/ibdaa/vo-src/explai
 TEMPO = 1.07
 GAP = 0.08          # between phrases inside a line
 LINE_GAP = 0.14     # between lines
+STUT = 0.22         # length of the stuttered first word
+ECHO = [("brand", "بيتحرك"), ("price", "تلتمية")]  # words that get a short echo tail
 LINES = [
     ("hook", "a", 0.00, 2.84, "دي إشارة|إن إعلانك محتاج يتحرك"),
     ("brand", "a", 3.13, 7.86, "إحنا إبداع بيتحرك|فكرتك على الشاشة|بتتحرك وتبيع"),
@@ -105,6 +107,17 @@ for k, (lid, src, a, b, text) in enumerate(LINES):
     phrases = text.split("|")
     spans = split_phrases(src, a, b, phrases)
     line = {"id": lid, "start": round(t, 3), "phrases": []}
+    stutter = []
+    if lid == "hook":
+        # "دي… دي… دي إشارة": the first word twice more, quick, before the line
+        s0 = spans[0][0]
+        f = f"{TMP}/stutter.wav"
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{s0:.3f}", "-to", f"{s0 + STUT:.3f}", "-i", SRC[src],
+                        "-af", f"atempo={TEMPO},afade=t=in:d=0.01,areverse,afade=t=in:d=0.03,areverse", "-ar", "48000", "-ac", "1", f], check=True)
+        for r in range(2):
+            pieces.append((t, f))
+            stutter.append({"w": phrases[0].split()[0], "t": round(t + 0.02, 3), "stutter": True})
+            t += STUT / TEMPO + 0.1
     for pi, ((s0, s1), ph) in enumerate(zip(spans, phrases)):
         f = f"{TMP}/p{k:02d}_{pi}.wav"
         subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{max(0, s0 - 0.03):.3f}", "-to", f"{s1 + 0.05:.3f}", "-i", SRC[src],
@@ -117,7 +130,9 @@ for k, (lid, src, a, b, text) in enumerate(LINES):
             w0 = t + 0.02 + (dur - 0.06) * acc / wt
             acc += chars(w_) + 1
             wl.append({"w": w_, "t": round(w0, 3)})
-        line["phrases"].append({"text": ph, "start": round(t, 3), "end": round(t + dur, 3), "words": wl})
+        if pi == 0 and stutter:
+            wl = stutter + wl
+        line["phrases"].append({"text": ph, "start": round(wl[0]["t"] - 0.02, 3), "end": round(t + dur, 3), "words": wl})
         pieces.append((t, f))
         t += dur + (GAP if pi < len(phrases) - 1 else 0)
     line["end"] = round(t, 3)
@@ -131,7 +146,24 @@ for i, (st, f) in enumerate(pieces):
     ms = int(st * 1000)
     filt.append(f"[{i}:a]adelay={ms}[d{i}]")
 filt.append("".join(f"[d{i}]" for i in range(len(pieces))) + f"amix=inputs={len(pieces)}:normalize=0,apad,atrim=0:{total:.3f}[o]")
-subprocess.run(["ffmpeg", "-loglevel", "error", "-y", *inputs, "-filter_complex", ";".join(filt), "-map", "[o]", "-ar", "48000", "public/ibdaa/promo/vo.wav"], check=True)
+dry = f"{TMP}/vo_dry.wav"
+subprocess.run(["ffmpeg", "-loglevel", "error", "-y", *inputs, "-filter_complex", ";".join(filt), "-map", "[o]", "-ar", "48000", dry], check=True)
+# echo: copies of the word, later and quieter, mixed back in
+parts, labels = [], ["[0:a]"]
+for k, (lid, word) in enumerate(ECHO):
+    l = next(x for x in meta if x["id"] == lid)
+    ws = [w for p in l["phrases"] for w in p["words"]]
+    j = next(i for i, w in enumerate(ws) if w["w"] == word)
+    a = ws[j]["t"] - 0.03
+    b = ws[j + 1]["t"] - 0.02 if j + 1 < len(ws) else max(p["end"] for p in l["phrases"])
+    for r, (d, g) in enumerate(((0.16, 0.32), (0.32, 0.14))):
+        lab = f"e{k}{r}"
+        parts.append(f"[0:a]atrim={a:.3f}:{b:.3f},asetpts=PTS-STARTPTS,highpass=f=300,volume={g},adelay={int((a + d) * 1000)}[{lab}]")
+        labels.append(f"[{lab}]")
+parts.insert(0, "[0:a]asplit=" + str(len(labels)) + "".join(f"[s{i}]" for i in range(len(labels))))
+parts = [parts[0]] + [p.replace("[0:a]", f"[s{i + 1}]", 1) for i, p in enumerate(parts[1:])]
+parts.append(f"[s0]" + "".join(labels[1:]) + f"amix=inputs={len(labels)}:normalize=0,atrim=0:{total:.3f}[o]")
+subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", dry, "-filter_complex", ";".join(parts), "-map", "[o]", "-ar", "48000", "public/ibdaa/promo/vo.wav"], check=True)
 json.dump({"duration": round(total, 2), "lines": meta}, open("src/ibdaa3/vo.json", "w"), ensure_ascii=False, indent=1)
 for l in meta:
     print(f'{l["id"]:7s} {l["start"]:6.2f}-{l["end"]:6.2f}  ' + " | ".join(f'{p["start"]:.2f}' for p in l["phrases"]))

@@ -191,3 +191,104 @@ def pad(duration, chords, volume=None, detune=0.6, tremolo=0.23, xfade=0.35):
             left[i] += sl * v
             right[i] += sr * v
     return left, right
+
+
+# ── foley: real-world sounds, nothing musical ──
+
+
+def sizzle(dur, density=0.06):
+    """Food on a hot grill: hiss bed plus random fat crackles."""
+    n = int(dur * SR)
+    hiss = bandnoise(n, lambda k: 6000, q=0.4)
+    out = []
+    pop_left = 0
+    for k in range(n):
+        env = min(1, k / (0.05 * SR)) * min(1, (n - k) / (0.15 * SR))
+        if pop_left <= 0 and random.random() < density / 40:
+            pop_left = int(random.uniform(0.002, 0.008) * SR)
+        crackle = random.uniform(-1, 1) * 1.4 if pop_left > 0 else 0.0
+        pop_left -= 1
+        out.append((hiss[k] * 0.35 + crackle) * env)
+    return out
+
+
+def crunch(dur=0.25):
+    """A crispy bite or crunch: dense short noise grains."""
+    n = int(dur * SR)
+    base = bandnoise(n, lambda k: 2500, q=0.5)
+    return [s * (1.6 if random.random() < 0.18 else 0.4) * (1 - k / n) ** 1.5 for k, s in enumerate(base)]
+
+
+def drip(f0=900):
+    """A thick drop landing (honey, water): fast upward chirp with a wet tail."""
+    n = int(0.22 * SR)
+    out, ph = [], 0.0
+    for k in range(n):
+        t = k / SR
+        f = f0 * (1 + 2.2 * (1 - math.exp(-t / 0.02)))
+        ph += 2 * math.pi * f / SR
+        out.append(math.sin(ph) * math.exp(-t / 0.035) * min(1, k / 40))
+    return out
+
+
+def beep(freq=2200, dur=0.07):
+    """Lab device beep: short, clean, quiet."""
+    n = int(dur * SR)
+    return [math.sin(2 * math.pi * freq * k / SR) * min(1, k / 60, (n - k) / 60) for k in range(n)]
+
+
+def servo(dur=0.5, f0=140, f1=260):
+    """Robotic arm / machine move: buzzy motor whine sweeping between two speeds."""
+    n = int(dur * SR)
+    out, ph = [], 0.0
+    for k in range(n):
+        x = k / n
+        f = f0 + (f1 - f0) * math.sin(math.pi * x)
+        ph += 2 * math.pi * f / SR
+        saw = (ph / math.pi) % 2 - 1
+        out.append((saw * 0.5 + random.uniform(-0.2, 0.2)) * math.sin(math.pi * x) ** 0.6)
+    return out
+
+
+def pageflip(dur=0.28):
+    """A page or card flipping: rising then falling papery noise."""
+    n = int(dur * SR)
+    base = bandnoise(n, lambda k: 1500 + 3500 * math.sin(math.pi * k / n), q=0.5)
+    return [s * math.sin(math.pi * k / n) ** 1.5 * (1.3 if random.random() < 0.05 else 1) for k, s in enumerate(base)]
+
+
+def shutter():
+    """Camera shutter: two mechanical clacks with a short spring between."""
+    a = click(3200, dur=0.02)
+    gap = [0.0] * int(0.045 * SR)
+    b = click(2100, dur=0.03)
+    noise = bandnoise(len(a) + len(gap) + len(b), lambda k: 5000, q=0.7)
+    body = a + gap + b
+    return [body[k] + noise[k] * 0.25 * math.exp(-k / (0.03 * SR)) for k in range(len(body))]
+
+
+def stamp():
+    """Rubber stamp on paper: dull thump plus a papery slap."""
+    n = int(0.3 * SR)
+    out, ph = [], 0.0
+    slap = bandnoise(n, lambda k: 1800, q=0.6)
+    for k in range(n):
+        t = k / SR
+        ph += 2 * math.pi * (70 + 90 * math.exp(-t / 0.02)) / SR
+        out.append(math.sin(ph) * math.exp(-t / 0.06) * 0.9 + slap[k] * math.exp(-t / 0.025) * 0.9)
+    return out
+
+
+def tick(tock=False):
+    """Clock tick (or the lower tock): a tiny wooden click."""
+    n = int(0.03 * SR)
+    f = 2600 if not tock else 1900
+    nz = bandnoise(n, lambda k: f, q=2.5)
+    return [s * math.exp(-k / (0.004 * SR)) * 2.2 for k, s in enumerate(nz)]
+
+
+def knock(f=520):
+    """Wooden block / toy knock: a short hollow tap."""
+    n = int(0.12 * SR)
+    nz = bandnoise(n, lambda k: f, q=4)
+    return [s * math.exp(-k / (0.018 * SR)) * 3 for k, s in enumerate(nz)]
