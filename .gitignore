@@ -7,3 +7,6 @@ __pycache__/
 .env
 drafts/
 sims/dist/
+
+# client media for the Ibdaa showreel (large, private; kept local only)
+public/ibdaa/
