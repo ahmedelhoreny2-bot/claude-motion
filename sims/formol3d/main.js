@@ -47,7 +47,7 @@ const ease = (x) => {
 };
 const eout = (x) => 1 - Math.pow(1 - clamp01(x), 3);
 const ein = (x) => Math.pow(clamp01(x), 3);
-const prog = (t, a, b, f = ease) => f((t - a) / (b - a));
+const prog = (t, a, b, f = ease) => f(clamp01((t - a) / (b - a)));
 const win = (t, a, b, fi = 0.35, fo = 0.3) => clamp01((t - a) / fi) * clamp01((b - t) / fo);
 const spring = (t, a, damp = 7, freq = 2.2) => {
   const x = t - a;
@@ -368,9 +368,9 @@ function buildLab(env) {
     lab.position.set(x, 6.5, z);
     scene.add(lab);
   };
-  bottle(28, -12, '#d9a464', '#8a5a2b', 'فورمالين');
-  bottle(-50, -10, '#ffffff', P.blue, 'لبن');
-  bottle(10, -16, '#cfe6ff', '#2a3142', 'NaOH');
+  bottle(33, -22, '#d9a464', '#8a5a2b', 'فورمالين');
+  bottle(-52, -14, '#ffffff', P.blue, 'لبن');
+  bottle(9, -24, '#cfe6ff', '#2a3142', 'NaOH');
 
   // burette
   const tipEnd = F0 + 14.15 - 1.6;
@@ -444,7 +444,8 @@ function buildLab(env) {
 
   // pipette (milk / formalin) and dropper (indicator)
   const pip = new THREE.Group();
-  const pipGlass = new THREE.Mesh(lathe([[0.18, 0], [0.32, 1.2], [0.32, 12], [1.0, 14], [1.0, 19], [0.32, 21], [0.32, 34]], 32), glassMat({thickness: 0.15}));
+  const toolGlass = new THREE.MeshPhysicalMaterial({color: '#dfeefa', roughness: 0.05, transparent: true, opacity: 0.45, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false});
+  const pipGlass = new THREE.Mesh(lathe([[0.18, 0], [0.32, 1.2], [0.32, 12], [1.0, 14], [1.0, 19], [0.32, 21], [0.32, 34]], 32), toolGlass);
   pip.add(pipGlass);
   const pipLiq = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 4.6, 32), new THREE.MeshPhysicalMaterial({color: P.milk, roughness: 0.3, clearcoat: 0.6}));
   pipLiq.position.y = 16.5;
@@ -453,7 +454,7 @@ function buildLab(env) {
   scene.add(stream);
   scene.add(pip);
   const dropper = new THREE.Group();
-  dropper.add(new THREE.Mesh(lathe([[0.1, 0], [0.3, 1.2], [0.42, 2], [0.42, 9]], 24), glassMat({thickness: 0.1})));
+  dropper.add(new THREE.Mesh(lathe([[0.1, 0], [0.3, 1.2], [0.42, 2], [0.42, 9]], 24), toolGlass));
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(1.0, 32, 20), new THREE.MeshPhysicalMaterial({color: '#7a4fd6', roughness: 0.45, clearcoat: 0.4}));
   bulb.scale.set(1, 1.5, 1);
   bulb.position.y = 10.4;
@@ -469,8 +470,8 @@ function buildLab(env) {
     [CH.protein.start + 1.6, V(beakerX + 0.2, 13, 9), V(beakerX, 6, 6), 40],
     [CH.protein.start + 2.2, V(beakerX, 9.1, 6.3), V(beakerX, 0, 6), 50],
     [CH.setup.start, V(32, 22, 64), V(10, 9, 0), 30],
-    [W.pour - 0.6, V(36, 15, 38), V(SIDE, 7, 0), 30],
-    [W.drops + 0.8, V(33, 14, 32), V(SIDE, 6, 0), 30],
+    [W.pour - 0.6, V(40, 24, 56), V(SIDE, 17, 0), 30],
+    [W.drops + 0.8, V(38, 25, 52), V(SIDE, 18.5, 0), 30],
     [W.fillBur, V(18, 18, 48), V(0, 12, 0), 30],
     [W.fillBur + 2.0, V(12, 82, 34), V(0, 84, 0), 30],
     [sa(14) - 0.2, V(10, 86, 30), V(0, 86, 0), 30],
@@ -481,17 +482,17 @@ function buildLab(env) {
     [W.dropwise, V(14, 13, 34), V(0, 10, 0), 30],
     [MACRO.b + 0.6, V(12, 12, 30), V(0, 9, 0), 30],
     [se(16), V(-8, 13, 32), V(0, 9, 0), 30],
-    [sa(17) + 1.6, V(4.5, 85.4, 14), V(4.2, 85.4, 0), 30],
-    [se(17), V(5.5, 85.8, 13), V(4.2, 85.6, 0), 30],
+    [sa(17) + 1.6, V(4.5, 85.4, 14), V(2.4, 85.4, 0), 30],
+    [se(17), V(5.5, 85.8, 13), V(2.4, 85.6, 0), 30],
     [CH.form.start + 0.4, V(30, 16, 50), V(8, 9, 0), 30],
-    [W.formPour - 0.2, V(36, 15, 38), V(SIDE, 8, 0), 30],
-    [W.formPour + 2.0, V(34, 14, 36), V(SIDE, 7, 0), 30],
+    [W.formPour - 0.2, V(40, 24, 56), V(SIDE, 17, 0), 30],
+    [W.formPour + 2.0, V(38, 22, 52), V(SIDE, 15, 0), 30],
     [W.vanish - 0.6, V(14, 12.5, 32), V(0, 8.5, 0), 30],
     [se(20), V(-12, 14, 34), V(0, 9, 0), 30],
     [CH.t2.start + 0.5, V(12, 14, 36), V(0, 10, 0), 30],
     [W.t2back + 1.0, V(10, 12.5, 30), V(0, 9, 0), 30],
-    [sa(22) + 0.9, V(4.5, 85.0, 14), V(4.2, 85.0, 0), 30],
-    [se(22), V(5.5, 85.4, 13), V(4.2, 85.2, 0), 30],
+    [sa(22) + 0.9, V(4.5, 85.0, 14), V(2.4, 85.0, 0), 30],
+    [se(22), V(5.5, 85.4, 13), V(2.4, 85.2, 0), 30],
     [CH.blank.start + 0.5, V(18, 22, 68), V(-2, 10, 0), 30],
     [sa(23) + 2.6, V(16, 20, 62), V(-4, 10, 0), 30],
     [sa(24) - 0.2, V(10, 13, 32), V(0, 9, 0), 30],
@@ -542,7 +543,7 @@ function buildLab(env) {
     const pf = prog(t, W.formPour - 0.6, W.formPour) * (1 - prog(t, W.formPour + 1.9, W.formPour + 2.6));
     const pk = Math.max(pm, pf);
     pip.visible = pk > 0.001;
-    pip.position.set(SIDE, lerp(60, F0 + 9.5, eout(pk)), 0);
+    pip.position.set(SIDE, lerp(70, F0 + 12.6, eout(pk)), 0);
     const isF = pf > pm;
     pipLiq.material.color.set(isF ? '#e4f5cf' : P.milk);
     const drain = isF ? prog(t, W.formPour + 0.1, W.formPour + 1.9) : prog(t, W.pour + 0.2, W.pour + 2.4);
@@ -557,7 +558,7 @@ function buildLab(env) {
     // dropper
     const dk = prog(t, W.drops - 0.9, W.drops - 0.2) * (1 - prog(t, W.drops + 1.6, W.drops + 2.2));
     dropper.visible = dk > 0.001;
-    dropper.position.set(SIDE, lerp(60, F0 + 16, eout(dk)), 0);
+    dropper.position.set(SIDE, lerp(70, F0 + 14.9, eout(dk)), 0);
     const dts = [0, 0.45, 0.9].map((o) => W.drops + o);
     bulb.scale.set(1 - 0.18 * dts.reduce((a, d) => a + Math.max(0, 1 - Math.abs(t - d + 0.05) / 0.12), 0), 1.5, 1);
     indDrop.visible = false;
@@ -565,7 +566,7 @@ function buildLab(env) {
       const k = (t - d) / 0.35;
       if (k >= 0 && k <= 1) {
         indDrop.visible = true;
-        indDrop.position.set(SIDE, F0 + 16 - (16 - Math.max(0.4, lvA)) * k * k, 0);
+        indDrop.position.set(SIDE, F0 + 14.8 - (14.8 - Math.max(0.4, lvA)) * k * k, 0);
       }
     }
     // demo flasks highlight
@@ -580,8 +581,8 @@ function buildLab(env) {
     anchors.flaskAhi = V(xa, F0 + 14.8, 0);
     anchors.flaskB = V(xb + 3.2, F0 + 5, 0);
     anchors.side = V(SIDE + 3.0, F0 + 4.5, 0);
-    anchors.pip = V(SIDE + 1.0, F0 + 22, 0);
-    anchors.dropper = V(SIDE + 1.2, F0 + 27, 0);
+    anchors.pip = V(SIDE + 1.2, F0 + 31, 0);
+    anchors.dropper = V(SIDE + 1.3, F0 + 27.5, 0);
     anchors.bur = V(0.7, 40, 0);
     anchors.demo0 = V(60, 9.6, 6);
     anchors.demo1 = V(71, 9.6, 6);
@@ -625,11 +626,17 @@ function buildMilk(env) {
     const z = -r() * 110 + 8;
     const a = r() * Math.PI * 2;
     const rad = 4 + r() * 14;
-    mdata.push({x: Math.cos(a) * rad, y: Math.sin(a) * rad * 0.7, z, s: 0.8 + r() * 1.8, ph: r() * 6});
+    const near = z < -48 ? 11 : 6.5;
+    const rr2 = Math.max(rad, near);
+    mdata.push({x: Math.cos(a) * rr2, y: Math.sin(a) * rr2 * 0.75, z, s: 0.8 + r() * 1.8, ph: r() * 6});
   }
   scene.add(mic);
   const fat = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 24, 16), new THREE.MeshPhysicalMaterial({color: '#fff3d6', roughness: 0.15, clearcoat: 1, transmission: 0.0}), 24);
-  const fdata = Array.from({length: 24}, () => ({x: (r() - 0.5) * 40, y: (r() - 0.5) * 24, z: -r() * 110, s: 1.6 + r() * 2.5}));
+  const fdata = Array.from({length: 24}, () => {
+    const a = r() * Math.PI * 2;
+    const rad = 12 + r() * 12;
+    return {x: Math.cos(a) * rad, y: Math.sin(a) * rad * 0.7, z: -r() * 110, s: 1.6 + r() * 2.5};
+  });
   scene.add(fat);
   // protein chain of amino-acid beads
   const COLS = [P.violet, P.cyan, P.coral, '#f5b51f', P.lime, '#ff8fb8'];
@@ -690,7 +697,7 @@ function buildMilk(env) {
       fat.setMatrixAt(i, dummy.matrix);
     });
     fat.instanceMatrix.needsUpdate = true;
-    const appear = prog(t, CH.protein.start + 4.0, sa(3) - 0.2);
+    const appear = prog(t, CH.protein.start + 2.9, sa(3) + 0.4);
     const ps = beads.map((_, i) => beadPos(i, t));
     beads.forEach((b, i) => {
       const k = clamp01(appear * 1.8 - Math.abs(i - HERO) * 0.1);
@@ -832,7 +839,7 @@ function buildMol(env) {
   const dummy = new THREE.Object3D();
 
   const NEAR = [3.55, 1.45, 0.35];
-  const FAR = [9, 6, 1.5];
+  const FAR = [9.5, 1.0, -0.5];
   const CF_END = [2.75, 0.6, 0];
   const OF_REL = [0.85, 0.85, 0];
   const AWAY = [8, 6.5, 1];
@@ -853,7 +860,7 @@ function buildMol(env) {
     pos.lerp(V(2.6, 1.4, 12.5), re);
     look.lerp(V(1.6, 0.8, 0), re);
     const hit = prog(t, W.bond - 0.2, W.cancel);
-    pos.lerp(V(3.2, 1.2, 8.5), hit * (1 - prog(t, W.water + 0.3, W.free)));
+    pos.lerp(V(2.6, 0.6, 10.5), hit * (1 - prog(t, W.water + 0.3, W.free)));
     const toAcid = prog(t, W.free - 0.4, W.free + 1.0) * (1 - prog(t, sa(11) - 0.2, sa(11) + 0.8));
     pos.lerp(V(-2.2, 1.2, 8.0), toAcid);
     look.lerp(V(-1.4, 0.6, 0), toAcid);
@@ -1131,7 +1138,7 @@ function buildMacro(env) {
     // the pink appears with the drop, spreads, then fades: the milk is still acidic
     const grow = eout(after / 1.0);
     dye.scale.setScalar(2 + 14 * grow);
-    dye.position.y = 0.06;
+    dye.position.y = 0.24;
     dye.material.opacity = after > 0 ? clamp01(after / 0.15) * (1 - prog(t, MACRO.impact + 0.6, MACRO.b - 0.1)) : 0;
   };
   return {scene, camAt, update, anchors: {drop: V(0, 3.4, 0), bloom: V(-2.8, 0.3, 1.8)}, focusOf: () => 11, aperture: 0.0024, maxblur: 0.016, bloom: false, exposure: 0.92};
@@ -1150,7 +1157,7 @@ const shotAt = (t) => {
 /* ------------------------------------------------------------------ overlay */
 
 const esc = (s) => s;
-const M = (s) => `<span class="m">${s}</span>`;
+const M = (s) => `<span class="f-m">${s}</span>`;
 const fadeStyle = (k, dy = 24) => `opacity:${k.toFixed(3)};transform:translateY(${((1 - k) * dy).toFixed(1)}px)`;
 
 function overlay(t, shot, world, cam, w, h) {
@@ -1166,24 +1173,27 @@ function overlay(t, shot, world, cam, w, h) {
     if (!v) return;
     const q = proj(v);
     if (q.z > 1) return;
+    q.x = Math.min(w - 260, Math.max(260, q.x));
+    if (!below) q.y = Math.max(250, q.y);
+    else q.y = Math.min(h - 200, q.y);
     const k = spring(t, a, 9, 1.6) * (1 - prog(t, b, b + 0.35));
     if (k <= 0.01) return;
-    out.push(`<div class="lbl${below ? ' below' : ''}" style="left:${q.x}px;top:${q.y}px;transform:translate(-50%,${below ? '0' : '-100%'}) scale(${(0.7 + 0.3 * Math.min(1, k)).toFixed(3)});opacity:${clamp01(k).toFixed(3)}"><div class="card"><span class="dot" style="background:${color};box-shadow:0 0 12px ${color}"></span>${html}</div><div class="stem"></div></div>`);
+    out.push(`<div class="f-lbl${below ? ' f-below' : ''}" style="left:${q.x}px;top:${q.y}px;transform:translate(-50%,${below ? '0' : '-100%'}) scale(${(0.7 + 0.3 * Math.min(1, k)).toFixed(3)});opacity:${clamp01(k).toFixed(3)}"><div class="f-card"><span class="f-dot" style="background:${color};box-shadow:0 0 12px ${color}"></span>${html}</div><div class="f-stem"></div></div>`);
   };
   const title = (a, b, html) => {
     const k = win(t, a, b, 0.5, 0.4);
     if (k <= 0.01) return;
-    out.push(`<div class="ttl" style="${fadeStyle(k)}">${html}</div>`);
+    out.push(`<div class="f-ttl" style="${fadeStyle(k)}">${html}</div>`);
   };
   const badge = (a, b, n, color, txt) => {
     const k = win(t, a, b, 0.45, 0.4);
     if (k <= 0.01) return;
-    out.push(`<div class="badge" style="${fadeStyle(k)}"><div class="n" style="background:${color}">${n}</div><div>${txt}</div></div>`);
+    out.push(`<div class="f-badge" style="${fadeStyle(k)}"><div class="f-n" style="background:${color}">${n}</div><div>${txt}</div></div>`);
   };
   const panel = (a, b, x, y, wd, html, dark = false) => {
     const k = win(t, a, b, 0.5, 0.4);
     if (k <= 0.01) return;
-    out.push(`<div class="panel ${dark ? 'darkcard' : 'lightcard'}" style="left:${x}px;top:${y}px;width:${wd}px;${fadeStyle(eout(k), 40)}">${html}</div>`);
+    out.push(`<div class="f-panel ${dark ? 'f-darkcard' : 'f-lightcard'}" style="left:${x}px;top:${y}px;width:${wd}px;${fadeStyle(eout(k), 40)}">${html}</div>`);
   };
   const appear = (a, d = 0.45) => clamp01((t - a) / d);
   const span = (a, html, extra = '') => `<span style="display:inline-block;${fadeStyle(eout(appear(a)), 16)};${extra}">${html}</span>`;
@@ -1201,14 +1211,14 @@ function overlay(t, shot, world, cam, w, h) {
       <div style="font-weight:600;font-size:30px;color:#3a4766;${fadeStyle(k1)}">جامعة عين شمس · كلية الزراعة · قسم علوم الأغذية</div>
       <div style="font-weight:900;font-size:104px;line-height:1.25;color:#16213a;${fadeStyle(k1, 40)}">تقدير نسبة البروتين في اللبن</div>
       <div style="font-weight:900;font-size:80px;line-height:1.25;color:${P.pink};${fadeStyle(k2, 40)}">بطريقة الفورمول</div>
-      <div style="${fadeStyle(k3)};margin-top:12px"><span class="m" style="font-size:26px;letter-spacing:.32em;color:#56627d">FORMOL TITRATION METHOD</span></div></div>`);
+      <div style="${fadeStyle(k3)};margin-top:12px"><span class="f-m" style="font-size:26px;letter-spacing:.32em;color:#56627d">FORMOL TITRATION METHOD</span></div></div>`);
   }
   if (shot === 'milk') {
     title(CH.protein.start + 2.6, CH.amino.start - 0.6, 'داخل قطرة اللبن<small>بروتينات الكازين</small>');
     label('mic', CH.protein.start + 3.2, sa(3) - 0.6, '#c9b08a', 'ميسيلات الكازين');
     label('hero', sa(3) + 0.5, CH.amino.start - 0.7, P.violet, 'الحمض الأميني · الوحدة الأساسية');
     const k = win(t, sa(4) + 0.3, CH.amino.start - 0.6, 0.5, 0.4);
-    if (k > 0.01) out.push(`<div style="position:absolute;bottom:150px;left:0;right:0;text-align:center;${fadeStyle(k)}"><div class="chip lightcard" style="font-size:38px">نعدّ الأحماض الأمينية <span style="color:${P.gold};margin:0 14px">⇐</span> نحسب نسبة البروتين</div></div>`);
+    if (k > 0.01) out.push(`<div style="position:absolute;bottom:150px;left:0;right:0;text-align:center;${fadeStyle(k)}"><div class="f-chip f-lightcard" style="font-size:38px">نعدّ الأحماض الأمينية <span style="color:${P.gold};margin:0 14px">⇐</span> نحسب نسبة البروتين</div></div>`);
   }
   if (shot === 'mol') {
     title(CH.amino.start + 1.0, CH.react.start - 0.2, 'العالم الجزيئي<small>تركيب الحمض الأميني</small>');
@@ -1216,7 +1226,7 @@ function overlay(t, shot, world, cam, w, h) {
     label('N', sa(5) + 0.3, sa(8) - 0.3, P.cyan, `مجموعة أمين ${M('NH₂')} · قاعدي`);
     label('C', sa(6) + 0.2, sa(8) - 0.3, P.coral, `مجموعة كربوكسيل ${M('COOH')} · حامضي`);
     const k7 = win(t, sa(7) + 0.7, sa(8) - 0.3, 0.45, 0.35);
-    if (k7 > 0.01) out.push(`<div style="position:absolute;bottom:150px;left:0;right:0;text-align:center;${fadeStyle(k7)}"><div class="chip darkcard">⚖ متعادل <span style="opacity:.5;margin:0 16px">|</span> لا يمكن معايرته مباشرةً</div></div>`);
+    if (k7 > 0.01) out.push(`<div style="position:absolute;bottom:150px;left:0;right:0;text-align:center;${fadeStyle(k7)}"><div class="f-chip f-darkcard">⚖ متعادل <span style="opacity:.5;margin:0 16px">|</span> لا يمكن معايرته مباشرةً</div></div>`);
     label('F', sa(8) + 0.5, W.cancel - 0.4, P.lime, `فورمالدهيد ${M('HCHO')}`, true);
     label('W', W.water + 0.2, W.water + 1.5, '#9fd8ff', `جزيء ماء ${M('H₂O')}`);
     label('lock', W.cancel + 0.25, sa(11) - 0.3, P.lime, '🔒 أُلغي التأثير القاعدي');
@@ -1226,15 +1236,15 @@ function overlay(t, shot, world, cam, w, h) {
       const eq = [['R–CH(', '#fff'], ['NH₂', P.cyan], [')–', '#fff'], ['COOH', P.coral], [' + ', '#8a96b8'], ['HCHO', P.lime], [' ⟶ ', P.gold], ['R–CH(', '#fff'], ['N=CH₂', P.lime], [')–', '#fff'], ['COOH', P.coral], [' + ', '#8a96b8'], ['H₂O', '#9fd8ff']]
         .map(([s, c], i) => `<span style="color:${c};display:inline-block;${fadeStyle(eout(appear(W.acidShow + 0.9 + i * 0.07, 0.4)), 14)}">${s}</span>`)
         .join('');
-      out.push(`<div style="position:absolute;bottom:140px;left:0;right:0;text-align:center;${fadeStyle(ke)}"><div class="darkcard" style="display:inline-block;padding:16px 34px;border-radius:22px"><span class="m" style="font-size:36px;white-space:pre">${eq}</span></div></div>`);
+      out.push(`<div style="position:absolute;bottom:140px;left:0;right:0;text-align:center;${fadeStyle(ke)}"><div class="f-darkcard" style="display:inline-block;padding:16px 34px;border-radius:22px"><span class="f-m" style="font-size:36px;white-space:pre">${eq}</span></div></div>`);
     }
     if (t > sa(11) && t < CH.react.end + 0.2) {
       const kk = 1 - prog(t, CH.react.end - 0.8, CH.react.end - 0.3);
-      const chips = [[`كل ${M('COOH')} نُعادلها`, P.coral, sa(11) + 0.3], ['حمض أميني', P.violet, W.amino11], ['بروتين', P.gold, W.protein11]];
+      const chips = [[`كل&nbsp;${M('COOH')}&nbsp;نُعادلها`, P.coral, sa(11) + 0.3], ['حمض أميني', P.violet, W.amino11], ['بروتين', P.gold, W.protein11]];
       const html = chips
         .map(([s, c, a], i) => {
           const k = spring(t, a, 8, 1.8);
-          return `${i ? `<span style="color:${P.gold};font-weight:900;font-size:56px;opacity:${clamp01(k)}">=</span>` : ''}<span class="chip" style="background:${c};color:#0a1230;transform:scale(${Math.max(0, k).toFixed(3)});opacity:${clamp01(k * 2)}">${s}</span>`;
+          return `${i ? `<span style="color:${P.gold};font-weight:900;font-size:56px;opacity:${clamp01(k)}">=</span>` : ''}<span class="f-chip" style="background:${c};color:#0a1230;transform:scale(${Math.max(0, k).toFixed(3)});opacity:${clamp01(k * 2)}">${s}</span>`;
         })
         .join('');
       out.push(`<div style="position:absolute;bottom:150px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:22px;opacity:${kk}">${html}</div>`);
@@ -1255,30 +1265,30 @@ function overlay(t, shot, world, cam, w, h) {
     label('burTop', sa(17) + 1.7, se(17) - 0.2, P.blue, `القراءة ${M('1.6 mL')}`, true);
     const ka = appear(W.acidCalc - 0.1, 0.5);
     panel(W.acidCalc - 0.1, se(17) + 0.3, 1000, 260, 820, `<div style="font-weight:900;font-size:44px">نسبة الحموضة %<span style="font-size:24px;font-weight:600;opacity:.6;margin-right:12px">كحمض لاكتيك</span></div>
-      <div style="text-align:center;font-size:34px;margin-top:16px"><span class="m"><span class="frac"><i>V × N × 90</i><b></b><u>10 × 1000</u></span> × 100</span></div>
-      <div style="text-align:center;font-size:34px;margin-top:14px;color:${P.blue}">${span(W.acidCalc + 1.6, `<span class="m"><span class="frac"><i>1.6 × 0.1 × 90</i><b></b><u>10 × 1000</u></span> × 100</span>`)}</div>
-      <div style="text-align:center;margin-top:16px">${span(W.acidNum, `<span class="m" style="font-size:66px;color:${P.pink}">= 0.144 %</span>`)}</div>`);
+      <div style="text-align:center;font-size:34px;margin-top:16px"><span class="f-m"><span class="f-frac"><i>V × N × 90</i><b></b><u>10 × 1000</u></span> × 100</span></div>
+      <div style="text-align:center;font-size:34px;margin-top:14px;color:${P.blue}">${span(W.acidCalc + 1.6, `<span class="f-m"><span class="f-frac"><i>1.6 × 0.1 × 90</i><b></b><u>10 × 1000</u></span> × 100</span>`)}</div>
+      <div style="text-align:center;margin-top:16px">${span(W.acidNum, `<span class="f-m" style="font-size:66px;color:${P.pink}">= 0.144 %</span>`)}</div>`);
     void ka;
     badge(CH.form.start + 0.3, CH.form.end - 0.2, '2', P.lime, 'إضافة الفورمالين');
     label('pip', W.formPour + 0.2, W.formPour + 2.0, P.lime, `${M('2 mL')} فورمالين`);
     label('flaskA', W.vanish, W.whyFree + 2.0, P.ink, '😮 اختفى اللون الوردي!');
     const kw = win(t, W.whyFree, se(20) + 0.3, 0.45, 0.35);
     if (kw > 0.01) {
-      const steps = [[`${M('COOH')} تحرّرت`, P.coral, W.whyFree], ['الوسط حامضي', P.ink, W.whyFree + 0.9], ['الدليل عديم اللون', '#7a8399', W.whyFree + 1.8]];
-      out.push(`<div style="position:absolute;top:260px;right:90px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;opacity:${kw}">${steps.map(([s, c, a]) => span(a, `<div class="chip lightcard" style="font-size:32px;color:${c}">${s}</div>`)).join('')}${span(W.noInd, `<div class="chip" style="font-size:30px;background:${P.lime};color:#0a1230">✓ لا نحتاج دليلاً جديداً</div>`)}</div>`);
+      const steps = [[`${M('COOH')}&nbsp;تحرّرت`, P.coral, W.whyFree], ['الوسط حامضي', P.ink, W.whyFree + 0.9], ['الدليل عديم اللون', '#7a8399', W.whyFree + 1.8]];
+      out.push(`<div style="position:absolute;top:260px;right:90px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;opacity:${kw}">${steps.map(([s, c, a]) => span(a, `<div class="f-chip f-lightcard" style="font-size:32px;color:${c}">${s}</div>`)).join('')}${span(W.noInd, `<div class="f-chip" style="font-size:30px;background:${P.lime};color:#0a1230">✓ لا نحتاج دليلاً جديداً</div>`)}</div>`);
     }
     badge(CH.t2.start + 0.3, CH.t2.end - 0.2, '3', P.pink, 'المعايرة الثانية');
     label('burTop', REFILL2 + 0.1, W.t2drops - 0.5, P.blue, 'نُصفّر السحاحة', true);
     label('flaskA', T2.end + 0.1, sa(22) + 0.5, P.pink, '✋ عاد الوردي الخفيف');
     label('burTop', sa(22) + 1.0, se(22) - 0.1, P.blue, `القراءة ${M('2.0 mL')}`, true);
-    panel(sa(22) + 1.3, se(22) + 0.2, 1040, 300, 760, `<div style="font-weight:900;font-size:40px">حجم المعايرة الثانية</div><div style="text-align:center"><span class="m" style="font-size:96px;color:${P.pink}">2.0<span style="font-size:40px"> mL</span></span></div><div style="font-weight:700;font-size:28px;opacity:.75;text-align:center">⇐ يُعبّر عن الأحماض الأمينية (البروتين)</div>`);
+    panel(sa(22) + 1.3, se(22) + 0.2, 1040, 300, 760, `<div style="font-weight:900;font-size:40px">حجم المعايرة الثانية</div><div style="text-align:center"><span class="f-m" style="font-size:96px;color:${P.pink}">2.0<span style="font-size:40px"> mL</span></span></div><div style="font-weight:700;font-size:28px;opacity:.75;text-align:center">⇐ يُعبّر عن الأحماض الأمينية (البروتين)</div>`);
     badge(CH.blank.start + 0.3, CH.blank.end - 0.2, '4', '#4aa8e0', 'تجربة البلانك');
     label('flaskA', sa(23) + 1.6, CH.blank.end - 0.3, P.pink, `لبن · ${M('2.0 mL')}`);
     label('flaskB', W.water23, sa(24) + 1.0, '#4aa8e0', 'ماء مقطر + فورمالين + دليل');
     label('flaskB', TB.end + 0.2, CH.blank.end - 0.3, P.pink, `ماء · ${M('0.2 mL')}`);
     panel(W.fn - 0.1, CH.blank.end - 0.1, 1060, 250, 760, `<div style="font-weight:900;font-size:44px">رقم الفورمول</div>
       <div style="font-weight:700;font-size:28px;opacity:.75;margin:6px 0 14px">= حجم اللبن − حجم البلانك</div>
-      <div style="text-align:center;font-size:76px" class="m">${span(W.fnTwo, '<span style="color:#d6337f">2.0</span>')} ${span(W.fnMinus, '<span>− <span style="color:#4aa8e0">0.2</span></span>')} ${span(W.fnRes, `<span style="color:${P.gold}">= 1.8</span>`)}</div>`);
+      <div style="text-align:center;font-size:76px" class="f-m">${span(W.fnTwo, '<span style="color:#d6337f">2.0</span>')} ${span(W.fnMinus, '<span>− <span style="color:#4aa8e0">0.2</span></span>')} ${span(W.fnRes, `<span style="color:${P.gold}">= 1.8</span>`)}</div>`);
     // calculation
     if (t > CH.calc.start - 0.2 && t < CH.calc.end + 0.5) {
       const kc = win(t, CH.calc.start + 0.2, CH.calc.end, 0.5, 0.45);
@@ -1286,11 +1296,11 @@ function overlay(t, shot, world, cam, w, h) {
       out.push(`<div style="position:absolute;inset:0;background:rgba(232,237,243,${(0.35 * kc).toFixed(3)})"></div>`);
       title(CH.calc.start + 0.2, CH.calc.end, 'حساب نسبة البروتين');
       panel(CH.calc.start + 0.4, CH.calc.end, 980, 230, 840, `<div style="font-weight:900;font-size:46px">🐄 اللبن البقري</div><div style="font-weight:700;font-size:30px;opacity:.75">% البروتين = رقم الفورمول × ${M('1.67')}</div>
-        <div style="text-align:center;margin-top:18px">${span(W.cowMul, `<span class="m" style="font-size:62px">1.8 × 1.67</span>`)}</div>
-        <div style="text-align:center">${span(W.cowRes - 0.6, `<span class="m" style="font-size:84px;color:${P.pink}">≈ ${(3.006 * cnt).toFixed(2)} %</span>`)}</div>`);
+        <div style="text-align:center;margin-top:18px">${span(W.cowMul, `<span class="f-m" style="font-size:62px">1.8 × 1.67</span>`)}</div>
+        <div style="text-align:center">${span(W.cowRes - 0.6, `<span class="f-m" style="font-size:84px;color:${P.pink}">≈ ${(3.006 * cnt).toFixed(2)} %</span>`)}</div>`);
       panel(sa(27) - 0.1, CH.calc.end, 100, 230, 840, `<div style="font-weight:900;font-size:46px">🐃 اللبن الجاموسي</div><div style="font-weight:700;font-size:30px;opacity:.75">% البروتين = رقم الفورمول × ${M('1.66')}</div>
         <div style="font-weight:700;font-size:30px;margin-top:30px;opacity:${appear(W.range - 0.4).toFixed(2)}">المعدل الطبيعي للبروتين</div>
-        <div style="text-align:center">${span(W.range, `<span class="m" style="font-size:80px;color:#2a8fd0">3.3 – 4.5 %</span>`)}</div>`);
+        <div style="text-align:center">${span(W.range, `<span class="f-m" style="font-size:80px;color:#2a8fd0">3.3 – 4.5 %</span>`)}</div>`);
       const g = prog(t, W.range, W.range + 1.4);
       if (g > 0) {
         const gx = (v) => 160 + (v / 5) * 1600;
@@ -1309,19 +1319,19 @@ function overlay(t, shot, world, cam, w, h) {
       if (ks > 0.01)
         out.push(`<div style="position:absolute;top:330px;left:0;right:0;display:flex;justify-content:center;gap:20px;opacity:${ks}">${STEPS.map(([n, s, c], i) => {
           const k = spring(t, sa(29) + 0.25 + i * 0.32, 8, 1.6);
-          return `<div class="lightcard" style="width:310px;height:220px;border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;transform:translateY(${((1 - Math.min(1, k)) * 60).toFixed(1)}px) scale(${(0.85 + 0.15 * Math.min(1, k)).toFixed(3)});opacity:${clamp01(k * 1.5)};border:2px solid ${c}"><div style="width:68px;height:68px;border-radius:20px;background:${c};color:#fff;font-weight:900;font-size:40px;display:grid;place-items:center">${n}</div><div style="font-weight:800;font-size:30px;line-height:1.35">${s}</div></div>`;
+          return `<div class="f-lightcard" style="width:310px;height:220px;border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;transform:translateY(${((1 - Math.min(1, k)) * 60).toFixed(1)}px) scale(${(0.85 + 0.15 * Math.min(1, k)).toFixed(3)});opacity:${clamp01(k * 1.5)};border:2px solid ${c}"><div style="width:68px;height:68px;border-radius:20px;background:${c};color:#fff;font-weight:900;font-size:40px;display:grid;place-items:center">${n}</div><div style="font-weight:800;font-size:30px;line-height:1.35">${s}</div></div>`;
         }).join('')}</div>`);
       const kc = clamp01((t - (W.credits - 1.4)) / 0.6);
       if (kc > 0.01) {
         const NAMES = ['رقية أحمد عبدالعظيم', 'زينب ابراهيم عبدالفتاح', 'سهام مجدي سيد', 'شاهندا ياسر عبدالرحمن', 'شهد حماده احمد'];
         const ln = (a, html) => span(a, html);
         out.push(`<div style="position:absolute;inset:0;background:rgba(240,244,248,${(0.55 * kc).toFixed(3)})"></div>
-        <div style="position:absolute;top:56px;left:0;right:0;text-align:center;opacity:${kc}">
+        <div style="position:absolute;top:150px;left:0;right:0;text-align:center;opacity:${kc}">
           <div style="display:flex;justify-content:center;gap:28px;direction:rtl">${ln(W.credits - 1.4, `<div style="width:170px;height:170px;border-radius:30px;background:#fff;padding:10px;box-shadow:0 14px 40px rgba(20,30,60,.18)"><img src="${ASU}" style="width:100%;height:100%;object-fit:contain"></div>`)}${ln(W.credits - 1.2, `<div style="width:272px;height:170px;border-radius:30px;background:#fff;padding:8px;box-shadow:0 14px 40px rgba(20,30,60,.18)"><img src="${FST}" style="width:100%;height:100%;object-fit:contain"></div>`)}</div>
           <div style="font-weight:900;font-size:60px;margin-top:22px">${ln(W.credits + 2.2, 'جامعة عين شمس')}</div>
           <div style="font-weight:800;font-size:32px;margin-top:4px">${ln(W.credits + 1.2, `<span style="color:#2f9a3e">كلية الزراعة</span>`)} <span style="color:${P.gold};margin:0 12px">◆</span> ${ln(W.credits, `<span style="color:#1f7fc0">قسم علوم الأغذية</span>`)} <span style="color:${P.gold};margin:0 12px">◆</span> ${ln(W.credits + 0.4, '<span style="opacity:.7">برنامج علوم وتكنولوجيا الأغذية</span>')}</div>
-          <div style="margin-top:22px">${ln(W.credits + 2.8, `<span class="chip" style="background:linear-gradient(135deg,${P.pink},#ff8a3d);color:#fff;font-size:36px">إعداد: طلاب المستوى الثاني</span>`)}</div>
-          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px 20px;width:1500px;margin:26px auto 0">${NAMES.map((nm, i) => ln(W.credits + 3.3 + i * 0.3, `<div class="lightcard" style="display:flex;align-items:center;gap:14px;padding:10px 26px 14px 18px;border-radius:20px;border:1.5px solid ${P.gold}"><div style="width:42px;height:42px;border-radius:13px;background:${P.gold};color:#fff;font-weight:900;font-size:26px;display:grid;place-items:center">${i + 1}</div><div style="font-weight:800;font-size:34px;white-space:nowrap">${nm}</div></div>`)).join('')}</div></div>`);
+          <div style="margin-top:22px">${ln(W.credits + 2.8, `<span class="f-chip" style="background:linear-gradient(135deg,${P.pink},#ff8a3d);color:#fff;font-size:36px">إعداد: طلاب المستوى الثاني</span>`)}</div>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px 20px;width:1500px;margin:26px auto 0">${NAMES.map((nm, i) => ln(W.credits + 3.3 + i * 0.3, `<div class="f-lightcard" style="display:flex;align-items:center;gap:14px;padding:10px 26px 14px 18px;border-radius:20px;border:1.5px solid ${P.gold}"><div style="width:42px;height:42px;border-radius:13px;background:${P.gold};color:#fff;font-weight:900;font-size:26px;display:grid;place-items:center">${i + 1}</div><div style="font-weight:800;font-size:34px;white-space:nowrap">${nm}</div></div>`)).join('')}</div></div>`);
       }
     }
   }
@@ -1330,13 +1340,13 @@ function overlay(t, shot, world, cam, w, h) {
   // burette readout HUD during the titrations
   const kh = win(t, CH.t1.start + 0.5, CH.blank.end - 0.5, 0.5, 0.4) * (shot === 'lab' ? 1 : 0) * (1 - win(t, CH.calc.start - 1, 1e9));
   if (kh > 0.01)
-    out.push(`<div class="hud lightcard" style="opacity:${kh}"><div style="font-weight:700;font-size:22px;opacity:.65">قراءة السحاحة</div><div class="m" style="font-size:54px;color:${P.blue}">${readingAt(t).toFixed(2)}<span style="font-size:24px;opacity:.6"> mL</span></div><div style="font-weight:600;font-size:18px;opacity:.55"><span class="m">NaOH 0.1 N</span></div></div>`);
+    out.push(`<div class="f-hud f-lightcard" style="opacity:${kh}"><div style="font-weight:700;font-size:22px;opacity:.65">قراءة السحاحة</div><div class="f-m" style="font-size:54px;color:${P.blue}">${readingAt(t).toFixed(2)}<span style="font-size:24px;opacity:.6"> mL</span></div><div style="font-weight:600;font-size:18px;opacity:.55"><span class="f-m">NaOH 0.1 N</span></div></div>`);
 
   // caption: the narration, in sync with the voice
   const cur = S.find((s) => t >= s.at - 0.05 && t <= s.at + s.dur + 0.25);
   if (cur) {
     const k = clamp01((t - cur.at + 0.05) / 0.25) * clamp01((cur.at + cur.dur + 0.25 - t) / 0.2);
-    out.push(`<div class="cap" style="opacity:${k.toFixed(3)}">${esc(cur.text)}</div>`);
+    out.push(`<div class="f-cap" style="opacity:${k.toFixed(3)}">${esc(cur.text)}</div>`);
   }
   // transitions: cream dip into the milk, white flash out of the molecules, violet into the bead
   const dip = win(t, CH.protein.start + 1.85, CH.protein.start + 2.75, 0.35, 0.5);
@@ -1344,10 +1354,10 @@ function overlay(t, shot, world, cam, w, h) {
   const white = win(t, CH.react.end - 0.5, CH.react.end + 0.6, 0.45, 0.6);
   const cut = (a, b) => win(t, a, b, 0.06, 0.14);
   const macroIn = cut(MACRO.a - 0.08, MACRO.a + 0.06) + cut(MACRO.b - 0.08, MACRO.b + 0.06);
-  if (dip > 0.01) out.push(`<div class="flash" style="background:#fbf5ec;opacity:${dip}"></div>`);
-  if (bead > 0.01) out.push(`<div class="flash" style="background:${P.violet};opacity:${bead * 0.85}"></div>`);
-  if (white > 0.01) out.push(`<div class="flash" style="background:#ffffff;opacity:${white}"></div>`);
-  if (macroIn > 0.01) out.push(`<div class="flash" style="background:#ffffff;opacity:${Math.min(1, macroIn) * 0.7}"></div>`);
+  if (dip > 0.01) out.push(`<div class="f-flash" style="background:#fbf5ec;opacity:${dip}"></div>`);
+  if (bead > 0.01) out.push(`<div class="f-flash" style="background:${P.violet};opacity:${bead * 0.85}"></div>`);
+  if (white > 0.01) out.push(`<div class="f-flash" style="background:#ffffff;opacity:${white}"></div>`);
+  if (macroIn > 0.01) out.push(`<div class="f-flash" style="background:#ffffff;opacity:${Math.min(1, macroIn) * 0.7}"></div>`);
   return {theme, html: out.join('')};
 }
 
@@ -1413,7 +1423,7 @@ runSim(DEFAULTS, async ({cfg, canvas}) => {
       renderer.toneMappingExposure = wd.exposure;
       composer.render();
       const o = overlay(t, shot, wd, camera, innerWidth, innerHeight);
-      ov.className = o.theme;
+      ov.className = 'f-' + o.theme;
       ov.innerHTML = o.html;
       return {};
     },
