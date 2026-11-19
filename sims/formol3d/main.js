@@ -1299,7 +1299,8 @@ function overlay(t, shot, world, cam, w, h) {
         <div style="text-align:center;margin-top:18px">${span(W.cowMul, `<span class="f-m" style="font-size:62px">1.8 × 1.67</span>`)}</div>
         <div style="text-align:center">${span(W.cowRes - 0.6, `<span class="f-m" style="font-size:84px;color:${P.pink}">≈ ${(3.006 * cnt).toFixed(2)} %</span>`)}</div>`);
       panel(sa(27) - 0.1, CH.calc.end, 100, 230, 840, `<div style="font-weight:900;font-size:46px">🐃 اللبن الجاموسي</div><div style="font-weight:700;font-size:30px;opacity:.75">% البروتين = رقم الفورمول × ${M('1.66')}</div>
-        <div style="font-weight:700;font-size:30px;margin-top:30px;opacity:${appear(W.range - 0.4).toFixed(2)}">المعدل الطبيعي للبروتين</div>
+        <div style="text-align:center;margin-top:14px">${span(W.buffMul, `<span class="f-m" style="font-size:62px;color:#2a8fd0">× 1.66</span>`)}</div>
+        <div style="font-weight:700;font-size:30px;margin-top:14px;opacity:${appear(W.range - 0.4).toFixed(2)}">المعدل الطبيعي للبروتين</div>
         <div style="text-align:center">${span(W.range, `<span class="f-m" style="font-size:80px;color:#2a8fd0">3.3 – 4.5 %</span>`)}</div>`);
       const g = prog(t, W.range, W.range + 1.4);
       if (g > 0) {
