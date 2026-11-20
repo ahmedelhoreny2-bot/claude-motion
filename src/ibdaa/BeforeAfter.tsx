@@ -16,15 +16,15 @@ const I = {
 const F = '"Cairo", system-ui, sans-serif';
 
 export const FPS = 30;
-const INTRO = 1.6;
-const SEG = 15.3; // the edit's opening: hook + «إيه هو السر ده؟»
+const INTRO = 1.4;
+const SEG = EDL.duration + 4.5; // the whole edit, end card included
 const OUTRO = 4.2;
 export const BA_DURATION = Math.round((INTRO + SEG + OUTRO) * FPS);
 const sp = (frame: number, t0: number, cfg = {}) => sp60(frame, t0, cfg, FPS);
 const soft = {damping: 18, stiffness: 110};
 
 type Piece = {in: number; out: number; at: number};
-const PIECES = (EDL.pieces as Piece[]).filter((p) => p.at < SEG);
+const PIECES = EDL.pieces as Piece[];
 
 const Mark: React.FC<{size: number; k: number}> = ({size, k}) => {
   const bar = (i: number) => clamp01(k * 2.2 - 0.6 - i * 0.18);
@@ -71,11 +71,11 @@ export const BeforeAfter: React.FC = () => {
   const markK = prog(t, 0, 0.9, easeOut);
   const dock = prog(t, 0.55, 1.15, easeInOut);
   const out = prog(t, end, end + 0.6, easeInOut);
-  const cards = sp(frame, 1.05, soft) * (1 - out);
-  const before = sp(frame, 1.25, soft) * (1 - out);
+  const cards = sp(frame, 0.95, soft) * (1 - out);
+  const before = sp(frame, 1.1, soft) * (1 - out);
   const finale = sp(frame, end + 0.35, soft);
-  const markSize = lerp(560, 230, dock) * (1 - out) + 420 * out;
-  const markY = lerp(780, 80, dock) * (1 - out) + 560 * out;
+  const markSize = lerp(560, 200, dock) * (1 - out) + 420 * out;
+  const markY = lerp(780, 52, dock) * (1 - out) + 560 * out;
   return (
     <AbsoluteFill style={{background: I.paper, overflow: 'hidden'}}>
       <Dots t={t} />
@@ -85,42 +85,50 @@ export const BeforeAfter: React.FC = () => {
       <div style={{position: 'absolute', left: 540 - markSize / 2, top: markY, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18}}>
         <Mark size={markSize} k={markK} />
       </div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: lerp(1120, 230, dock) * (1 - out) + 840 * out, display: 'flex', justifyContent: 'center', opacity: prog(t, 0.3, 0.8, easeOut)}}>
-        <Img src={staticFile('ibdaa/word.png')} style={{width: lerp(520, 300, dock) * (1 - out) + 560 * out}} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: lerp(1120, 180, dock) * (1 - out) + 840 * out, display: 'flex', justifyContent: 'center', opacity: prog(t, 0.3, 0.8, easeOut)}}>
+        <Img src={staticFile('ibdaa/word.png')} style={{width: lerp(520, 260, dock) * (1 - out) + 560 * out}} />
       </div>
 
-      {/* the two phones */}
+      {/* the two phones: BEFORE small and set back, AFTER large in front */}
       <AbsoluteFill style={{opacity: clamp01(cards * 1.4)}}>
-        {/* BEFORE */}
-        <div style={{position: 'absolute', left: 70, top: 640, transform: `translateY(${(1 - before) * 120}px) rotate(${-2 * before}deg)`}}>
+        <div style={{position: 'absolute', left: 60, top: 400, transform: `translateY(${(1 - before) * 80}px)`}}>
           <Label k={before} ar="قبل" en="BEFORE" color={I.teal} />
-          <div style={{marginTop: 18, width: 410, height: 729, borderRadius: 40, overflow: 'hidden', border: `6px solid ${I.teal}`, boxShadow: `0 30px 70px rgba(19,194,181,0.25), 0 10px 30px rgba(0,0,0,0.18)`, background: '#000'}}>
+          <div style={{marginTop: 14, width: 360, height: 640, borderRadius: 30, overflow: 'hidden', border: `5px solid ${I.teal}`, boxShadow: '0 18px 40px rgba(0,0,0,0.16)', background: '#000', filter: 'saturate(0.9) brightness(0.92)'}}>
             {PIECES.map((p, i) => (
-              <Sequence key={i} from={Math.round((INTRO + p.at) * FPS)} durationInFrames={Math.round((Math.min(p.out - p.in, SEG - p.at)) * FPS)} layout="none">
-                <OffthreadVideo src={staticFile('sedra/raw/talk.mp4')} startFrom={Math.round(p.in * FPS)} muted style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+              <Sequence key={i} from={Math.round((INTRO + p.at) * FPS)} durationInFrames={Math.round((p.out - p.in) * FPS)} layout="none">
+                <OffthreadVideo src={staticFile('sedra/raw/talk.mp4')} startFrom={Math.round(p.in * FPS)} muted style={{width: '100%', height: '100%', objectFit: 'contain'}} />
               </Sequence>
             ))}
-            {t < INTRO ? <OffthreadVideo src={staticFile('sedra/raw/talk.mp4')} startFrom={Math.round(PIECES[0].in * FPS)} muted style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : null}
+            {t < INTRO || t >= INTRO + EDL.duration ? <Img src={staticFile('ibdaa/before_still.jpg')} style={{width: '100%', height: '100%', objectFit: 'contain'}} /> : null}
           </div>
         </div>
-        {/* AFTER */}
-        <div style={{position: 'absolute', left: 470, top: 470, transform: `translateY(${(1 - cards) * 160}px) rotate(${1.5 * cards}deg)`}}>
-          <Label k={cards} ar="بعد" en="AFTER" color={I.orange} />
-          <div style={{marginTop: 18, width: 540, height: 960, borderRadius: 46, overflow: 'hidden', border: `7px solid ${I.orange}`, boxShadow: `0 0 0 10px rgba(255,90,32,0.12), 0 40px 90px rgba(255,90,32,0.35), 0 14px 36px rgba(0,0,0,0.2)`, background: '#000'}}>
+        <div style={{position: 'absolute', right: 40, top: 300, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', transform: `translateY(${(1 - cards) * 120}px)`}}>
+          <div style={{display: 'flex', alignItems: 'baseline', gap: 16, opacity: clamp01(cards * 1.6)}}>
+            <div style={{fontFamily: F, fontWeight: 900, fontSize: 40, color: I.ink}}>بعد المونتاج</div>
+            <div style={{fontFamily: F, fontWeight: 900, fontSize: 92, letterSpacing: '0.04em', color: I.orange, lineHeight: 1}}>AFTER</div>
+          </div>
+          <div style={{marginTop: 16, width: 620, height: 1102, borderRadius: 44, overflow: 'hidden', border: `7px solid ${I.orange}`, boxShadow: '0 0 0 12px rgba(255,90,32,0.12), 0 40px 90px rgba(255,90,32,0.3), 0 16px 40px rgba(0,0,0,0.22)', background: '#000'}}>
             <Sequence from={Math.round(INTRO * FPS)} durationInFrames={Math.round(SEG * FPS)} layout="none">
               <OffthreadVideo src={staticFile('sedra/raw/after.mp4')} muted style={{width: '100%', height: '100%'}} />
             </Sequence>
-            {t < INTRO ? <OffthreadVideo src={staticFile('sedra/raw/after.mp4')} muted style={{width: '100%', height: '100%'}} /> : null}
+            {t < INTRO ? <Img src={staticFile('ibdaa/after_still.jpg')} style={{width: '100%', height: '100%'}} /> : null}
           </div>
         </div>
       </AbsoluteFill>
 
-      {/* caption line under the phones */}
-      <div style={{position: 'absolute', left: 60, right: 60, top: 1590, textAlign: 'center', direction: 'rtl', opacity: clamp01(cards * 1.4) * prog(t, 1.7, 2.3, easeOut), fontFamily: F}}>
-        <div style={{fontWeight: 900, fontSize: 58, color: I.ink}}>
-          نفس الفيديو… <span style={{color: I.orange}}>بلمسة إبداع</span>
+      {/* note under BEFORE, in the free left column */}
+      <div style={{position: 'absolute', left: 60, width: 360, top: 1150, textAlign: 'center', direction: 'rtl', opacity: clamp01(cards * 1.4) * prog(t, 1.5, 2.1, easeOut), fontFamily: F}}>
+        <div style={{fontWeight: 900, fontSize: 46, color: I.ink, lineHeight: 1.35}}>
+          نفس الفيديو…
+          <br />
+          <span style={{color: I.orange}}>بلمسة إبداع</span>
         </div>
-        <div style={{marginTop: 6, fontWeight: 700, fontSize: 34, color: I.inkDim}}>مونتاج وموشن جرافيك · مركز سدرة للحجامة</div>
+        <div style={{marginTop: 18, fontWeight: 700, fontSize: 28, color: I.inkDim, lineHeight: 1.5}}>
+          مونتاج · موشن جرافيك
+          <br />
+          كابشن · تلوين · صوت
+        </div>
+        <div style={{marginTop: 26, display: 'inline-block', background: I.teal, color: '#fff', fontWeight: 900, fontSize: 28, padding: '6px 22px 10px', borderRadius: 999}}>مركز سدرة للحجامة</div>
       </div>
 
       {/* finale */}
