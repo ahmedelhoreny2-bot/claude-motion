@@ -91,9 +91,9 @@ export const BeforeAfter: React.FC = () => {
 
       {/* the two phones: BEFORE small and set back, AFTER large in front */}
       <AbsoluteFill style={{opacity: clamp01(cards * 1.4)}}>
-        <div style={{position: 'absolute', left: 60, top: 400, transform: `translateY(${(1 - before) * 80}px)`}}>
+        <div style={{position: 'absolute', left: 50, top: 420, transform: `translateY(${(1 - before) * 80}px)`}}>
           <Label k={before} ar="قبل" en="BEFORE" color={I.teal} />
-          <div style={{marginTop: 14, width: 360, height: 640, borderRadius: 30, overflow: 'hidden', border: `5px solid ${I.teal}`, boxShadow: '0 18px 40px rgba(0,0,0,0.16)', background: '#000', filter: 'saturate(0.9) brightness(0.92)'}}>
+          <div style={{marginTop: 14, width: 340, height: 604, borderRadius: 28, overflow: 'hidden', border: `5px solid ${I.teal}`, boxShadow: '0 18px 40px rgba(0,0,0,0.16)', background: '#000', filter: 'saturate(0.9) brightness(0.92)'}}>
             {PIECES.map((p, i) => (
               <Sequence key={i} from={Math.round((INTRO + p.at) * FPS)} durationInFrames={Math.round((p.out - p.in) * FPS)} layout="none">
                 <OffthreadVideo src={staticFile('sedra/raw/talk.mp4')} startFrom={Math.round(p.in * FPS)} muted style={{width: '100%', height: '100%', objectFit: 'contain'}} />
@@ -102,12 +102,12 @@ export const BeforeAfter: React.FC = () => {
             {t < INTRO || t >= INTRO + EDL.duration ? <Img src={staticFile('ibdaa/before_still.jpg')} style={{width: '100%', height: '100%', objectFit: 'contain'}} /> : null}
           </div>
         </div>
-        <div style={{position: 'absolute', right: 40, top: 300, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', transform: `translateY(${(1 - cards) * 120}px)`}}>
+        <div style={{position: 'absolute', right: 50, top: 300, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', transform: `translateY(${(1 - cards) * 120}px)`}}>
           <div style={{display: 'flex', alignItems: 'baseline', gap: 16, opacity: clamp01(cards * 1.6)}}>
             <div style={{fontFamily: F, fontWeight: 900, fontSize: 40, color: I.ink}}>بعد المونتاج</div>
             <div style={{fontFamily: F, fontWeight: 900, fontSize: 92, letterSpacing: '0.04em', color: I.orange, lineHeight: 1}}>AFTER</div>
           </div>
-          <div style={{marginTop: 16, width: 620, height: 1102, borderRadius: 44, overflow: 'hidden', border: `7px solid ${I.orange}`, boxShadow: '0 0 0 12px rgba(255,90,32,0.12), 0 40px 90px rgba(255,90,32,0.3), 0 16px 40px rgba(0,0,0,0.22)', background: '#000'}}>
+          <div style={{marginTop: 16, width: 590, height: 1049, borderRadius: 42, overflow: 'hidden', border: `7px solid ${I.orange}`, boxShadow: '0 0 0 12px rgba(255,90,32,0.12), 0 40px 90px rgba(255,90,32,0.3), 0 16px 40px rgba(0,0,0,0.22)', background: '#000'}}>
             <Sequence from={Math.round(INTRO * FPS)} durationInFrames={Math.round(SEG * FPS)} layout="none">
               <OffthreadVideo src={staticFile('sedra/raw/after.mp4')} muted style={{width: '100%', height: '100%'}} />
             </Sequence>
@@ -117,7 +117,7 @@ export const BeforeAfter: React.FC = () => {
       </AbsoluteFill>
 
       {/* note under BEFORE, in the free left column */}
-      <div style={{position: 'absolute', left: 60, width: 360, top: 1150, textAlign: 'center', direction: 'rtl', opacity: clamp01(cards * 1.4) * prog(t, 1.5, 2.1, easeOut), fontFamily: F}}>
+      <div style={{position: 'absolute', left: 50, width: 340, top: 1130, textAlign: 'center', direction: 'rtl', opacity: clamp01(cards * 1.4) * prog(t, 1.5, 2.1, easeOut), fontFamily: F}}>
         <div style={{fontWeight: 900, fontSize: 46, color: I.ink, lineHeight: 1.35}}>
           نفس الفيديو…
           <br />
