@@ -185,24 +185,27 @@ type Ov = {from: number; to: number; tail?: number; full: boolean; hideCaptions?
 const OVERLAYS: Ov[] = [
   // hook title
   {from: 129, to: 135, tail: 0, full: false, render: (t, frame, a) => <div style={{position: 'absolute', left: 0, right: 0, top: 260, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a + 0.2)}>قصة من السُّنّة</Chip></div>},
-  {from: 7, to: 10, full: true, hideCaptions: true, render: (t, frame, a) => (
+  {from: 7, to: 10, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
-      <Navy t={t} />
+      <Photo src="sedra/ai/lantern.jpg" t={t} from={a} dur={b - a + 1} focusY={45} />
+      <AbsoluteFill style={{background: 'rgba(7,23,53,0.35)'}} />
       <Big k={sp(frame, a)} top={700} size={88} color={S.creamDim}>سر من أسرار</Big>
       <Big k={sp(frame, at(10) - 0.05, {damping: 9, stiffness: 220})} top={830} size={190} color={S.orange}>الشفاء</Big>
     </>
   )},
-  {from: 16, to: 20, full: true, hideCaptions: true, render: (t, frame, a) => (
+  {from: 16, to: 20, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
-      <Navy t={t} pattern={0.2} />
+      <Photo src="sedra/ai/mosque.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />
+      <AbsoluteFill style={{background: 'rgba(7,23,53,0.3)'}} />
       <Big k={sp(frame, a)} top={700} size={88} color={S.creamDim}>سر من أسرار</Big>
       <Big k={sp(frame, at(19) - 0.05, {damping: 9, stiffness: 220})} top={830} size={170} color={S.orange}>الطب النبوي</Big>
     </>
   )},
   {from: 28, to: 34, full: false, render: (t, frame, a) => <LowerThird k={sp(frame, a)} sub="الحديث" title="أبو سعيد الخدري رضي الله عنه" />},
-  {from: 48, to: 60, full: true, render: (t, frame, a) => (
+  {from: 48, to: 60, full: true, render: (t, frame, a, b) => (
     <>
-      <Navy t={t} glow="rgba(200,40,30,0.25)" />
+      <Photo src="sedra/ai/stomach.jpg" t={t} from={a} dur={b - a + 1} focusY={45} />
+      <AbsoluteFill style={{background: 'rgba(120,20,10,0.18)'}} />
       <div style={{position: 'absolute', left: 0, right: 0, top: 360, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26}}>
         {[[48, 'أخي يشتكي بطنه'], [53, 'قولونه تعبان'], [55, 'ومعدته'], [56, 'والدنيا مش حلوة معاه']].map(([src, txt], i) => (
           <Chip key={i} k={sp(frame, at(src as number) - 0.05)} bg={i === 0 ? S.orange : 'rgba(246,242,233,0.12)'} color={i === 0 ? S.navy : S.cream} size={i === 0 ? 62 : 52}>{txt as string}</Chip>
@@ -212,7 +215,7 @@ const OVERLAYS: Ov[] = [
   )},
   {from: 66, to: 67, tail: 0.6, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
-      <Photo src="sedra/honey.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />
+      <Photo src="sedra/ai/dipper.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />
       <HoneyDrop t={t} from={a} />
       <div style={{position: 'absolute', left: 0, right: 0, top: 560, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream} size={38}>المرة الأولى</Chip></div>
       <Big k={sp(frame, a + 0.1, {damping: 9, stiffness: 220})} top={700} size={180} color={S.orange}>اسقه عسلاً</Big>
@@ -221,14 +224,14 @@ const OVERLAYS: Ov[] = [
   {from: 72, to: 73, tail: 0.3, full: false, render: (t, frame, a) => <div style={{position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream}>📅 تاني يوم</Chip></div>},
   {from: 80, to: 81, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
-      <Card src="sedra/bee.jpg" t={t} from={a} dur={b - a + 1} circle w={640} top={260} />
+      <Card src="sedra/ai/jar.jpg" t={t} from={a} dur={b - a + 1} circle w={640} top={260} />
       <div style={{position: 'absolute', left: 0, right: 0, top: 940, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream} size={38}>المرة التانية</Chip></div>
       <Big k={sp(frame, a + 0.1, {damping: 9, stiffness: 220})} top={1030} size={170} color={S.orange}>اسقه عسلاً</Big>
     </>
   )},
   {from: 100, to: 101, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
-      <Photo src="sedra/honey.jpg" t={t} from={a} dur={b - a + 1} focusY={75} z0={1.5} z1={1.25} />
+      <Photo src="sedra/ai/honeycomb.jpg" t={t} from={a} dur={b - a + 1} focusY={50} />
       <HoneyDrop t={t} from={a - 0.2} />
       <div style={{position: 'absolute', left: 0, right: 0, top: 560, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream} size={38}>المرة التالتة</Chip></div>
       <Big k={sp(frame, a + 0.1, {damping: 9, stiffness: 220})} top={700} size={180} color={S.orange}>اسقه عسلاً</Big>
@@ -248,10 +251,13 @@ const OVERLAYS: Ov[] = [
       <Chip k={sp(frame, at(146))} size={58}>يقينه</Chip>
     </div>
   )},
-  {from: 157, to: 169, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a) => (
+  {from: 157, to: 169, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
-      <Navy t={t} pattern={0.2} />
-      <Card src="sedra/bee.jpg" t={t} from={a - 0.2} dur={8} circle w={330} top={230} />
+      <Photo src="sedra/ai/quran.jpg" t={t} from={a} dur={b - a + 1} focusY={45} />
+      <AbsoluteFill style={{background: 'rgba(7,23,53,0.45)'}} />
+      <div style={{position: 'absolute', left: W / 2 - 165, top: 230, width: 330, height: 330, borderRadius: '50%', overflow: 'hidden', border: `6px solid ${S.orange}`, boxShadow: '0 30px 70px rgba(0,0,0,0.5)', transform: `scale(${sp(frame, at(161))})`}}>
+        <Img src={staticFile('sedra/ai/bee2.jpg')} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+      </div>
       <div style={{position: 'absolute', left: 60, right: 60, top: 640, padding: '46px 30px 50px', borderRadius: 40, background: 'rgba(7,23,53,0.8)', border: `3px solid ${S.orange}`}}>
         <div style={{textAlign: 'center', direction: 'rtl', fontFamily: SF.quote, fontWeight: 700, fontSize: 78, lineHeight: 1.7, color: S.cream}}>
           {[
@@ -272,7 +278,7 @@ const OVERLAYS: Ov[] = [
       </div>
     </>
   )},
-  {from: 170, to: 176, full: true, render: (t, frame, a, b) => <Card src="sedra/products.jpg" t={t} from={a} dur={b - a + 1} w={940} h={740} top={300} />},
+  {from: 170, to: 176, full: true, render: (t, frame, a, b) => <Photo src="sedra/honey.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />},
   {from: 192, to: 195, tail: 0.4, full: false, render: (t, frame) => (
     <div style={{position: 'absolute', left: 0, right: 0, top: 320, display: 'flex', justifyContent: 'center'}}>
       <Chip k={sp(frame, at(195) - 0.05, {damping: 9, stiffness: 230})} bg="#25A55F" color="#fff" size={70}>✓ خف</Chip>
@@ -285,11 +291,16 @@ const OVERLAYS: Ov[] = [
       <Big k={sp(frame, at(197))} top={980} size={90}>بما عند الله</Big>
     </>
   )},
-  {from: 206, to: 212, full: false, render: (t, frame, a) => <LowerThird k={sp(frame, a)} sub="الحديث" title="جابر بن عبد الله رضي الله عنه" />},
+  {from: 200, to: 212, full: true, render: (t, frame, a, b) => (
+    <>
+      <Photo src="sedra/ai/manuscript.jpg" t={t} from={a} dur={b - a + 1} focusY={55} />
+      <LowerThird k={sp(frame, at(206))} sub="الحديث" title="جابر بن عبد الله رضي الله عنه" />
+    </>
+  )},
   {from: 221, to: 239, tail: 0.3, full: true, hideCaptions: true, render: (t, frame, a) => {
     const items: [number, string, string][] = [
-      [229, 'شرطة محجم', 'sedra/cups.jpg'],
-      [231, 'شربة عسل', 'sedra/honey.jpg'],
+      [229, 'شرطة محجم', 'sedra/ai/sterile.jpg'],
+      [231, 'شربة عسل', 'sedra/ai/jar.jpg'],
       [233, 'كية نار', 'sedra/firecups.jpg'],
     ];
     const strike = prog(t, at(236), at(236) + 0.5, easeOut);
@@ -335,9 +346,10 @@ const OVERLAYS: Ov[] = [
       </>
     );
   }},
-  {from: 294, to: 308, full: true, hideCaptions: true, render: (t, frame, a) => (
+  {from: 294, to: 308, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
-      <Navy t={t} pattern={0.2} />
+      <Photo src="sedra/ai/dua.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />
+      <AbsoluteFill style={{background: 'rgba(7,23,53,0.4)'}} />
       <div style={{position: 'absolute', left: 70, right: 70, top: 520}}>
         <Synced t={t} from={294} to={303} size={74} />
       </div>
@@ -345,7 +357,8 @@ const OVERLAYS: Ov[] = [
       <Big k={sp(frame, at(308))} top={1080} size={96}>الأول</Big>
     </>
   )},
-  {from: 309, to: 319, full: true, render: (t, frame, a, b) => <Photo src="sedra/training.jpg" t={t} from={a} dur={b - a + 1} focusY={35} />},
+  {from: 309, to: 319, full: true, render: (t, frame, a, b) => <Photo src="sedra/ai/placing.jpg" t={t} from={a} dur={b - a + 1} focusY={50} />},
+  {from: 344, to: 353, full: true, render: (t, frame, a, b) => <Photo src="sedra/training.jpg" t={t} from={a} dur={b - a + 1} focusY={35} />},
   {from: 324, to: 337, tail: 0.3, full: true, render: (t, frame) => (
     <>
       <Navy t={t} />
@@ -364,6 +377,27 @@ const OVERLAYS: Ov[] = [
       </div>
     </>
   )},
+  {from: 393, to: 396, tail: 0.3, full: true, render: (t, frame, a) => {
+    const tiles = ['sedra/selfie.jpg', 'sedra/cups.jpg', 'sedra/honey.jpg', 'sedra/chest.jpg'];
+    return (
+      <>
+        <Navy t={t} pattern={0.1} />
+        <div style={{position: 'absolute', left: 60, right: 60, top: 230, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18}}>
+          {tiles.map((src, i) => {
+            const k = sp(frame, a - 0.1 + i * 0.12, {damping: 12, stiffness: 190});
+            return (
+              <div key={i} style={{height: 520, borderRadius: 28, overflow: 'hidden', border: '4px solid rgba(246,242,233,0.9)', opacity: clamp01(k * 2), transform: `scale(${0.7 + 0.3 * k}) rotate(${(1 - k) * (i % 2 ? 6 : -6)}deg)`}}>
+                <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+              </div>
+            );
+          })}
+        </div>
+        <div style={{position: 'absolute', left: W / 2 - 110, top: 690, width: 220, height: 220, borderRadius: '50%', background: S.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', transform: `scale(${sp(frame, a + 0.4, {damping: 10, stiffness: 200})})`}}>
+          <Logo size={150} />
+        </div>
+      </>
+    );
+  }},
   {from: 374, to: 378, tail: 0.5, full: true, hideCaptions: true, render: (t, frame) => (
     <>
       <Navy t={t} pattern={0.22} glow="rgba(242,140,40,0.3)" />
