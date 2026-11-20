@@ -370,7 +370,7 @@ const OVERLAYS: Ov[] = [
   {from: 358, to: 365, tail: 0.5, full: true, render: (t, frame, a, b) => (
     <>
       <Photo src="sedra/sheikh.jpg" t={t} from={a} dur={b - a + 1} focusY={22} />
-      <div style={{position: 'absolute', left: 0, right: 0, top: 860, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 640, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22}}>
         {[[360, 'توفيق'], [362, 'حكمة'], [364, 'خبرة ودراية']].map(([src, txt], i) => (
           <Chip key={i} k={sp(frame, at(src as number) - 0.05, {damping: 10, stiffness: 220})} size={64}>{txt as string}</Chip>
         ))}
