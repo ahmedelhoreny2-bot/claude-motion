@@ -370,7 +370,15 @@ const OVERLAYS: Ov[] = [
   )},
   {from: 358, to: 365, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
-      <Photo src="sedra/sheikh.jpg" t={t} from={a} dur={b - a + 1} focusY={22} />
+      <Navy t={t} pattern={0.14} />
+      {[['sedra/cert1.jpg', W / 2 + 10, 5, 0], ['sedra/cert2.jpg', W / 2 - 450, -5, 0.2]].map(([src, x, r, d], i) => {
+        const k = sp(frame, a + (d as number), {damping: 12, stiffness: 170});
+        return (
+          <div key={i} style={{position: 'absolute', left: x as number, top: 250, width: 440, height: 330, background: '#fff', padding: 10, borderRadius: 16, overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.5)', opacity: clamp01(k * 2), transform: `translateY(${(1 - k) * -160}px) rotate(${(r as number) * k}deg)`}}>
+            <Img src={staticFile(src as string)} style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 28%'}} />
+          </div>
+        );
+      })}
       <div style={{position: 'absolute', left: 0, right: 0, top: 640, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22}}>
         {[[360, 'توفيق'], [362, 'حكمة'], [364, 'خبرة ودراية']].map(([src, txt], i) => (
           <Chip key={i} k={sp(frame, at(src as number) - 0.05, {damping: 10, stiffness: 220})} size={64}>{txt as string}</Chip>
