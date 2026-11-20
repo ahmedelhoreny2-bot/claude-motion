@@ -3,437 +3,406 @@ import {AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame
 import type {SpringConfig} from 'remotion';
 import {Grain} from '../components/primitives';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, sp as sp60} from '../lib';
-import {Logo, S, SF, useSedraFonts} from '../sedra/kit';
+import {Logo} from '../sedra/kit';
 import EDL from './edl.json';
+import {archPath, Divider, G, GF, Lattice, useTalkFonts} from './theme';
 
 export const FPS = 30;
 export const W = 1080;
 export const H = 1920;
-const CTA_LEN = 4.5;
+const CTA_LEN = 5;
 export const TALK_DURATION = Math.round((EDL.duration + CTA_LEN) * FPS);
 
 type Word = {w: string; s: number; e: number; src: number};
 type Piece = {in: number; out: number; at: number};
 const WD = EDL.words as Word[];
 const PIECES = EDL.pieces as Piece[];
-const bySrc = new Map(WD.map((w, i) => [w.src, i]));
-/** Output start of source word i (first occurrence in the cut). */
+const bySrc = new Map(WD.map((w, i) => [w.src, i])); // last occurrence wins
 const at = (src: number) => WD[bySrc.get(src)!].s;
 const endOf = (src: number) => WD[bySrc.get(src)!].e;
 const sp = (frame: number, t0: number, cfg: Partial<SpringConfig> = {}) => sp60(frame, t0, cfg, FPS);
+const soft = {damping: 20, stiffness: 90, mass: 1};
 const clean = (w: string) => w.replace(/[،.…:؟!]/g, '').replace(/ـ$/, '');
+const FACE = {x: 47, y: 34};
+const XF = 0.2; // seconds of dissolve on every jump cut
 
-const FACE = {x: 47, y: 31}; // face centre in % of the frame
-
-// ------------------------------------------------------------------ speaker
-const SHOT_SCALES = [1.0, 1.42, 1.18, 1.75, 1.3];
-const PUNCH_WORDS = [133, 93, 114, 130, 147, 151, 343, 365, 378];
-
-const Speaker: React.FC<{t: number; frame: number}> = ({t, frame}) => {
-  const k = PIECES.findIndex((p, i) => t >= p.at && (i + 1 === PIECES.length || t < PIECES[i + 1].at));
-  const idx = Math.max(0, k);
+// ------------------------------------------------------------------ speaker: calm framing, soft jump cuts
+const Speaker: React.FC<{t: number}> = ({t}) => {
+  const idx = Math.max(0, PIECES.findIndex((p, i) => t >= p.at && (i + 1 === PIECES.length || t < PIECES[i + 1].at)));
+  // two framings only, changed every few pieces and eased, plus a slow breathing push
+  const framing = (i: number) => (Math.floor(i / 3) % 2 ? 1.12 : 1.04);
   const p = PIECES[idx];
-  const base = idx === 0 ? 1.85 : SHOT_SCALES[idx % SHOT_SCALES.length];
-  const local = t - p.at;
-  const push = 1 + 0.05 * clamp01(local / Math.max(1, p.out - p.in));
-  const enter = 1 + 0.06 * Math.exp(-local * 9);
-  const punch = PUNCH_WORDS.reduce((acc, src) => {
-    if (!bySrc.has(src)) return acc;
-    const d = t - at(src);
-    return d >= 0 && d < 0.7 ? acc + 0.12 * Math.exp(-d * 5) * Math.min(1, d * 20) : acc;
-  }, 0);
+  const prev = framing(Math.max(0, idx - 1));
+  const scale = lerp(prev, framing(idx), prog(t, p.at, p.at + 0.9, easeInOut)) + 0.02 * Math.sin(t * 0.25);
   return (
-    <AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
-      {PIECES.map((pc, i) => {
-        if (Math.abs(i - idx) > 1) return null;
-        return (
-          <Sequence key={i} from={Math.round(pc.at * FPS)} durationInFrames={Math.round((pc.out - pc.in) * FPS)} layout="none">
-            <AbsoluteFill style={{transformOrigin: `${FACE.x}% ${FACE.y}%`, transform: `scale(${base * push * enter + punch})`}}>
-              <OffthreadVideo src={staticFile('sedra/raw/talk_hd_k.mp4')} startFrom={Math.round(pc.in * FPS)} muted style={{width: '100%', height: '100%'}} />
-            </AbsoluteFill>
-          </Sequence>
-        );
-      })}
-      <AbsoluteFill style={{background: 'linear-gradient(180deg, rgba(7,23,53,0.35) 0%, rgba(7,23,53,0) 18%, rgba(7,23,53,0) 55%, rgba(7,23,53,0.75) 100%)'}} />
+    <AbsoluteFill style={{overflow: 'hidden', background: G.deep}}>
+      <AbsoluteFill style={{transformOrigin: `${FACE.x}% ${FACE.y}%`, transform: `scale(${scale})`}}>
+        {PIECES.map((pc, i) => {
+          if (i < idx - 1 || i > idx + 1) return null;
+          const from = Math.round(pc.at * FPS);
+          const len = Math.round((pc.out - pc.in) * FPS) + Math.round(XF * FPS);
+          const fadeIn = i === 0 ? 1 : prog(t, pc.at, pc.at + XF, easeInOut);
+          return (
+            <Sequence key={i} from={from} durationInFrames={len} layout="none">
+              <AbsoluteFill style={{opacity: fadeIn}}>
+                <OffthreadVideo src={staticFile('sedra/raw/talk_hd2.mp4')} startFrom={Math.round(pc.in * FPS)} muted style={{width: '100%', height: '100%'}} />
+              </AbsoluteFill>
+            </Sequence>
+          );
+        })}
+      </AbsoluteFill>
+      <AbsoluteFill style={{background: `linear-gradient(180deg, rgba(11,35,29,0.5) 0%, rgba(11,35,29,0) 16%, rgba(11,35,29,0) 58%, rgba(11,35,29,0.82) 100%)`}} />
     </AbsoluteFill>
   );
 };
 
-// ------------------------------------------------------------------ overlay pieces
-const Pattern: React.FC<{t: number; opacity?: number}> = ({t, opacity = 0.14}) => {
-  const star = (cx: number, cy: number, r: number) => {
-    const sq = (rot: number) =>
-      [0, 1, 2, 3].map((k) => {
-        const a = rot + (k * Math.PI) / 2 + Math.PI / 4;
-        return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
-      }).join(' ');
-    return (
-      <g key={`${cx}-${cy}`}>
-        <polygon points={sq(0)} fill="none" stroke={S.orange} strokeWidth={2} />
-        <polygon points={sq(Math.PI / 4)} fill="none" stroke={S.orange} strokeWidth={2} />
-      </g>
-    );
-  };
-  const cells = [];
-  for (let y = -1; y < 9; y++) for (let x = -1; x < 6; x++) cells.push(star(x * 240 + (y % 2) * 120, y * 240, 96));
+/** Thin gold frame inset from the edges, with small corner diamonds. */
+const Frame: React.FC<{opacity?: number}> = ({opacity = 1}) => (
+  <svg width={W} height={H} style={{position: 'absolute', inset: 0, opacity, pointerEvents: 'none'}}>
+    <rect x={30} y={30} width={W - 60} height={H - 60} rx={34} fill="none" stroke={G.gold} strokeWidth={2.5} opacity={0.75} />
+    {[[30, 30], [W - 30, 30], [30, H - 30], [W - 30, H - 30]].map(([x, y], i) => (
+      <rect key={i} x={x - 9} y={y - 9} width={18} height={18} transform={`rotate(45 ${x} ${y})`} fill={G.gold} />
+    ))}
+  </svg>
+);
+
+// ------------------------------------------------------------------ backgrounds and the arch window
+const Parchment: React.FC<{t: number; lattice?: number}> = ({t, lattice = 0.1}) => (
+  <AbsoluteFill style={{background: `radial-gradient(ellipse 85% 60% at 50% 38%, ${G.emerald} 0%, ${G.green} 45%, ${G.deep} 100%)`}}>
+    <Lattice t={t} width={W} height={H} opacity={lattice} />
+    <AbsoluteFill style={{background: 'radial-gradient(ellipse 60% 30% at 50% 36%, rgba(233,205,130,0.16) 0%, rgba(0,0,0,0) 70%)'}} />
+  </AbsoluteFill>
+);
+
+/** An image inside a mihrab arch: the gold outline draws itself, the picture fades up inside. */
+const Arch: React.FC<{src: string; t: number; from: number; dur: number; x?: number; y?: number; w?: number; h?: number; focusY?: number}> = ({
+  src, t, from, dur, x = 140, y = 230, w = 800, h = 900, focusY = 50,
+}) => {
+  const draw = prog(t, from - 0.1, from + 0.9, easeInOut);
+  const pic = prog(t, from + 0.1, from + 0.8, easeOut);
+  const k = clamp01((t - from) / dur);
+  const d = archPath(x, y, w, h);
+  const len = 2 * h + w * 1.6;
+  const id = `arch-${Math.round(from * 100)}`;
   return (
-    <svg width={W} height={H} style={{position: 'absolute', inset: 0, opacity}}>
-      <g transform={`translate(${-t * 6} ${-t * 10})`}>{cells}</g>
+    <svg width={W} height={H} style={{position: 'absolute', inset: 0}}>
+      <defs>
+        <clipPath id={id}>
+          <path d={d} />
+        </clipPath>
+      </defs>
+      <path d={d} fill={G.deep} opacity={0.6 * pic} transform={`translate(0 18)`} />
+      <g clipPath={`url(#${id})`} opacity={pic}>
+        <image href={staticFile(src)} x={x - 40} y={y - 40} width={w + 80} height={h + 80} preserveAspectRatio={`xMidY${focusY < 40 ? 'Min' : focusY > 60 ? 'Max' : 'Mid'} slice`} transform={`translate(${W / 2} ${y + h / 2}) scale(${lerp(1.1, 1.0, easeOut(k))}) translate(${-W / 2} ${-(y + h / 2)})`} />
+        <rect x={x} y={y + h * 0.6} width={w} height={h * 0.4} fill="url(#archFade)" />
+      </g>
+      <defs>
+        <linearGradient id="archFade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={G.deep} stopOpacity={0} />
+          <stop offset="100%" stopColor={G.deep} stopOpacity={0.55} />
+        </linearGradient>
+      </defs>
+      <path d={d} fill="none" stroke={G.gold} strokeWidth={5} strokeDasharray={len} strokeDashoffset={len * (1 - draw)} strokeLinejoin="round" />
+      <path d={archPath(x - 18, y - 18, w + 36, h + 18)} fill="none" stroke={G.gold} strokeWidth={1.5} opacity={0.5 * draw} />
     </svg>
   );
 };
 
-const Navy: React.FC<{t: number; pattern?: number; glow?: string}> = ({t, pattern = 0.12, glow = 'rgba(242,140,40,0.18)'}) => (
-  <AbsoluteFill style={{background: `radial-gradient(ellipse 80% 55% at 50% 40%, ${S.navy2} 0%, ${S.navy} 75%)`}}>
-    <AbsoluteFill style={{background: `radial-gradient(ellipse 60% 35% at 50% 42%, ${glow} 0%, rgba(0,0,0,0) 70%)`}} />
-    <Pattern t={t} opacity={pattern} />
-  </AbsoluteFill>
-);
-
-const Photo: React.FC<{src: string; t: number; from: number; dur: number; focusY?: number; z0?: number; z1?: number}> = ({src, t, from, dur, focusY = 50, z0 = 1.2, z1 = 1.04}) => (
-  <AbsoluteFill style={{overflow: 'hidden'}}>
-    <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: `50% ${focusY}%`, transform: `scale(${lerp(z0, z1, easeOut(clamp01((t - from) / dur)))})`}} />
-    <AbsoluteFill style={{background: 'linear-gradient(180deg, rgba(7,23,53,0.45) 0%, rgba(7,23,53,0) 25%, rgba(7,23,53,0) 50%, rgba(7,23,53,0.88) 85%)'}} />
-  </AbsoluteFill>
-);
-
-const Card: React.FC<{src: string; t: number; from: number; dur: number; w?: number; h?: number; top?: number; circle?: boolean}> = ({src, t, from, dur, w = 900, h = 760, top = 300, circle}) => {
-  const pop = prog(t, from, from + 0.35, easeOut);
-  const k = clamp01((t - from) / dur);
+const Title: React.FC<{t: number; at: number; children: React.ReactNode; size?: number; top: number; color?: string; font?: string}> = ({t, at: a, children, size = 110, top, color = G.goldHi, font = GF.title}) => {
+  const k = prog(t, a - 0.1, a + 0.7, easeOut);
   return (
-    <AbsoluteFill>
-      <AbsoluteFill style={{overflow: 'hidden'}}>
-        <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(34px) brightness(0.42)', transform: 'scale(1.25)'}} />
-      </AbsoluteFill>
-      <div style={{position: 'absolute', left: (W - w) / 2, top, width: w, height: circle ? w : h, overflow: 'hidden', borderRadius: circle ? '50%' : 40, border: `6px solid ${circle ? S.orange : 'rgba(246,242,233,0.9)'}`, boxShadow: '0 40px 90px rgba(0,0,0,0.55)', opacity: clamp01(pop * 2), transform: `scale(${0.85 + 0.15 * pop}) rotate(${(1 - pop) * -3}deg)`}}>
-        <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${lerp(1.22, 1.02, easeOut(k)) * (circle ? 1.12 : 1)})`}} />
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-const Big: React.FC<{k: number; children: React.ReactNode; size?: number; color?: string; font?: string; top?: number}> = ({k, children, size = 130, color = S.cream, font = SF.ar, top = 900}) => (
-  <div style={{position: 'absolute', left: 60, right: 60, top, textAlign: 'center', direction: 'rtl', fontFamily: font, fontWeight: 900, fontSize: size, lineHeight: 1.25, color, textShadow: '0 8px 40px rgba(0,0,0,0.8)', opacity: clamp01(k * 2), transform: `scale(${0.7 + 0.3 * k})`}}>
-    {children}
-  </div>
-);
-
-const Chip: React.FC<{k: number; children: React.ReactNode; bg?: string; color?: string; size?: number}> = ({k, children, bg = S.orange, color = S.navy, size = 40}) => (
-  <div style={{display: 'inline-flex', alignItems: 'center', gap: 14, direction: 'rtl', padding: '10px 32px 16px', borderRadius: 999, background: bg, color, fontFamily: SF.ar, fontWeight: 900, fontSize: size, opacity: clamp01(k * 2), transform: `scale(${0.6 + 0.4 * k})`, boxShadow: '0 16px 40px rgba(0,0,0,0.35)'}}>
-    {children}
-  </div>
-);
-
-const LowerThird: React.FC<{k: number; title: string; sub?: string}> = ({k, title, sub}) => (
-  <div style={{position: 'absolute', right: 60, top: 300, direction: 'rtl', opacity: clamp01(k * 2), transform: `translateX(${(1 - k) * 200}px)`}}>
-    {sub ? <div style={{display: 'inline-block', background: S.orange, color: S.navy, fontFamily: SF.ar, fontWeight: 900, fontSize: 34, padding: '4px 22px 10px', borderRadius: 12}}>{sub}</div> : null}
-    <div style={{marginTop: 10, background: 'rgba(7,23,53,0.88)', border: `2px solid ${S.orange}`, color: S.cream, fontFamily: SF.ar, fontWeight: 900, fontSize: 52, padding: '10px 30px 18px', borderRadius: 18}}>{title}</div>
-  </div>
-);
-
-/** Spoken words revealed in sync (word appears when said). */
-const Synced: React.FC<{t: number; from: number; to: number; size: number; font?: string; weight?: number; accent?: number[]; color?: string}> = ({t, from, to, size, font = SF.ar, weight = 900, accent = [], color = S.cream}) => {
-  const a = bySrc.get(from)!;
-  const b = bySrc.get(to)!;
-  return (
-    <div style={{direction: 'rtl', textAlign: 'center', fontFamily: font, fontWeight: weight, fontSize: size, lineHeight: 1.45, color}}>
-      {WD.slice(a, b + 1).map((w) => {
-        const k = prog(t, w.s - 0.08, w.s + 0.2, easeOut);
-        return (
-          <span key={w.src} style={{display: 'inline-block', margin: '0 0.12em', opacity: 0.15 + 0.85 * k, transform: `translateY(${(1 - k) * 16}px)`, color: accent.includes(w.src) ? S.orange : undefined}}>
-            {clean(w.w)}
-          </span>
-        );
-      })}
+    <div style={{position: 'absolute', left: 70, right: 70, top, textAlign: 'center', direction: 'rtl', fontFamily: font, fontWeight: 700, fontSize: size, lineHeight: 1.35, color, opacity: k, transform: `translateY(${(1 - k) * 24}px)`, textShadow: '0 6px 30px rgba(0,0,0,0.55)'}}>
+      {children}
     </div>
   );
 };
 
-const HoneyDrop: React.FC<{t: number; from: number}> = ({t, from}) => {
-  const k = prog(t, from, from + 0.9, easeIn);
-  return (
-    <svg width={W} height={500} style={{position: 'absolute', left: 0, top: 0}}>
-      <defs>
-        <linearGradient id="honey" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFB42E" />
-          <stop offset="100%" stopColor="#C46A00" />
-        </linearGradient>
-      </defs>
-      <path d={`M0 0 H${W} V60 C${W * 0.8} 90 ${W * 0.62} 60 ${W * 0.55} 90 C${W * 0.52} ${120 + 220 * k} ${W * 0.48} ${120 + 220 * k} ${W * 0.45} 90 C${W * 0.35} 60 ${W * 0.2} 100 0 70 Z`} fill="url(#honey)" opacity={0.95} />
-    </svg>
-  );
-};
-
-const Silhouette: React.FC<{x: number; dots: [number, number][]; k: number; label: string}> = ({x, dots, k, label}) => (
-  <div style={{position: 'absolute', left: x, top: 330, width: 440, opacity: clamp01(k * 2), transform: `translateY(${(1 - k) * 60}px)`}}>
-    <svg width={440} height={640} viewBox="0 0 220 320">
-      <path d="M110 20 C125 20 135 32 135 48 C135 62 127 72 118 76 L118 84 C150 90 182 100 192 130 L200 230 C200 250 190 300 180 310 L40 310 C30 300 20 250 20 230 L28 130 C38 100 70 90 102 84 L102 76 C93 72 85 62 85 48 C85 32 95 20 110 20 Z" fill="rgba(246,242,233,0.12)" stroke={S.cream} strokeWidth={3} />
-      {dots.map(([dx, dy], i) => (
-        <g key={i} opacity={clamp01(k * 3 - i * 0.25)}>
-          <circle cx={dx} cy={dy} r={13} fill="rgba(242,140,40,0.25)" stroke={S.orange} strokeWidth={3} />
-          <circle cx={dx} cy={dy} r={4} fill={S.orange} />
-        </g>
-      ))}
-    </svg>
-    <div style={{textAlign: 'center', fontFamily: SF.ar, fontWeight: 900, fontSize: 44, color: S.cream}}>{label}</div>
+const Tag: React.FC<{k: number; children: React.ReactNode; size?: number; solid?: boolean}> = ({k, children, size = 40, solid}) => (
+  <div style={{display: 'inline-flex', alignItems: 'center', gap: 14, direction: 'rtl', padding: '10px 34px 16px', borderRadius: 999, background: solid ? G.gold : G.glass, border: `2px solid ${G.gold}`, color: solid ? G.deep : G.cream, fontFamily: GF.body, fontWeight: 800, fontSize: size, opacity: clamp01(k * 1.6), transform: `translateY(${(1 - k) * 20}px)`, boxShadow: '0 14px 36px rgba(0,0,0,0.3)'}}>
+    {children}
   </div>
 );
 
-// ------------------------------------------------------------------ overlays (keyed to spoken words)
-type Ov = {from: number; to: number; tail?: number; full: boolean; hideCaptions?: boolean; render: (t: number, frame: number, a: number, b: number) => React.ReactNode};
+const LowerThird: React.FC<{k: number; title: string; sub: string}> = ({k, title, sub}) => (
+  <div style={{position: 'absolute', right: 70, top: 250, direction: 'rtl', opacity: clamp01(k * 1.6), transform: `translateX(${(1 - k) * 80}px)`}}>
+    <div style={{fontFamily: GF.body, fontWeight: 800, fontSize: 30, color: G.goldHi, marginBottom: 6}}>{sub}</div>
+    <div style={{background: G.glass, borderRight: `6px solid ${G.gold}`, color: G.cream, fontFamily: GF.title, fontWeight: 700, fontSize: 54, padding: '6px 28px 14px', borderRadius: 14}}>{title}</div>
+  </div>
+);
+
+/** Spoken words appear as they are said. */
+const Synced: React.FC<{t: number; from: number; to: number; size: number; font?: string; accent?: number[]; color?: string; lineHeight?: number}> = ({
+  t, from, to, size, font = GF.body, accent = [], color = G.cream, lineHeight = 1.55,
+}) => (
+  <div style={{direction: 'rtl', textAlign: 'center', fontFamily: font, fontWeight: 700, fontSize: size, lineHeight, color}}>
+    {WD.slice(bySrc.get(from)!, bySrc.get(to)! + 1).map((w) => {
+      const k = prog(t, w.s - 0.1, w.s + 0.25, easeOut);
+      return (
+        <span key={w.src} style={{display: 'inline-block', margin: '0 0.12em', opacity: 0.18 + 0.82 * k, color: accent.includes(w.src) ? G.goldHi : undefined}}>
+          {clean(w.w)}
+        </span>
+      );
+    })}
+  </div>
+);
+
+const IconCup: React.FC<{size: number; color?: string}> = ({size, color = G.goldHi}) => (
+  <svg width={size} height={size * 1.15} viewBox="0 0 60 70">
+    <path d="M10 60 C6 40 12 22 26 18 V10 H34 V18 C48 22 54 40 50 60 Z" fill="none" stroke={color} strokeWidth={4} strokeLinejoin="round" />
+    <rect x={24} y={4} width={12} height={8} rx={2} fill={color} />
+    <line x1={8} y1={62} x2={52} y2={62} stroke={color} strokeWidth={4} strokeLinecap="round" />
+  </svg>
+);
+const IconDrop: React.FC<{size: number}> = ({size}) => (
+  <svg width={size} height={size} viewBox="0 0 60 60">
+    <path d="M30 6 C30 6 12 28 12 40 A18 18 0 0 0 48 40 C48 28 30 6 30 6 Z" fill={G.gold} />
+    <path d="M22 40 A8 8 0 0 0 30 48" fill="none" stroke={G.cream} strokeWidth={3} strokeLinecap="round" opacity={0.8} />
+  </svg>
+);
+const IconFlame: React.FC<{size: number}> = ({size}) => (
+  <svg width={size} height={size} viewBox="0 0 60 60">
+    <path d="M30 4 C34 16 46 22 46 38 A16 16 0 0 1 14 38 C14 28 20 24 22 16 C26 22 28 24 30 26 C32 18 30 10 30 4 Z" fill={G.gold} />
+    <path d="M30 30 C32 36 38 38 38 44 A8 8 0 0 1 22 44 C22 40 26 38 30 30 Z" fill={G.cream} opacity={0.85} />
+  </svg>
+);
+
+// ------------------------------------------------------------------ cards keyed to spoken words
+type Ov = {from: number; to: number; tail?: number; full: boolean; captions?: boolean; render: (t: number, frame: number, a: number, b: number) => React.ReactNode};
+
+const ArchCard = (src: string, title: React.ReactNode, sub?: (t: number, frame: number, a: number) => React.ReactNode, focusY = 50) =>
+  (t: number, frame: number, a: number, b: number) => (
+    <>
+      <Parchment t={t} />
+      <Arch src={src} t={t} from={a} dur={b - a + 1} focusY={focusY} />
+      {sub ? sub(t, frame, a) : null}
+      {title}
+    </>
+  );
 
 const OVERLAYS: Ov[] = [
-  // hook title
-  {from: 129, to: 135, tail: 0, full: false, render: (t, frame, a) => <div style={{position: 'absolute', left: 0, right: 0, top: 260, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a + 0.2)}>قصة من السُّنّة</Chip></div>},
-  {from: 7, to: 10, full: true, hideCaptions: true, render: (t, frame, a, b) => (
-    <>
-      <Photo src="sedra/ai/lantern.jpg" t={t} from={a} dur={b - a + 1} focusY={45} />
-      <AbsoluteFill style={{background: 'rgba(7,23,53,0.35)'}} />
-      <Big k={sp(frame, a)} top={700} size={88} color={S.creamDim}>سر من أسرار</Big>
-      <Big k={sp(frame, at(10) - 0.05, {damping: 9, stiffness: 220})} top={830} size={190} color={S.orange}>الشفاء</Big>
-    </>
-  )},
-  {from: 16, to: 20, full: true, hideCaptions: true, render: (t, frame, a, b) => (
-    <>
-      <Photo src="sedra/ai/mosque.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />
-      <AbsoluteFill style={{background: 'rgba(7,23,53,0.3)'}} />
-      <Big k={sp(frame, a)} top={700} size={88} color={S.creamDim}>سر من أسرار</Big>
-      <Big k={sp(frame, at(19) - 0.05, {damping: 9, stiffness: 220})} top={830} size={170} color={S.orange}>الطب النبوي</Big>
-    </>
-  )},
-  {from: 28, to: 34, full: false, render: (t, frame, a) => <LowerThird k={sp(frame, a)} sub="الحديث" title="أبو سعيد الخدري رضي الله عنه" />},
+  {from: 7, to: 10, full: true, render: (t, frame, a, b) =>
+    ArchCard('sedra/ai/lantern.jpg', <><Title t={t} at={a} top={1150} size={70} color={G.creamDim} font={GF.body}>سر من أسرار</Title><Title t={t} at={at(10)} top={1240} size={150}>الشفاء</Title></>)(t, frame, a, b)},
+  {from: 16, to: 20, full: true, render: (t, frame, a, b) =>
+    ArchCard('sedra/ai/mosque.jpg', <><Title t={t} at={a} top={1150} size={70} color={G.creamDim} font={GF.body}>سر من أسرار</Title><Title t={t} at={at(19)} top={1240} size={140}>الطب النبوي</Title></>, undefined, 45)(t, frame, a, b)},
+  {from: 28, to: 34, full: false, captions: true, render: (t, frame, a) => <LowerThird k={sp(frame, a, soft)} sub="من حديث" title="أبي سعيد الخدري رضي الله عنه" />},
   {from: 48, to: 60, full: true, render: (t, frame, a, b) => (
     <>
-      <Photo src="sedra/ai/stomach.jpg" t={t} from={a} dur={b - a + 1} focusY={45} />
-      <AbsoluteFill style={{background: 'rgba(120,20,10,0.18)'}} />
-      <div style={{position: 'absolute', left: 0, right: 0, top: 360, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26}}>
-        {[[48, 'أخي يشتكي بطنه'], [53, 'قولونه تعبان'], [55, 'ومعدته'], [56, 'والدنيا مش حلوة معاه']].map(([src, txt], i) => (
-          <Chip key={i} k={sp(frame, at(src as number) - 0.05)} bg={i === 0 ? S.orange : 'rgba(246,242,233,0.12)'} color={i === 0 ? S.navy : S.cream} size={i === 0 ? 62 : 52}>{txt as string}</Chip>
+      <Parchment t={t} />
+      <Arch src="sedra/ai/stomach.jpg" t={t} from={a} dur={b - a + 1} h={760} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 1040, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 16, direction: 'rtl', padding: '0 80px'}}>
+        {([[48, 'يشتكي بطنه'], [53, 'قولونه تعبان'], [55, 'ومعدته']] as [number, string][]).map(([src, txt], i) => (
+          <Tag key={i} k={sp(frame, at(src) - 0.05, soft)} solid={i === 0} size={46}>{txt}</Tag>
         ))}
       </div>
     </>
   )},
-  {from: 66, to: 67, tail: 0.6, full: true, hideCaptions: true, render: (t, frame, a, b) => (
+  {from: 66, to: 67, tail: 0.8, full: true, render: (t, frame, a, b) =>
+    ArchCard('sedra/ai/dipper.jpg', <Title t={t} at={a} top={1200} size={150}>اسقه عسلاً</Title>, (tt, f, aa) => <div style={{position: 'absolute', left: 0, right: 0, top: 1150, display: 'flex', justifyContent: 'center'}}><Tag k={sp(f, aa - 0.2, soft)} size={34}>المرة الأولى</Tag></div>)(t, frame, a, b)},
+  {from: 80, to: 81, tail: 0.8, full: true, render: (t, frame, a, b) =>
+    ArchCard('sedra/ai/jar.jpg', <Title t={t} at={a} top={1200} size={150}>اسقه عسلاً</Title>, (tt, f, aa) => <div style={{position: 'absolute', left: 0, right: 0, top: 1150, display: 'flex', justifyContent: 'center'}}><Tag k={sp(f, aa - 0.2, soft)} size={34}>المرة الثانية</Tag></div>)(t, frame, a, b)},
+  {from: 100, to: 101, tail: 0.8, full: true, render: (t, frame, a, b) =>
+    ArchCard('sedra/ai/honeycomb.jpg', <Title t={t} at={a} top={1200} size={150}>اسقه عسلاً</Title>, (tt, f, aa) => <div style={{position: 'absolute', left: 0, right: 0, top: 1150, display: 'flex', justifyContent: 'center'}}><Tag k={sp(f, aa - 0.2, soft)} size={34}>المرة الثالثة</Tag></div>)(t, frame, a, b)},
+  {from: 121, to: 128, full: true, render: (t, frame, a) => (
     <>
-      <Photo src="sedra/ai/dipper.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />
-      <HoneyDrop t={t} from={a} />
-      <div style={{position: 'absolute', left: 0, right: 0, top: 560, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream} size={38}>المرة الأولى</Chip></div>
-      <Big k={sp(frame, a + 0.1, {damping: 9, stiffness: 220})} top={700} size={180} color={S.orange}>اسقه عسلاً</Big>
-    </>
-  )},
-  {from: 72, to: 73, tail: 0.3, full: false, render: (t, frame, a) => <div style={{position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream}>📅 تاني يوم</Chip></div>},
-  {from: 80, to: 81, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
-    <>
-      <Card src="sedra/ai/jar.jpg" t={t} from={a} dur={b - a + 1} circle w={640} top={260} />
-      <div style={{position: 'absolute', left: 0, right: 0, top: 940, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream} size={38}>المرة التانية</Chip></div>
-      <Big k={sp(frame, a + 0.1, {damping: 9, stiffness: 220})} top={1030} size={170} color={S.orange}>اسقه عسلاً</Big>
-    </>
-  )},
-  {from: 100, to: 101, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
-    <>
-      <Photo src="sedra/ai/honeycomb.jpg" t={t} from={a} dur={b - a + 1} focusY={50} />
-      <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 30% at 50% 40%, rgba(7,23,53,0.75) 0%, rgba(7,23,53,0.2) 100%)'}} />
-      <HoneyDrop t={t} from={a - 0.2} />
-      <div style={{position: 'absolute', left: 0, right: 0, top: 560, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream} size={38}>المرة التالتة</Chip></div>
-      <Big k={sp(frame, a + 0.1, {damping: 9, stiffness: 220})} top={700} size={180} color={S.cream}>اسقه عسلاً</Big>
-    </>
-  )},
-  {from: 121, to: 128, full: true, hideCaptions: true, render: (t, frame, a) => (
-    <>
-      <Navy t={t} pattern={0.18} />
-      <div style={{position: 'absolute', left: 70, right: 70, top: 640}}>
-        <Synced t={t} from={115} to={128} size={84} accent={[124, 125, 126, 127, 128]} />
+      <Parchment t={t} lattice={0.14} />
+      <div style={{position: 'absolute', left: 80, right: 80, top: 560}}>
+        <Divider k={prog(t, a - 0.3, a + 0.6, easeOut)} />
+        <div style={{height: 30}} />
+        <Synced t={t} from={115} to={128} size={78} accent={[124, 125, 126, 127, 128]} />
+        <div style={{height: 30}} />
+        <Divider k={prog(t, a, a + 0.9, easeOut)} />
       </div>
     </>
   )},
-  {from: 140, to: 147, full: false, render: (t, frame) => (
-    <div style={{position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', justifyContent: 'center', gap: 24, direction: 'rtl'}}>
-      <Chip k={sp(frame, at(143))} size={58}>إيمانه</Chip>
-      <Chip k={sp(frame, at(146))} size={58}>يقينه</Chip>
+  {from: 140, to: 147, full: false, captions: true, render: (t, frame) => (
+    <div style={{position: 'absolute', left: 0, right: 0, top: 260, display: 'flex', justifyContent: 'center', gap: 22, direction: 'rtl'}}>
+      <Tag k={sp(frame, at(143), soft)} size={54} solid>إيمانه</Tag>
+      <Tag k={sp(frame, at(146), soft)} size={54} solid>يقينه</Tag>
     </div>
   )},
-  {from: 157, to: 169, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
+  {from: 157, to: 169, tail: 0.8, full: true, render: (t, frame, a, b) => (
     <>
-      <Photo src="sedra/ai/quran.jpg" t={t} from={a} dur={b - a + 1} focusY={45} />
-      <AbsoluteFill style={{background: 'rgba(7,23,53,0.45)'}} />
-      <div style={{position: 'absolute', left: W / 2 - 165, top: 230, width: 330, height: 330, borderRadius: '50%', overflow: 'hidden', border: `6px solid ${S.orange}`, boxShadow: '0 30px 70px rgba(0,0,0,0.5)', transform: `scale(${sp(frame, at(161))})`}}>
-        <Img src={staticFile('sedra/ai/bee2.jpg')} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-      </div>
-      <div style={{position: 'absolute', left: 60, right: 60, top: 640, padding: '46px 30px 50px', borderRadius: 40, background: 'rgba(7,23,53,0.8)', border: `3px solid ${S.orange}`}}>
-        <div style={{textAlign: 'center', direction: 'rtl', fontFamily: SF.quote, fontWeight: 700, fontSize: 78, lineHeight: 1.7, color: S.cream}}>
-          {[
-            [157, 'فَاسْلُكِي سُبُلَ رَبِّكِ ذُلُلًا ۚ'],
-            [161, 'يَخْرُجُ مِن بُطُونِهَا شَرَابٌ'],
-            [164, 'مُّخْتَلِفٌ أَلْوَانُهُ'],
-            [167, 'فِيهِ شِفَاءٌ لِّلنَّاسِ'],
-          ].map(([src, line], i) => {
-            const k = prog(t, at(src as number) - 0.1, at(src as number) + 0.35, easeOut);
-            return (
-              <div key={i} style={{opacity: 0.12 + 0.88 * k, color: i === 3 ? S.orange : undefined, transform: `translateY(${(1 - k) * 14}px)`}}>
-                {line as string}
-              </div>
-            );
-          })}
-        </div>
-        <div style={{textAlign: 'center', fontFamily: SF.ar, fontWeight: 700, fontSize: 30, color: S.muted, marginTop: 10}}>[النحل: ٦٩]</div>
+      <Parchment t={t} lattice={0.12} />
+      <Arch src="sedra/ai/quran.jpg" t={t} from={a} dur={b - a + 1} x={240} y={200} w={600} h={560} />
+      <div style={{position: 'absolute', left: 60, right: 60, top: 860, textAlign: 'center', direction: 'rtl', fontFamily: GF.quote, fontWeight: 700, fontSize: 76, lineHeight: 1.75, color: G.cream}}>
+        {([[157, 'فَاسْلُكِي سُبُلَ رَبِّكِ ذُلُلًا ۚ'], [161, 'يَخْرُجُ مِن بُطُونِهَا شَرَابٌ'], [164, 'مُّخْتَلِفٌ أَلْوَانُهُ'], [167, 'فِيهِ شِفَاءٌ لِّلنَّاسِ']] as [number, string][]).map(([src, line], i) => {
+          const k = prog(t, at(src) - 0.15, at(src) + 0.45, easeOut);
+          return <div key={i} style={{opacity: 0.15 + 0.85 * k, color: i === 3 ? G.goldHi : undefined}}>{line}</div>;
+        })}
+        <div style={{fontFamily: GF.body, fontWeight: 700, fontSize: 30, color: G.muted, marginTop: 8}}>[النحل: ٦٩]</div>
       </div>
     </>
   )},
-  {from: 170, to: 176, full: true, render: (t, frame, a, b) => <Photo src="sedra/honey.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />},
-  {from: 192, to: 195, tail: 0.4, full: false, render: (t, frame) => (
-    <div style={{position: 'absolute', left: 0, right: 0, top: 320, display: 'flex', justifyContent: 'center'}}>
-      <Chip k={sp(frame, at(195) - 0.05, {damping: 9, stiffness: 230})} bg="#25A55F" color="#fff" size={70}>✓ خف</Chip>
+  {from: 170, to: 176, tail: 0.4, full: true, render: (t, frame, a) => {
+    const fall = prog(t, a, a + 1.2, easeIn);
+    const ripple = prog(t, a + 1.2, a + 2.2, easeOut);
+    return (
+      <>
+        <Parchment t={t} />
+        <svg width={W} height={H} style={{position: 'absolute', inset: 0}}>
+          <path d="M380 760 C380 700 400 680 420 670 H660 C680 680 700 700 700 760 V1020 C700 1060 680 1080 640 1080 H440 C400 1080 380 1060 380 1020 Z" fill="rgba(201,162,74,0.12)" stroke={G.gold} strokeWidth={5} />
+          <rect x={410} y={640} width={260} height={34} rx={10} fill="none" stroke={G.gold} strokeWidth={5} />
+          <path d={`M384 ${1000 - 160 * ripple} H696 V1020 C696 1058 678 1076 640 1076 H440 C402 1076 384 1058 384 1020 Z`} fill={G.gold} opacity={0.75} />
+          <g transform={`translate(540 ${lerp(300, 900, fall)})`} opacity={1 - ripple}>
+            <path d="M0 -40 C0 -40 -26 -6 -26 12 A26 26 0 0 0 26 12 C26 -6 0 -40 0 -40 Z" fill={G.goldHi} />
+          </g>
+          {ripple > 0 ? <ellipse cx={540} cy={1000 - 160 * ripple} rx={150 * ripple} ry={20 * ripple} fill="none" stroke={G.cream} strokeWidth={3} opacity={1 - ripple} /> : null}
+        </svg>
+        <Title t={t} at={at(174)} top={1150} size={120}>فيه شفاء للناس</Title>
+      </>
+    );
+  }},
+  {from: 192, to: 195, tail: 0.5, full: false, captions: true, render: (t, frame) => (
+    <div style={{position: 'absolute', left: 0, right: 0, top: 260, display: 'flex', justifyContent: 'center'}}>
+      <Tag k={sp(frame, at(195) - 0.05, soft)} size={64} solid>خفّ بإذن الله</Tag>
     </div>
   )},
-  {from: 196, to: 199, tail: 0.6, full: true, hideCaptions: true, render: (t, frame, a) => (
+  {from: 196, to: 199, tail: 0.6, full: true, render: (t, frame, a) => (
     <>
-      <Navy t={t} pattern={0.2} />
-      <Big k={sp(frame, a, {damping: 10, stiffness: 180})} top={760} size={170} color={S.orange}>اليقين</Big>
-      <Big k={sp(frame, at(197))} top={980} size={90}>بما عند الله</Big>
+      <Parchment t={t} lattice={0.16} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 640}}><Divider k={prog(t, a - 0.2, a + 0.8, easeOut)} /></div>
+      <Title t={t} at={a} top={720} size={190}>اليقين</Title>
+      <Title t={t} at={at(197)} top={960} size={90} color={G.cream} font={GF.body}>بما عند الله</Title>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 1130}}><Divider k={prog(t, a, a + 1, easeOut)} /></div>
     </>
   )},
   {from: 200, to: 212, full: true, render: (t, frame, a, b) => (
     <>
-      <Photo src="sedra/ai/manuscript.jpg" t={t} from={a} dur={b - a + 1} focusY={55} />
-      <LowerThird k={sp(frame, at(206))} sub="الحديث" title="جابر بن عبد الله رضي الله عنه" />
+      <Parchment t={t} />
+      <Arch src="sedra/ai/manuscript.jpg" t={t} from={a} dur={b - a + 1} />
+      <Title t={t} at={at(206)} top={1170} size={96}>حديث جابر</Title>
+      <Title t={t} at={at(209)} top={1300} size={52} color={G.creamDim} font={GF.body}>رضي الله عنه</Title>
     </>
   )},
-  {from: 221, to: 239, tail: 0.3, full: true, hideCaptions: true, render: (t, frame, a) => {
-    const items: [number, string, string][] = [
-      [229, 'شرطة محجم', 'sedra/ai/sterile.jpg'],
-      [231, 'شربة عسل', 'sedra/ai/jar.jpg'],
-      [233, 'كية نار', 'sedra/firecups.jpg'],
+  {from: 221, to: 239, tail: 0.4, full: true, render: (t, frame) => {
+    const items: [number, string, React.ReactNode][] = [
+      [229, 'شرطة محجم', <IconCup key="c" size={86} />],
+      [231, 'شربة عسل', <IconDrop key="d" size={96} />],
+      [233, 'كية نار', <IconFlame key="f" size={96} />],
     ];
-    const strike = prog(t, at(236), at(236) + 0.5, easeOut);
+    const strike = prog(t, at(236), at(236) + 0.6, easeInOut);
     return (
       <>
-        <Navy t={t} />
-        <div style={{position: 'absolute', left: 70, right: 70, top: 250}}>
-          <Synced t={t} from={221} to={227} size={70} />
+        <Parchment t={t} lattice={0.1} />
+        <div style={{position: 'absolute', left: 80, right: 80, top: 260}}>
+          <Synced t={t} from={221} to={227} size={66} font={GF.quote} />
+          <div style={{height: 16}} />
+          <Divider k={prog(t, at(221), at(221) + 0.9, easeOut)} />
         </div>
-        <div style={{position: 'absolute', left: 60, right: 60, top: 520, display: 'flex', flexDirection: 'column', gap: 26}}>
-          {items.map(([src, label, img], i) => {
-            const k = sp(frame, at(src) - 0.05, {damping: 12, stiffness: 190});
+        <div style={{position: 'absolute', left: 90, right: 90, top: 560, display: 'flex', flexDirection: 'column', gap: 26}}>
+          {items.map(([src, label, icon], i) => {
+            const k = sp(frame, at(src) - 0.05, soft);
             return (
-              <div key={i} style={{display: 'flex', alignItems: 'center', gap: 30, direction: 'rtl', background: 'rgba(246,242,233,0.08)', border: `2px solid ${S.line}`, borderRadius: 30, padding: 18, opacity: clamp01(k * 2), transform: `translateX(${(1 - k) * 160}px)`, position: 'relative'}}>
-                <div style={{width: 180, height: 180, borderRadius: 24, overflow: 'hidden', flexShrink: 0}}>
-                  <Img src={staticFile(img)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                </div>
-                <div style={{fontFamily: SF.ar, fontWeight: 900, fontSize: 76, color: i === 2 && strike > 0 ? S.muted : S.cream}}>{label}</div>
-                {i === 2 ? <div style={{position: 'absolute', right: 230, top: '50%', height: 8, width: 330 * strike, background: '#E5483B', borderRadius: 4}} /> : null}
+              <div key={i} style={{position: 'relative', display: 'flex', alignItems: 'center', gap: 34, direction: 'rtl', background: G.glass, border: `2px solid ${G.line}`, borderRadius: 28, padding: '22px 36px', opacity: clamp01(k * 1.6), transform: `translateY(${(1 - k) * 30}px)`}}>
+                <div style={{width: 120, display: 'flex', justifyContent: 'center'}}>{icon}</div>
+                <div style={{fontFamily: GF.title, fontWeight: 700, fontSize: 78, color: i === 2 && strike > 0 ? G.muted : G.cream}}>{label}</div>
+                {i === 2 ? <div style={{position: 'absolute', right: 180, top: '52%', height: 6, width: 300 * strike, background: G.red, borderRadius: 3}} /> : null}
               </div>
             );
           })}
         </div>
-        <div style={{position: 'absolute', left: 0, right: 0, top: 1240, display: 'flex', justifyContent: 'center'}}>
-          <Chip k={sp(frame, at(235))} bg="#E5483B" color="#fff" size={46}>وأنا أنهى أمتي عن الكي</Chip>
+        <div style={{position: 'absolute', left: 0, right: 0, top: 1150, display: 'flex', justifyContent: 'center'}}>
+          <Tag k={sp(frame, at(235), soft)} size={44}>وأنا أنهى أمتي عن الكي</Tag>
         </div>
-        <div style={{position: 'absolute', left: 0, right: 0, top: 1350, textAlign: 'center', fontFamily: SF.ar, fontWeight: 700, fontSize: 30, color: S.muted}}>متفق عليه</div>
+        <div style={{position: 'absolute', left: 0, right: 0, top: 1250, textAlign: 'center', fontFamily: GF.body, fontWeight: 700, fontSize: 28, color: G.muted}}>متفق عليه</div>
       </>
     );
   }},
-  {from: 258, to: 260, tail: 0.3, full: false, render: (t, frame) => <div style={{position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, at(259))} size={60}>العلاج الصح</Chip></div>},
-  {from: 267, to: 281, full: true, render: (t, frame, a, b) => {
-    const n = Math.round(lerp(0, 20, prog(t, at(268) - 0.1, at(269), easeOut)) + lerp(0, 10, prog(t, at(271) - 0.1, at(272), easeOut)));
-    const target = sp(frame, at(275), {damping: 10, stiffness: 200});
+  {from: 258, to: 260, tail: 0.4, full: false, captions: true, render: (t, frame) => <div style={{position: 'absolute', left: 0, right: 0, top: 260, display: 'flex', justifyContent: 'center'}}><Tag k={sp(frame, at(259), soft)} size={56} solid>العلاج الصح</Tag></div>},
+  {from: 267, to: 281, full: true, captions: true, render: (t, frame) => {
+    const shown = Math.round(20 * prog(t, at(268) - 0.2, at(269) + 0.2, easeOut) + 10 * prog(t, at(271) - 0.2, at(272) + 0.2, easeOut));
+    const pick = prog(t, at(275) - 0.1, at(275) + 0.7, easeInOut);
+    const PICK = 17;
     return (
       <>
-        <Photo src="sedra/backcups.jpg" t={t} from={a} dur={b - a + 1} focusY={70} z0={1.6} z1={1.3} />
-        <div style={{position: 'absolute', left: 0, right: 0, top: 330, textAlign: 'center', fontFamily: SF.ar, fontWeight: 900, fontSize: 220, color: S.cream, textShadow: '0 10px 50px rgba(0,0,0,0.8)', opacity: t < at(273) ? 1 : 1 - prog(t, at(273), at(273) + 0.3, easeIn)}}>
-          {n} <span style={{fontSize: 90}}>كاس</span>
+        <Parchment t={t} />
+        <div style={{position: 'absolute', left: 0, right: 0, top: 230, textAlign: 'center', fontFamily: GF.title, fontWeight: 700, fontSize: 120, color: G.goldHi, opacity: 1 - pick * 0.6}}>
+          {shown} <span style={{fontFamily: GF.body, fontSize: 60, color: G.cream}}>كاس</span>
         </div>
-        <div style={{position: 'absolute', left: W / 2 - 160, top: 560, width: 320, height: 320, borderRadius: '50%', border: `10px solid ${S.orange}`, opacity: clamp01(target * 2), transform: `scale(${2 - target})`, boxShadow: `0 0 60px ${S.orange}`}} />
-        <div style={{position: 'absolute', left: 0, right: 0, top: 930, display: 'flex', justifyContent: 'center'}}><Chip k={target} size={56}>الكاس المهم</Chip></div>
+        <div style={{position: 'absolute', left: 150, top: 470, width: 780, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', rowGap: 26, justifyItems: 'center'}}>
+          {Array.from({length: 30}, (_, i) => {
+            const on = i < shown;
+            const isPick = i === PICK;
+            return (
+              <div key={i} style={{opacity: on ? (isPick ? 1 : 1 - 0.7 * pick) : 0.08, transform: `scale(${on ? (isPick ? 1 + 0.5 * pick : 1) : 0.8})`, filter: isPick && pick > 0 ? `drop-shadow(0 0 ${18 * pick}px ${G.goldHi})` : undefined}}>
+                <IconCup size={80} color={isPick && pick > 0 ? G.goldHi : G.cream} />
+              </div>
+            );
+          })}
+        </div>
+        <div style={{position: 'absolute', left: 0, right: 0, top: 1100, display: 'flex', justifyContent: 'center'}}><Tag k={pick} size={52} solid>الكاس المهم</Tag></div>
       </>
     );
   }},
-  {from: 294, to: 308, full: true, hideCaptions: true, render: (t, frame, a, b) => (
+  {from: 294, to: 308, full: true, render: (t, frame, a, b) => (
     <>
-      <Photo src="sedra/ai/dua.jpg" t={t} from={a} dur={b - a + 1} focusY={40} />
-      <AbsoluteFill style={{background: 'rgba(7,23,53,0.4)'}} />
-      <div style={{position: 'absolute', left: 70, right: 70, top: 520}}>
-        <Synced t={t} from={294} to={303} size={74} />
+      <Parchment t={t} />
+      <Arch src="sedra/ai/dua.jpg" t={t} from={a} dur={b - a + 1} />
+      <Title t={t} at={at(304)} top={1170} size={140}>الجأ لله</Title>
+      <Title t={t} at={at(308)} top={1350} size={70} color={G.cream} font={GF.body}>الأول</Title>
+    </>
+  )},
+  {from: 309, to: 319, full: true, captions: true, render: (t, frame, a, b) => (
+    <>
+      <Parchment t={t} />
+      <Arch src="sedra/ai/placing.jpg" t={t} from={a} dur={b - a + 1} />
+    </>
+  )},
+  {from: 324, to: 337, tail: 0.4, full: true, captions: true, render: (t, frame) => {
+    const body = (x: number, dots: [number, number][], k: number, label: string) => (
+      <div style={{position: 'absolute', left: x, top: 330, width: 400, opacity: clamp01(k * 1.6), transform: `translateY(${(1 - k) * 30}px)`}}>
+        <svg width={400} height={580} viewBox="0 0 220 320">
+          <path d="M110 20 C125 20 135 32 135 48 C135 62 127 72 118 76 L118 84 C150 90 182 100 192 130 L200 230 C200 250 190 300 180 310 L40 310 C30 300 20 250 20 230 L28 130 C38 100 70 90 102 84 L102 76 C93 72 85 62 85 48 C85 32 95 20 110 20 Z" fill="rgba(244,236,216,0.08)" stroke={G.gold} strokeWidth={2.5} />
+          {dots.map(([dx, dy], i) => <circle key={i} cx={dx} cy={dy} r={10} fill="none" stroke={G.goldHi} strokeWidth={3} opacity={clamp01(k * 3 - i * 0.3)} />)}
+        </svg>
+        <div style={{textAlign: 'center', fontFamily: GF.title, fontWeight: 700, fontSize: 52, color: G.goldHi}}>{label}</div>
       </div>
-      <Big k={sp(frame, at(304), {damping: 10, stiffness: 190})} top={900} size={140} color={S.orange}>الجأ لله</Big>
-      <Big k={sp(frame, at(308))} top={1080} size={96}>الأول</Big>
-    </>
-  )},
-  {from: 309, to: 319, full: true, render: (t, frame, a, b) => <Photo src="sedra/ai/placing.jpg" t={t} from={a} dur={b - a + 1} focusY={50} />},
-  {from: 344, to: 353, full: true, render: (t, frame, a, b) => <Photo src="sedra/training.jpg" t={t} from={a} dur={b - a + 1} focusY={35} />},
-  {from: 324, to: 337, tail: 0.3, full: true, render: (t, frame) => (
-    <>
-      <Navy t={t} />
-      <div style={{position: 'absolute', left: 0, right: 0, top: 200, textAlign: 'center', fontFamily: SF.ar, fontWeight: 900, fontSize: 60, color: S.cream, opacity: sp(frame, at(324))}}>نفس الشكوى…</div>
-      <Silhouette x={570} k={sp(frame, at(328))} label="الأول" dots={[[80, 130], [140, 130], [110, 170], [70, 220]]} />
-      <Silhouette x={70} k={sp(frame, at(333))} label="التاني" dots={[[110, 110], [60, 160], [160, 200], [110, 250]]} />
-    </>
-  )},
-  {from: 358, to: 365, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
-    <>
-      <Navy t={t} pattern={0.14} />
-      {[['sedra/cert1.jpg', W / 2 + 10, 5, 0], ['sedra/cert2.jpg', W / 2 - 450, -5, 0.2]].map(([src, x, r, d], i) => {
-        const k = sp(frame, a + (d as number), {damping: 12, stiffness: 170});
-        return (
-          <div key={i} style={{position: 'absolute', left: x as number, top: 250, width: 440, height: 330, background: '#fff', padding: 10, borderRadius: 16, overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.5)', opacity: clamp01(k * 2), transform: `translateY(${(1 - k) * -160}px) rotate(${(r as number) * k}deg)`}}>
-            <Img src={staticFile(src as string)} style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 28%'}} />
-          </div>
-        );
-      })}
-      <div style={{position: 'absolute', left: 0, right: 0, top: 640, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22}}>
-        {[[360, 'توفيق'], [362, 'حكمة'], [364, 'خبرة ودراية']].map(([src, txt], i) => (
-          <Chip key={i} k={sp(frame, at(src as number) - 0.05, {damping: 10, stiffness: 220})} size={64}>{txt as string}</Chip>
-        ))}
-      </div>
-    </>
-  )},
+    );
+    return (
+      <>
+        <Parchment t={t} />
+        <Title t={t} at={at(324)} top={200} size={70} color={G.cream} font={GF.body}>نفس الشكوى…</Title>
+        {body(560, [[80, 130], [140, 130], [110, 170], [70, 220]], sp(frame, at(328), soft), 'الأول')}
+        {body(120, [[110, 110], [60, 160], [160, 200], [110, 250]], sp(frame, at(333), soft), 'الثاني')}
+      </>
+    );
+  }},
   {from: 393, to: 396, tail: 0.3, full: true, render: (t, frame, a) => {
     const tiles = ['sedra/selfie.jpg', 'sedra/cups.jpg', 'sedra/honey.jpg', 'sedra/chest.jpg'];
     return (
       <>
-        <Navy t={t} pattern={0.1} />
-        <div style={{position: 'absolute', left: 60, right: 60, top: 230, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18}}>
+        <Parchment t={t} />
+        <div style={{position: 'absolute', left: 80, right: 80, top: 230, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20}}>
           {tiles.map((src, i) => {
-            const k = sp(frame, a - 0.1 + i * 0.12, {damping: 12, stiffness: 190});
+            const k = sp(frame, a - 0.2 + i * 0.15, soft);
             return (
-              <div key={i} style={{height: 520, borderRadius: 28, overflow: 'hidden', border: '4px solid rgba(246,242,233,0.9)', opacity: clamp01(k * 2), transform: `scale(${0.7 + 0.3 * k}) rotate(${(1 - k) * (i % 2 ? 6 : -6)}deg)`}}>
+              <div key={i} style={{height: 500, borderRadius: 26, overflow: 'hidden', border: `4px solid ${G.gold}`, opacity: clamp01(k * 1.6), transform: `scale(${0.9 + 0.1 * k})`}}>
                 <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
               </div>
             );
           })}
         </div>
-        <div style={{position: 'absolute', left: W / 2 - 110, top: 690, width: 220, height: 220, borderRadius: '50%', background: S.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', transform: `scale(${sp(frame, a + 0.4, {damping: 10, stiffness: 200})})`}}>
+        <div style={{position: 'absolute', left: W / 2 - 115, top: 625, width: 230, height: 230, borderRadius: '50%', background: G.cream, border: `5px solid ${G.gold}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.45)', transform: `scale(${sp(frame, a + 0.4, soft)})`}}>
           <Logo size={150} />
         </div>
       </>
     );
   }},
-  {from: 374, to: 378, tail: 0.5, full: true, hideCaptions: true, render: (t, frame) => (
-    <>
-      <Navy t={t} pattern={0.22} glow="rgba(242,140,40,0.3)" />
-      <div style={{position: 'absolute', left: 60, right: 60, top: 660}}>
-        <Synced t={t} from={374} to={378} size={130} font={SF.quote} weight={700} accent={[376, 377, 378]} />
-      </div>
-    </>
-  )},
 ];
 
-const HOOK_FULL: Ov = {from: 129, to: 135, full: false, render: () => null};
-
-// payoff in the middle of the story: the same words as the hook, now a full card
-const PAYOFF = 129; // first occurrence is the hook; the story copy is found by position
-const payoffWords = WD.map((w, i) => ({...w, i})).filter((w) => w.src >= 129 && w.src <= 135);
-const payoffStart = payoffWords.length > 7 ? payoffWords[7].s : -1;
+// the story copy of «صدق الله وكذبت بطن أخيك» (the hook is the first copy)
+const PAY = WD.map((w, i) => ({...w, i})).filter((w) => w.src >= 129 && w.src <= 135).slice(7);
+const CLOSING = [374, 378] as const;
 
 // ------------------------------------------------------------------ captions
-type Group = {a: number; b: number};
-const GROUPS: Group[] = (() => {
-  const out: Group[] = [];
+type Grp = {a: number; b: number};
+const GROUPS: Grp[] = (() => {
+  const out: Grp[] = [];
   let cur: number[] = [];
   WD.forEach((w, i) => {
     cur.push(i);
     const letters = cur.reduce((n, j) => n + clean(WD[j].w).length, 0);
-    const brk = /[،.…:؟!]$/.test(w.w) || cur.length >= 3 || letters >= 15 || (i + 1 < WD.length && WD[i + 1].s - w.e > 0.25);
-    if (brk) {
+    if (/[،.…:؟!]$/.test(w.w) || cur.length >= 4 || letters >= 18 || (i + 1 < WD.length && WD[i + 1].s - w.e > 0.3)) {
       out.push({a: cur[0], b: cur[cur.length - 1]});
       cur = [];
     }
@@ -441,24 +410,22 @@ const GROUPS: Group[] = (() => {
   return out;
 })();
 
-const Captions: React.FC<{t: number; hidden: boolean; top: number}> = ({t, hidden, top}) => {
-  if (hidden) return null;
+const Captions: React.FC<{t: number; top: number; big: boolean}> = ({t, top, big}) => {
   const gi = GROUPS.findIndex((g, i) => {
     const next = GROUPS[i + 1];
-    const end = next ? Math.min(WD[next.a].s - 0.02, WD[g.b].e + 0.5) : WD[g.b].e + 0.5;
-    return t >= WD[g.a].s - 0.06 && t < end;
+    const end = next ? Math.min(WD[next.a].s - 0.03, WD[g.b].e + 0.6) : WD[g.b].e + 0.6;
+    return t >= WD[g.a].s - 0.1 && t < end;
   });
   if (gi < 0) return null;
   const g = GROUPS[gi];
-  const k = prog(t, WD[g.a].s - 0.06, WD[g.a].s + 0.1, easeOut);
+  const k = prog(t, WD[g.a].s - 0.1, WD[g.a].s + 0.15, easeOut);
   return (
-    <div style={{position: 'absolute', left: 40, right: 40, top, display: 'flex', justifyContent: 'center'}}>
-      <div style={{direction: 'rtl', textAlign: 'center', transform: `scale(${0.85 + 0.15 * k}) translateY(${(1 - k) * 18}px)`, opacity: k}}>
+    <div style={{position: 'absolute', left: 60, right: 60, top, display: 'flex', justifyContent: 'center', opacity: k}}>
+      <div style={{direction: 'rtl', textAlign: 'center', background: 'rgba(11,35,29,0.55)', borderRadius: 26, padding: '10px 30px 18px', border: `1.5px solid ${G.line}`}}>
         {WD.slice(g.a, g.b + 1).map((w, j) => {
-          const on = t >= w.s - 0.03;
-          const active = on && t < w.e + 0.05;
+          const on = t >= w.s - 0.05;
           return (
-            <span key={j} style={{display: 'inline-block', margin: '0 0.14em', fontFamily: SF.ar, fontWeight: 900, fontSize: 88, lineHeight: 1.3, color: active ? S.orange : S.cream, opacity: on ? 1 : 0.5, transform: `scale(${active ? 1.08 : 1})`, textShadow: '0 4px 0 rgba(7,23,53,0.9), 0 8px 30px rgba(0,0,0,0.75)', WebkitTextStroke: '2px rgba(7,23,53,0.6)'}}>
+            <span key={j} style={{display: 'inline-block', margin: '0 0.13em', fontFamily: GF.body, fontWeight: 800, fontSize: big ? 84 : 66, lineHeight: 1.45, color: on ? (t < w.e + 0.05 ? G.goldHi : G.cream) : 'rgba(244,236,216,0.45)'}}>
               {clean(w.w)}
             </span>
           );
@@ -468,22 +435,24 @@ const Captions: React.FC<{t: number; hidden: boolean; top: number}> = ({t, hidde
   );
 };
 
-// ------------------------------------------------------------------ CTA
+// ------------------------------------------------------------------ closing card
 const Cta: React.FC<{t: number; frame: number; from: number}> = ({t, frame, from}) => {
-  const logo = sp(frame, from, {damping: 11, stiffness: 170});
-  const phone = sp(frame, from + 0.5, {damping: 10, stiffness: 200});
+  const k = sp(frame, from, soft);
+  const p = sp(frame, from + 0.6, soft);
   return (
     <>
-      <Navy t={t} pattern={0.12} />
-      <div style={{position: 'absolute', left: 0, right: 0, top: 330, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-        <div style={{transform: `scale(${0.5 + 0.5 * logo})`, opacity: clamp01(logo * 2)}}>
-          <Logo size={380} />
+      <Parchment t={t} lattice={0.12} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+        <div style={{width: 400, height: 400, borderRadius: '50%', background: G.cream, border: `6px solid ${G.gold}`, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: clamp01(k * 1.6), transform: `scale(${0.85 + 0.15 * k})`, boxShadow: '0 30px 80px rgba(0,0,0,0.45)'}}>
+          <Logo size={280} />
         </div>
-        <div style={{marginTop: 40, fontFamily: SF.ar, fontWeight: 900, fontSize: 84, color: S.cream, opacity: logo}}>مركز سدرة للحجامة</div>
-        <div style={{marginTop: 40, display: 'flex', alignItems: 'center', gap: 20, background: S.orange, borderRadius: 32, padding: '12px 44px 18px', transform: `scale(${0.6 + 0.4 * phone})`, opacity: clamp01(phone * 2), fontFamily: SF.ar, fontWeight: 900, fontSize: 100, color: S.navy, direction: 'ltr'}}>
+        <div style={{height: 40}} />
+        <Divider k={k} />
+        <div style={{marginTop: 20, fontFamily: GF.title, fontWeight: 700, fontSize: 100, color: G.goldHi, opacity: k}}>مركز سدرة للحجامة</div>
+        <div style={{marginTop: 30, display: 'flex', alignItems: 'center', background: G.gold, borderRadius: 30, padding: '10px 46px 16px', fontFamily: GF.body, fontWeight: 800, fontSize: 92, color: G.deep, direction: 'ltr', opacity: clamp01(p * 1.6), transform: `translateY(${(1 - p) * 20}px)`}}>
           01148470010
         </div>
-        <div style={{marginTop: 26, opacity: prog(t, from + 0.9, from + 1.3, easeOut), fontFamily: SF.ar, fontWeight: 700, fontSize: 40, color: S.creamDim, textAlign: 'center', direction: 'rtl', lineHeight: 1.5}}>
+        <div style={{marginTop: 30, opacity: p, fontFamily: GF.body, fontWeight: 700, fontSize: 38, color: G.creamDim, textAlign: 'center', direction: 'rtl', lineHeight: 1.6}}>
           زفتى · شارع الجيش · كوبري المصرف
           <br />
           بجوار سوبر ماركت بشرة خير
@@ -495,76 +464,74 @@ const Cta: React.FC<{t: number; frame: number; from: number}> = ({t, frame, from
 
 // ------------------------------------------------------------------ composition
 export const TalkEdit: React.FC = () => {
-  useSedraFonts();
+  useTalkFonts();
   const frame = useCurrentFrame();
   const t = frame / FPS;
-  // overlays use the LAST occurrence of a word for the story payoff (src 129-135 appear twice)
-  const live = OVERLAYS.map((o) => {
-    const a = o.from === 129 ? WD[0].s : at(o.from);
-    const b = (o.from === 129 ? WD[6].e : endOf(o.to)) + (o.tail ?? 0.15);
-    return {o, a, b};
-  }).filter(({a, b}) => t >= a - 0.25 && t < b + 0.35);
-  const payoffOn = payoffStart >= 0 && t >= payoffStart - 0.15 && t < payoffWords[13].e + 0.5;
-  const full = live.some(({o, a, b}) => o.full && t >= a && t < b) || payoffOn;
-  const hideCaps = live.some(({o, a, b}) => o.hideCaptions && t >= a && t < b) || payoffOn || t > EDL.duration - 0.2;
-  const ctaFrom = EDL.duration - 0.3;
-  const shake = [payoffStart, WD[0].s + 0.02, at(195), at(304)].reduce((acc, t0) => {
-    const d = t - t0;
-    return t0 >= 0 && d >= 0 && d < 0.5 ? acc + Math.exp(-d * 10) * 12 : acc;
-  }, 0);
-  const cuts = [...PIECES.map((p) => p.at), ...OVERLAYS.filter((o) => o.full).map((o) => (o.from === 129 ? -1 : at(o.from))), payoffStart, ctaFrom];
-  const flash = cuts.reduce((acc, c) => {
-    const d = t - c;
-    return c >= 0 && d >= 0 && d < 0.25 ? Math.max(acc, Math.exp(-d * 18) * 0.28) : acc;
-  }, 0);
+  const live = OVERLAYS.map((o) => ({o, a: at(o.from), b: endOf(o.to) + (o.tail ?? 0.25)})).filter(({a, b}) => t >= a - 0.6 && t < b + 0.7);
+  const payA = PAY[0].s;
+  const payB = PAY[PAY.length - 1].e + 0.7;
+  const closA = at(CLOSING[0]);
+  const closB = endOf(CLOSING[1]) + 0.7;
+  const ctaFrom = EDL.duration - 0.2;
+  const cardOn = live.some(({o, a, b}) => o.full && t >= a && t < b) || (t >= payA && t < payB) || (t >= closA && t < closB);
+  const capsHidden = live.some(({o, a, b}) => o.full && !o.captions && t >= a - 0.5 && t < b + 0.2) || (t >= payA - 0.5 && t < payB) || (t >= closA - 0.5 && t < closB) || t > ctaFrom - 0.5;
+  // card fade: 0.55 s in, 0.5 s out — never a hard cut over the voice
+  const fade = (a: number, b: number) => prog(t, a - 0.45, a + 0.1, easeInOut) * (1 - prog(t, b, b + 0.5, easeInOut));
+  const hookK = prog(t, 0.2, 1.0, easeOut) * (1 - prog(t, WD[6].e, WD[6].e + 0.5, easeIn));
   return (
-    <AbsoluteFill style={{background: S.navy, overflow: 'hidden'}}>
-      <AbsoluteFill style={{transform: `translate(${Math.sin(t * 71) * shake}px, ${Math.cos(t * 53) * shake}px)`}}>
-        <Speaker t={t} frame={frame} />
-        {live.map(({o, a, b}, i) => {
-          const k = o.full ? prog(t, a - 0.12, a + 0.18, easeOut) * (1 - prog(t, b, b + 0.25, easeIn)) : 1;
-          const scale = o.full ? 1.08 - 0.08 * prog(t, a - 0.12, a + 0.25, easeOut) : 1;
-          return (
-            <AbsoluteFill key={i} style={{opacity: k, transform: `scale(${scale})`}}>
-              {o.render(t, frame, a, b)}
-            </AbsoluteFill>
-          );
-        })}
-        {payoffOn ? (
-          <AbsoluteFill style={{opacity: prog(t, payoffStart - 0.15, payoffStart + 0.15, easeOut) * (1 - prog(t, payoffWords[13].e + 0.2, payoffWords[13].e + 0.5, easeIn))}}>
-            <Navy t={t} pattern={0.22} glow="rgba(242,140,40,0.32)" />
-            <div style={{position: 'absolute', left: 50, right: 50, top: 600, direction: 'rtl', textAlign: 'center', fontFamily: SF.quote, fontWeight: 700, fontSize: 132, lineHeight: 1.45, color: S.cream}}>
-              {payoffWords.slice(7).map((w) => {
-                const k = prog(t, w.s - 0.08, w.s + 0.2, easeOut);
+    <AbsoluteFill style={{background: G.deep, overflow: 'hidden'}}>
+      <Speaker t={t} />
+      <AbsoluteFill style={{opacity: hookK}}>
+        <div style={{position: 'absolute', left: 0, right: 0, top: 230, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14}}>
+          <Tag k={hookK} size={38} solid>قصة من السُّنّة</Tag>
+        </div>
+      </AbsoluteFill>
+      {live.map(({o, a, b}, i) => (
+        <AbsoluteFill key={i} style={{opacity: o.full ? fade(a, b) : 1 - prog(t, b, b + 0.5, easeInOut)}}>
+          {o.render(t, frame, a, b)}
+        </AbsoluteFill>
+      ))}
+      {[[payA, payB, PAY.map((w) => w.i)], [closA, closB, null]].map(([a, b, idx], n) => {
+        const A = a as number;
+        const B = b as number;
+        if (t < A - 0.6 || t > B + 0.6) return null;
+        const words = n === 0 ? (idx as number[]).map((i) => WD[i]) : WD.slice(bySrc.get(374)!, bySrc.get(378)! + 1);
+        return (
+          <AbsoluteFill key={n} style={{opacity: fade(A, B)}}>
+            <Parchment t={t} lattice={0.16} />
+            <div style={{position: 'absolute', left: 0, right: 0, top: 560}}><Divider k={prog(t, A - 0.3, A + 0.8, easeOut)} /></div>
+            <div style={{position: 'absolute', left: 60, right: 60, top: 640, direction: 'rtl', textAlign: 'center', fontFamily: GF.title, fontWeight: 700, fontSize: 132, lineHeight: 1.5, color: G.cream}}>
+              {words.map((w, j) => {
+                const k = prog(t, w.s - 0.12, w.s + 0.3, easeOut);
                 return (
-                  <span key={w.i} style={{display: 'inline-block', margin: '0 0.12em', opacity: 0.12 + 0.88 * k, transform: `scale(${0.9 + 0.1 * k})`, color: w.src >= 131 && w.src <= 133 ? S.orange : undefined}}>
+                  <span key={j} style={{display: 'inline-block', margin: '0 0.12em', opacity: 0.15 + 0.85 * k, color: [131, 132, 133, 376, 377, 378].includes(w.src) ? G.goldHi : undefined}}>
                     {clean(w.w)}
                   </span>
                 );
               })}
             </div>
+            <div style={{position: 'absolute', left: 0, right: 0, top: 1180}}><Divider k={prog(t, A, A + 1, easeOut)} /></div>
           </AbsoluteFill>
-        ) : null}
-        {t >= ctaFrom ? (
-          <AbsoluteFill style={{opacity: prog(t, ctaFrom, ctaFrom + 0.3, easeOut)}}>
-            <Cta t={t} frame={frame} from={ctaFrom} />
-          </AbsoluteFill>
-        ) : null}
-        <Captions t={t} hidden={hideCaps} top={full ? 1330 : 1300} />
-      </AbsoluteFill>
-      <AbsoluteFill style={{background: '#fff', opacity: flash, pointerEvents: 'none'}} />
-      <AbsoluteFill style={{background: 'radial-gradient(ellipse 85% 75% at 50% 45%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.4) 100%)'}} />
-      <div style={{position: 'absolute', left: 0, top: 0, height: 10, width: `${(t / (TALK_DURATION / FPS)) * 100}%`, background: S.orange}} />
-      {t < ctaFrom ? (
-        <div style={{position: 'absolute', left: 46, top: 60, opacity: 0.92}}>
-          <Logo size={110} />
+        );
+      })}
+      {t >= ctaFrom - 0.6 ? (
+        <AbsoluteFill style={{opacity: prog(t, ctaFrom - 0.5, ctaFrom + 0.2, easeInOut)}}>
+          <Cta t={t} frame={frame} from={ctaFrom} />
+        </AbsoluteFill>
+      ) : null}
+      {!capsHidden ? <Captions t={t} top={cardOn ? 1440 : 1390} big={t < WD[6].e + 0.5} /> : null}
+      <Frame />
+      {t < ctaFrom - 0.3 ? (
+        <div style={{position: 'absolute', left: 64, top: 64, width: 130, height: 130, borderRadius: '50%', background: G.cream, border: `3px solid ${G.gold}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.35)'}}>
+          <Logo size={92} />
         </div>
       ) : null}
-      <Grain frame={frame} opacity={0.05} />
+      <div style={{position: 'absolute', left: 60, right: 60, bottom: 48, height: 4, borderRadius: 2, background: 'rgba(244,236,216,0.15)'}}>
+        <div style={{height: 4, borderRadius: 2, width: `${clamp01(t / (TALK_DURATION / FPS)) * 100}%`, background: G.gold}} />
+      </div>
+      <Grain frame={frame} opacity={0.035} />
     </AbsoluteFill>
   );
 };
 
-void HOOK_FULL;
-void PAYOFF;
-void easeInOut;
+void easeIn;
