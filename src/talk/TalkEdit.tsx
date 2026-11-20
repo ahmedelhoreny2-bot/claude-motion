@@ -232,9 +232,10 @@ const OVERLAYS: Ov[] = [
   {from: 100, to: 101, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
       <Photo src="sedra/ai/honeycomb.jpg" t={t} from={a} dur={b - a + 1} focusY={50} />
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 30% at 50% 40%, rgba(7,23,53,0.75) 0%, rgba(7,23,53,0.2) 100%)'}} />
       <HoneyDrop t={t} from={a - 0.2} />
       <div style={{position: 'absolute', left: 0, right: 0, top: 560, display: 'flex', justifyContent: 'center'}}><Chip k={sp(frame, a)} bg={S.cream} size={38}>المرة التالتة</Chip></div>
-      <Big k={sp(frame, a + 0.1, {damping: 9, stiffness: 220})} top={700} size={180} color={S.orange}>اسقه عسلاً</Big>
+      <Big k={sp(frame, a + 0.1, {damping: 9, stiffness: 220})} top={700} size={180} color={S.cream}>اسقه عسلاً</Big>
     </>
   )},
   {from: 121, to: 128, full: true, hideCaptions: true, render: (t, frame, a) => (
@@ -367,7 +368,7 @@ const OVERLAYS: Ov[] = [
       <Silhouette x={70} k={sp(frame, at(333))} label="التاني" dots={[[110, 110], [60, 160], [160, 200], [110, 250]]} />
     </>
   )},
-  {from: 358, to: 365, tail: 0.5, full: true, render: (t, frame, a, b) => (
+  {from: 358, to: 365, tail: 0.5, full: true, hideCaptions: true, render: (t, frame, a, b) => (
     <>
       <Photo src="sedra/sheikh.jpg" t={t} from={a} dur={b - a + 1} focusY={22} />
       <div style={{position: 'absolute', left: 0, right: 0, top: 640, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22}}>
