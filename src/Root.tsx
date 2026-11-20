@@ -6,6 +6,7 @@ import {FPS, H, TL, W} from './lib';
 import {SEDRA_DURATION, SEDRA_H, SEDRA_W, SedraAd} from './sedra/SedraAd';
 import {FPS as SEDRA_FPS} from './sedra/kit';
 import {TALK_DURATION, TalkEdit} from './talk/TalkEdit';
+import {BA_DURATION, BeforeAfter} from './ibdaa/BeforeAfter';
 
 export const Root: React.FC = () => (
   <>
@@ -26,6 +27,7 @@ export const Root: React.FC = () => (
       height={SEDRA_H}
     />
     <Composition id="SedraTalk" component={TalkEdit} durationInFrames={TALK_DURATION} fps={30} width={1080} height={1920} />
+    <Composition id="IbdaaBeforeAfter" component={BeforeAfter} durationInFrames={BA_DURATION} fps={30} width={1080} height={1920} />
     <Still id="ArticleCover" component={ArticleCover} width={2000} height={800} />
   </>
 );
