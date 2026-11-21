@@ -12,7 +12,7 @@ import {
 } from 'remotion';
 import {Grain} from '../components/primitives';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, sp} from '../lib';
-import {Icon3D} from './Icons3D';
+import {Icon2D} from './Icons2D';
 import {S, SF, SH, SW, T} from './theme';
 
 const FPS = T.fps;
@@ -366,55 +366,31 @@ const ICONS = T.icons as [number, number, string, string][];
 const IconBadges: React.FC<{s: number; frame: number}> = ({s, frame}) => (
   <>
     {ICONS.map(([a, b, name, side], i) => {
-      if (s < a - 0.1 || s > b + 0.5) return null;
-      const f0 = Math.round((a + OFF) * FPS);
-      const pop = sp(frame - f0, 0, {damping: 9, stiffness: 180, mass: 0.7}, FPS);
+      if (s < a - 0.1 || s > b + 0.45) return null;
+      const f0 = Math.round((a - 0.06 + OFF) * FPS);
+      const pop = sp(frame - f0, 0, {damping: 9, stiffness: 210, mass: 0.6}, FPS);
       const out = prog(s, b, b + 0.4, easeIn);
       const k = pop * (1 - out);
-      const lt = s - a;
-      const float = Math.sin(lt * 2.2 + i) * 10;
-      const sway = Math.sin(lt * 1.5 + i) * 14;
-      const flip = (1 - pop) * (side === 'R' ? 80 : -80) + out * (side === 'R' ? -70 : 70);
-      const spin = name === 'gear' ? lt * 90 * (side === 'R' ? 1 : -1) : 0;
-      const bounce = name === 'car' ? Math.abs(Math.sin(lt * 9)) * -5 : 0;
+      const lt = Math.max(0, s - a);
+      const R = side === 'R';
+      const bob = Math.sin(lt * 2.4 + i) * 8;
+      const tilt = (1 - pop) * (R ? 25 : -25) + Math.sin(lt * 1.8 + i) * 3;
       return (
-        <div key={i} style={{position: 'absolute', top: 330, [side === 'R' ? 'right' : 'left']: 30, width: 240, height: 290, perspective: 900}}>
-          <div
-            style={{
-              position: 'absolute',
-              left: 40,
-              right: 40,
-              top: 240,
-              height: 26,
-              borderRadius: '50%',
-              background: 'radial-gradient(ellipse, rgba(0,0,0,0.45), transparent 70%)',
-              transform: `scale(${k * (1 - float / 60)})`,
-              opacity: k,
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              left: 20,
-              top: 10,
-              width: 200,
-              height: 200,
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(255,201,104,0.35), transparent 65%)',
-              transform: `scale(${k * 1.3})`,
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              left: 20,
-              top: 10,
-              transform: `translateY(${float + bounce - (1 - pop) * 60}px) rotateY(${sway + flip}deg) scale(${k})`,
-              filter: 'drop-shadow(0 12px 16px rgba(0,0,0,0.35))',
-            }}
-          >
-            <Icon3D name={name} size={200} spin={spin} id={`i${i}`} />
-          </div>
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            top: 300 + bob,
+            [R ? 'right' : 'left']: 24,
+            width: 300,
+            height: 300,
+            transform: `scale(${k}) rotate(${tilt}deg)`,
+            transformOrigin: R ? '70% 60%' : '30% 60%',
+            opacity: clamp01(k * 2),
+            filter: 'drop-shadow(0 0 0 #FFF8EC) drop-shadow(5px 0 0 #FFF8EC) drop-shadow(-5px 0 0 #FFF8EC) drop-shadow(0 5px 0 #FFF8EC) drop-shadow(0 -5px 0 #FFF8EC) drop-shadow(0 14px 16px rgba(0,0,0,0.4))',
+          }}
+        >
+          <Icon2D name={name} size={300} lt={lt} />
         </div>
       );
     })}
