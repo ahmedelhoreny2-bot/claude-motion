@@ -75,26 +75,26 @@ export const BeforeAfter: React.FC = () => {
   const before = sp(frame, 1.15, soft) * (1 - out);
   const finale = sp(frame, end + 0.3, soft);
   // logo box: centre (intro) -> top-left (during) -> centre (finale)
-  const lx = lerp(540, 200, dock) * (1 - out) + 540 * out;
-  const ly = lerp(860, 120, dock) * (1 - out) + 820 * out;
+  const lx = lerp(540, 179, dock) * (1 - out) + 540 * out;
+  const ly = lerp(860, 147, dock) * (1 - out) + 820 * out;
   const ls = lerp(1, 0.42, dock) * (1 - out) + 1 * out;
   return (
     <AbsoluteFill style={{background: I.paper, overflow: 'hidden'}}>
       <AbsoluteFill style={{background: 'radial-gradient(ellipse 90% 70% at 50% 45%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%, rgba(0,0,0,0.05) 100%)'}} />
 
       {/* logo */}
-      <div style={{position: 'absolute', left: lx - 260, top: ly - 170, width: 520, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, transform: `scale(${ls})`, transformOrigin: '50% 50%'}}>
+      <div style={{position: 'absolute', left: lx - 260, top: ly - 184, width: 520, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, transform: `scale(${ls})`, transformOrigin: '50% 50%'}}>
         <Mark size={420} k={markK} />
         <Img src={staticFile('ibdaa/word.png')} style={{width: 460, opacity: prog(t, 0.3, 0.8, easeOut)}} />
       </div>
 
       {/* BEFORE: small, set back */}
-      <div style={{position: 'absolute', left: 60, top: 720, opacity: clamp01(before * 1.5), transform: `translateY(${(1 - before) * 60}px)`}}>
-        <div style={{display: 'flex', alignItems: 'baseline', gap: 12, direction: 'ltr'}}>
+      <div style={{position: 'absolute', left: 70, top: 648, opacity: clamp01(before * 1.5), transform: `translateY(${(1 - before) * 60}px)`}}>
+        <div style={{height: 60, display: 'flex', alignItems: 'flex-end', gap: 12, direction: 'ltr'}}>
           <div style={{fontFamily: F, fontWeight: 800, fontSize: 30, letterSpacing: '0.18em', color: I.inkDim}}>BEFORE</div>
           <div style={{fontFamily: F, fontWeight: 800, fontSize: 30, color: I.inkDim}}>قبل</div>
         </div>
-        <div style={{marginTop: 14, width: 320, height: 569, borderRadius: 30, overflow: 'hidden', background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.18)', filter: 'brightness(0.94)'}}>
+        <div style={{marginTop: 16, width: 310, height: 551, borderRadius: 28, overflow: 'hidden', background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.18)', filter: 'brightness(0.94)'}}>
           {PIECES.map((p, i) => (
             <Sequence key={i} from={Math.round((INTRO + p.at) * FPS)} durationInFrames={Math.round((p.out - p.in) * FPS)} layout="none">
               <OffthreadVideo src={staticFile('sedra/raw/talk.mp4')} startFrom={Math.round(p.in * FPS)} muted style={{width: '100%', height: '100%', objectFit: 'contain'}} />
@@ -105,13 +105,13 @@ export const BeforeAfter: React.FC = () => {
       </div>
 
       {/* AFTER: large, in front */}
-      <div style={{position: 'absolute', right: 60, top: 430, opacity: clamp01(cards * 1.5), transform: `translateY(${(1 - cards) * 80}px)`}}>
-        <div style={{display: 'flex', alignItems: 'center', gap: 14, direction: 'ltr', justifyContent: 'flex-end'}}>
+      <div style={{position: 'absolute', right: 70, top: 408, opacity: clamp01(cards * 1.5), transform: `translateY(${(1 - cards) * 80}px)`}}>
+        <div style={{height: 60, display: 'flex', alignItems: 'center', gap: 14, direction: 'ltr', justifyContent: 'flex-end'}}>
           <div style={{width: 14, height: 14, borderRadius: 7, background: I.orange}} />
           <div style={{fontFamily: F, fontWeight: 900, fontSize: 52, letterSpacing: '0.14em', color: I.ink}}>AFTER</div>
           <div style={{fontFamily: F, fontWeight: 800, fontSize: 40, color: I.ink}}>بعد</div>
         </div>
-        <div style={{marginTop: 16, width: 590, height: 1049, borderRadius: 40, overflow: 'hidden', background: '#000', boxShadow: '0 40px 90px rgba(0,0,0,0.28), 0 10px 24px rgba(0,0,0,0.14)'}}>
+        <div style={{marginTop: 16, width: 580, height: 1031, borderRadius: 40, overflow: 'hidden', background: '#000', boxShadow: '0 40px 90px rgba(0,0,0,0.28), 0 10px 24px rgba(0,0,0,0.14)'}}>
           <Sequence from={Math.round(INTRO * FPS)} durationInFrames={Math.round(SEG * FPS)} layout="none">
             <OffthreadVideo src={staticFile('sedra/raw/after.mp4')} muted style={{width: '100%', height: '100%'}} />
           </Sequence>
@@ -120,7 +120,7 @@ export const BeforeAfter: React.FC = () => {
       </div>
 
       {/* footer: small, under the phones */}
-      <div style={{position: 'absolute', left: 60, right: 60, top: 1610, textAlign: 'center', direction: 'rtl', fontFamily: F, opacity: clamp01(cards * 1.5) * prog(t, 1.6, 2.2, easeOut)}}>
+      <div style={{position: 'absolute', left: 70, right: 70, top: 1699, textAlign: 'center', direction: 'rtl', fontFamily: F, opacity: clamp01(cards * 1.5) * prog(t, 1.6, 2.2, easeOut)}}>
         <div style={{fontWeight: 900, fontSize: 44, color: I.ink}}>
           نفس الفيديو… <span style={{color: I.orange}}>بلمسة إبداع</span>
         </div>
