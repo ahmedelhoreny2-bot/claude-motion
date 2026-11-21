@@ -11,7 +11,6 @@ export const S = {
   blue: '#2FA3DF',
   navy: '#1D2F7A',
   cream: '#FFF8EC',
-  creamDim: 'rgba(255,248,236,0.78)',
   ink: '#16120E',
   paper: '#F6EFE2',
   shadow: '0 6px 18px rgba(0,0,0,0.75), 0 2px 4px rgba(0,0,0,0.8)',

@@ -1,4 +1,5 @@
-"""Sound for a talking-head reel: the speaker's voice, an optional humming bed, quiet accents.
+"""Sound for the talking-head reel: cold open on the punchline, a rewind, then the talk.
+Voice is re-cut to match the picture edit; a humming bed and quiet accents sit under it.
 
     python3 -m sfx sfx/cues/talk.py
 """
@@ -12,8 +13,7 @@ from sfx.synth import blip, chime, envelope, impact, pop, whoosh
 TIMELINE = "src/talk/timeline.json"
 OUT = "public/talk/mix.wav"
 TARGET_LUFS = -14.0
-
-NOTES = [880.0, 987.77, 1174.66, 1318.51, 1567.98]
+SR = 48000
 
 
 def load(path):
@@ -23,53 +23,59 @@ def load(path):
     return [s / 32768 for s in struct.unpack(f"<{n}h", raw)]
 
 
-def bed(dur):
-    """Optional humming bed (public/talk/hum48.wav), looped, faded at both ends."""
-    if not os.path.exists("public/talk/hum48.wav"):
-        return None
-    x = load("public/talk/hum48.wav")
-    need = int(dur * 48000)
-    out = (x * (need // len(x) + 1))[:need]
-    fade = 2 * 48000
-    for i in range(fade):
-        out[i] *= i / fade
-        out[-1 - i] *= i / fade
-    return out
+def faded(x, ms=25):
+    n = int(SR * ms / 1000)
+    x = list(x)
+    for i in range(min(n, len(x))):
+        x[i] *= i / n
+        x[-1 - i] *= i / n
+    return x
 
 
 def score(mix, tl):
     put = mix.put
-    put(0, load("public/talk/voice48.wav"), 1.0)
-    b = bed(tl["duration"])
-    if b:
-        e = tl["end"]["in"]
-        lvl = envelope([(0, 0.16), (tl["hook"]["out"], 0.16), (tl["hook"]["out"] + 1.0, 0.12), (e - 0.3, 0.12), (e + 0.6, 0.4), (tl["duration"], 0.4)])
-        put(0, [v * lvl(i / 48000) for i, v in enumerate(b)], 1.0)
+    e = tl["edit"]
+    hl, rw = e["hookLen"], e["rewind"]
+    off = hl + rw - e["bodySrc"]
+    o = lambda s: s + off  # source seconds -> output seconds
+    voice = load("public/talk/voice48.wav")
 
-    put(0.0, impact(1.2), 0.09)
-    put(0.0, whoosh(0.8, 2400, 300, peak=0.15), 0.08)
-    put(tl["hook"]["answer"], pop(900, 400), 0.09)
+    # cold open: the punchline
+    a = int(e["hookSrc"] * SR)
+    put(0, faded(voice[a:a + int(hl * SR)]), 1.0)
+    put(0.08, impact(1.4), 0.07)
+    put(0.0, chime([440.0, 659.25, 880.0, 1318.51], dur=2.4, tau=0.9), 0.06)
+    # rewind back to the top
+    put(hl - 0.05, whoosh(rw + 0.2, 3200, 220, peak=0.35, q=0.7), 0.12)
+    put(hl + rw * 0.5, whoosh(0.5, 400, 2600, peak=0.6), 0.05)
+    # the talk
+    put(hl + rw, faded(voice[int(e["bodySrc"] * SR):]), 1.0)
 
-    for a, b2, _ in tl["rings"]:
-        put(a - 0.3, whoosh(1.0, 300, 1800, peak=0.5), 0.06, -0.3)
-    put(tl["rings"][1][0], chime([440.0, 659.25, 880.0, 1318.51], dur=2.6, tau=1.0), 0.08)
+    if os.path.exists("public/talk/hum48.wav"):
+        hum = load("public/talk/hum48.wav")
+        dur = tl["duration"]
+        need = int(dur * SR)
+        hum = (hum * (need // len(hum) + 1))[:need]
+        end = o(tl["end"]["in"])
+        lvl = envelope([(0, 0.0), (0.6, 0.12), (hl, 0.12), (hl + rw, 0.05), (hl + rw + 1.5, 0.12),
+                        (end - 0.3, 0.12), (end + 0.6, 0.4), (dur - 0.3, 0.4), (dur, 0)])
+        put(0, [v * lvl(i / SR) for i, v in enumerate(hum)], 1.0)
 
-    for at, kind in tl["transitions"]:
-        if kind == "ink_in":
-            put(at - 0.05, whoosh(0.8, 1800, 400, peak=0.35, q=0.6), 0.09, 0.3)
-        elif kind == "tear_out":
-            put(at, whoosh(0.5, 900, 4000, peak=0.2, q=0.4), 0.08, -0.3)
-        else:
-            put(at - 0.3, whoosh(1.1, 200, 1400, peak=0.5), 0.05)
+    # backgrounds opening behind the speaker
+    for at, f, _ in tl["bg"]:
+        put(o(at) - 0.1, whoosh(1.0, 250, 1500 if f else 900, peak=0.5, q=0.8), 0.05, 0.2 if f else -0.2)
+    # word belts around the head
+    for a, b, _, _ in tl["rings"]:
+        put(o(a) - 0.4, whoosh(1.1, 300, 2000, peak=0.55, q=0.6), 0.05, -0.3)
+        put(o(a) + 0.15, chime([880.0, 1318.51], dur=1.4, tau=0.5), 0.04)
+    for s in tl["shakes"]:
+        put(o(s), impact(0.9), 0.04)
+    c = tl["carousel"]
+    put(o(c["in"]) - 0.1, whoosh(1.2, 250, 1800, peak=0.5), 0.06)
+    for j in range(4):
+        put(o(c["in"]) + 0.2 + j * 0.15, pop(800 + j * 140, 320 + j * 60), 0.05, -0.4 + j * 0.25)
 
-    for i, (_, a, _, mode, _) in enumerate(tl["imgs"]):
-        if mode == "behind":
-            put(a, pop(700 + (i % 5) * 120, 300 + (i % 5) * 50), 0.07, -0.4 + (i % 5) * 0.2)
-    put(tl["remedyTitle"], blip(NOTES[3], dur=0.5, tau=0.15), 0.07)
-    for j in range(3):
-        put(63.35 + j * 0.95, blip(NOTES[j + 1], dur=0.6, tau=0.2), 0.06)
-
-    e = tl["end"]["in"]
-    put(e - 0.1, whoosh(0.9, 200, 1600, peak=0.5), 0.08)
-    put(e + 0.2, chime([440.0, 659.25, 880.0, 1108.73], dur=3.0, tau=1.1), 0.09)
-    put(e + 1.2, pop(900, 380), 0.09)
+    end = o(tl["end"]["in"])
+    put(end - 0.1, whoosh(0.9, 200, 1600, peak=0.5), 0.07)
+    put(end + 0.2, chime([440.0, 659.25, 880.0, 1108.73], dur=3.0, tau=1.1), 0.08)
+    put(end + 1.2, pop(900, 380), 0.08)

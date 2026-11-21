@@ -10,17 +10,18 @@ import {
   staticFile,
   useCurrentFrame,
 } from 'remotion';
-import {Grain, Mask} from '../components/primitives';
+import {Grain} from '../components/primitives';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, sp} from '../lib';
 import {S, SF, SH, SW, T} from './theme';
 
 const FPS = T.fps;
+const E = T.edit;
 type Cap = [number, number, string, string];
-type Pic = [string, number, number, string, string];
+type Ring = [number, number, string[], number];
+type Bg = [number, string | null, number];
 const CAPS = T.cap as Cap[];
-const PICS = T.imgs as Pic[];
-const RINGS = T.rings as [number, number, string][];
-const TRANS = T.transitions as [number, string][];
+const RINGS = T.rings as Ring[];
+const BGS = T.bg as Bg[];
 
 /** Client details come in as props at render time (kept out of the repo). */
 export type Client = {name: string; phone: string; addr1: string; addr2: string};
@@ -32,6 +33,7 @@ export const CLIENT_PLACEHOLDER: Client = {
 };
 
 type Track = {x: number[]; y: number[]};
+type Pt = {x: number; y: number};
 
 const useAssets = () => {
   const [h] = useState(() => delayRender('talk-assets'));
@@ -40,7 +42,6 @@ const useAssets = () => {
     Promise.all([
       document.fonts.load('800 60px "Cairo"'),
       document.fonts.load('900 60px "Cairo"'),
-      document.fonts.load('600 60px "Cairo"'),
       document.fonts.load('700 60px "Amiri"'),
       document.fonts.load('700 60px "Aref Ruqaa"'),
       fetch(staticFile('talk/track.json'))
@@ -55,144 +56,270 @@ const useAssets = () => {
 const env = (t: number, a: number, b: number, inD = 0.45, outD = 0.35) =>
   prog(t, a, a + inD, easeOut) * (1 - prog(t, b - outD, b, easeIn));
 
-const zoomAt = (t: number) => {
-  const z = T.zoom as [number, number][];
-  let s = z[0][1];
-  for (const [at, v] of z) s = lerp(s, v, prog(t, at - 0.2, at + 0.9, easeInOut));
-  s *= lerp(1.18, 1, prog(t, 0, 1.6, easeOut));
-  return s * (1 + 0.01 * Math.sin(t * 0.35));
+/* ---------- the edit: cold open on the punchline, rewind, then the talk from the top ---------- */
+
+const HL = E.hookLen;
+const RW = E.rewind;
+const OFF = HL + RW - E.bodySrc;
+
+/** Output seconds → source seconds of the talk. */
+const srcAt = (t: number) => {
+  if (t < HL) return E.hookSrc + t;
+  if (t < HL + RW) return lerp(E.hookSrc + HL, E.bodySrc, easeInOut(prog(t, HL, HL + RW, (x) => x)));
+  return t - OFF;
 };
-const ORIGIN = {x: 540, y: 560};
 
-/* ---------- captions that live behind the speaker ---------- */
+const zoomAt = (s: number) => {
+  const z = T.zoom as [number, number][];
+  let v = z[0][1];
+  for (const [at, to] of z) v = lerp(v, to, prog(s, at - 0.2, at + 0.9, easeInOut));
+  return v * (1 + 0.008 * Math.sin(s * 0.4));
+};
 
-const capAt = (t: number) =>
-  CAPS.findIndex(([a, b], j) => {
-    const next = CAPS[j + 1]?.[0] ?? b + 0.4;
-    const end = next - b < 0.45 ? next : b + 0.2;
-    return t >= a && t < end;
+const shakeAt = (s: number) => {
+  let dx = 0;
+  let dy = 0;
+  for (const at of T.shakes as number[]) {
+    const d = s - at;
+    if (d < 0 || d > 0.45) continue;
+    const a = 9 * Math.exp(-d * 9);
+    dx += a * Math.sin(d * 70);
+    dy += a * 0.6 * Math.cos(d * 55);
+  }
+  return {dx, dy};
+};
+
+const hash = (n: number) => {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+/* ---------- backgrounds that open behind the speaker ---------- */
+
+const bgIndex = (s: number) => {
+  let i = -1;
+  BGS.forEach(([at], j) => {
+    if (s >= at) i = j;
   });
+  return i;
+};
 
-const Words: React.FC<{text: string; t: number; t0: number; font: string; size: number; weight: number; color?: string}> = ({
-  text,
-  t,
-  t0,
-  font,
-  size,
-  weight,
-  color = S.cream,
-}) => {
-  const words = text.split(' ');
+const BgImage: React.FC<{file: string; blur: number; s: number; since: number}> = ({file, blur, s, since}) => (
+  <AbsoluteFill style={{overflow: 'hidden'}}>
+    <Img
+      src={staticFile(`talk/img/${file}.jpg`)}
+      style={{
+        width: SW,
+        height: SH,
+        objectFit: 'cover',
+        transform: `scale(${1.08 + 0.012 * (s - since)}) translateY(${-6 * (s - since)}px)`,
+        filter: `blur(${blur}px) brightness(0.8) saturate(1.08)`,
+      }}
+    />
+    <AbsoluteFill style={{background: 'linear-gradient(180deg, rgba(10,8,6,0.35), rgba(10,8,6,0) 35%, rgba(10,8,6,0.25))'}} />
+  </AbsoluteFill>
+);
+
+/** Golden dust drifting in the light, behind the speaker. */
+const Dust: React.FC<{s: number; k: number}> = ({s, k}) => (
+  <AbsoluteFill style={{opacity: k}}>
+    {Array.from({length: 46}, (_, i) => {
+      const sp0 = 14 + hash(i) * 30;
+      const x = hash(i + 7) * SW + Math.sin(s * 0.5 + i) * 30;
+      const y = ((hash(i + 3) * SH - s * sp0) % SH + SH) % SH;
+      const r = 2 + hash(i + 11) * 6;
+      const tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(s * (1 + hash(i)) * 2 + i));
+      return (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            left: x,
+            top: y,
+            width: r,
+            height: r,
+            borderRadius: 99,
+            background: '#FFD9A0',
+            opacity: tw * 0.8,
+            filter: `blur(${r > 6 ? 2 : 0.6}px)`,
+            boxShadow: '0 0 10px rgba(255,200,120,0.8)',
+          }}
+        />
+      );
+    })}
+  </AbsoluteFill>
+);
+
+/** A soft beam of window light sweeping slowly across the backdrop. */
+const Rays: React.FC<{s: number; k: number}> = ({s, k}) => (
+  <AbsoluteFill
+    style={{
+      mixBlendMode: 'screen',
+      opacity: 0.32 * k,
+      background: `linear-gradient(${112 + Math.sin(s * 0.25) * 6}deg, transparent 18%, rgba(255,190,110,0.55) 30%, transparent 42%, rgba(255,210,150,0.35) 52%, transparent 64%)`,
+    }}
+  />
+);
+
+const Backdrop: React.FC<{s: number; c: Pt}> = ({s, c}) => {
+  const i = bgIndex(s);
+  if (i < 0) return null;
+  const [at, file, blur] = BGS[i];
+  const prev = i > 0 ? BGS[i - 1] : null;
+  const p = prog(s, at, at + 0.9, easeInOut);
+  const r = lerp(0, 1700, p);
+  const feather = 140;
+  const ringK = Math.sin(p * Math.PI);
+  const holeOut = `radial-gradient(circle at ${c.x}px ${c.y}px, transparent ${r}px, #000 ${r + feather}px)`;
+  const reveal = `radial-gradient(circle at ${c.x}px ${c.y}px, #000 ${r}px, transparent ${r + feather}px)`;
+  const prevFile = prev?.[1] ?? null;
+  const imageK = file ? 1 : 1 - p;
   return (
-    <span style={{fontFamily: font, fontSize: size, fontWeight: weight, lineHeight: 1.3}}>
-      {words.map((w, i) => {
-        const hl = w.includes('*');
-        const k = prog(t, t0 + i * 0.07, t0 + i * 0.07 + 0.5, easeOut);
-        return (
-          <React.Fragment key={i}>
-            <Mask k={k} tilt={0}>
-              <span
-                style={{
-                  color: hl ? S.orangeHi : color,
-                  fontWeight: hl ? 900 : weight,
-                  fontSize: hl ? '1.14em' : undefined,
-                  textShadow: hl ? S.glowHot : S.glow,
-                }}
-              >
-                {w.replace(/\*/g, '')}
-              </span>
-            </Mask>
-            {i < words.length - 1 ? ' ' : ''}
-          </React.Fragment>
-        );
-      })}
-    </span>
+    <AbsoluteFill>
+      {p < 1 && prevFile ? (
+        <AbsoluteFill style={file ? undefined : {WebkitMaskImage: holeOut, maskImage: holeOut}}>
+          <BgImage file={prevFile} blur={prev![2]} s={s} since={prev![0]} />
+        </AbsoluteFill>
+      ) : null}
+      {file ? (
+        <AbsoluteFill style={p < 1 ? {WebkitMaskImage: reveal, maskImage: reveal} : undefined}>
+          <BgImage file={file} blur={blur} s={s} since={at} />
+        </AbsoluteFill>
+      ) : null}
+      {imageK > 0 && (file || prevFile) ? (
+        <>
+          <Rays s={s} k={imageK} />
+          <Dust s={s} k={imageK} />
+        </>
+      ) : null}
+      {ringK > 0.01 ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: c.x - r - feather / 2,
+            top: c.y - r - feather / 2,
+            width: (r + feather / 2) * 2,
+            height: (r + feather / 2) * 2,
+            borderRadius: '50%',
+            border: `3px solid rgba(255,201,104,${0.85 * ringK})`,
+            boxShadow: `0 0 40px rgba(243,147,37,${0.6 * ringK}), inset 0 0 40px rgba(243,147,37,${0.45 * ringK})`,
+          }}
+        />
+      ) : null}
+    </AbsoluteFill>
   );
 };
 
-/** Normal speech: sits behind the speaker on the table and rises out from behind his body. */
-const BehindCaption: React.FC<{t: number}> = ({t}) => {
-  const i = capAt(t);
+/* ---------- captions: every line arrives on an orbit around the speaker ---------- */
+
+const capAt = (s: number) =>
+  CAPS.findIndex(([a, b], j) => {
+    const next = CAPS[j + 1]?.[0] ?? b + 0.4;
+    const end = next - b < 0.45 ? next : b + 0.2;
+    return s >= a - 0.1 && s < end;
+  });
+
+const ORBIT = {rx: 440, ry: 250, turn: 3.4};
+
+const OrbitCaption: React.FC<{s: number; back: boolean}> = ({s, back}) => {
+  const i = capAt(s);
   if (i < 0) return null;
   const [a, b, text, style] = CAPS[i];
   if (style !== 'n' && style !== 'h') return null;
   const next = CAPS[i + 1]?.[0] ?? b + 0.4;
   const end = next - b < 0.45 ? next : b + 0.2;
-  const k = prog(t, a - 0.05, a + 0.45, easeOut);
-  const out = prog(t, end - 0.2, end, easeIn);
+  const words = text.split(' ');
+  const long = text.length > 24;
+  const hadith = style === 'h';
   return (
     <div
       style={{
         position: 'absolute',
-        left: 60,
-        right: 60,
-        top: lerp(1190, 1330, k) - out * 120,
+        left: 30,
+        right: 30,
+        top: 1215,
         textAlign: 'center',
         direction: 'rtl',
-        opacity: (1 - out) * clamp01(k * 2),
+        whiteSpace: 'nowrap',
+        fontFamily: hadith ? SF.naskh : SF.sans,
+        fontWeight: hadith ? 700 : 800,
+        fontSize: hadith ? (long ? 62 : 74) : long ? 56 : 70,
+        lineHeight: 1.3,
       }}
     >
-      <Words
-        text={text}
-        t={t}
-        t0={a}
-        font={style === 'h' ? SF.naskh : SF.sans}
-        size={style === 'h' ? 74 : 70}
-        weight={style === 'h' ? 700 : 800}
-      />
+      {words.map((w, j) => {
+        const hl = w.includes('*');
+        const kin = prog(s, a - 0.1 + j * 0.06, a - 0.1 + j * 0.06 + 0.8, easeOut);
+        const kout = prog(s, end - 0.45 + j * 0.035, end - 0.45 + j * 0.035 + 0.45, easeIn);
+        const phi = (1 - kin) * ORBIT.turn - kout * ORBIT.turn;
+        const behind = Math.cos(phi) < -0.05;
+        const depth = (Math.cos(phi) + 1) / 2;
+        const op = clamp01(kin * 4) * (1 - clamp01((kout - 0.75) * 4));
+        const land = hl ? 1 + 0.18 * Math.sin(clamp01((kin - 0.85) / 0.15) * Math.PI) : 1;
+        return (
+          <React.Fragment key={j}>
+            <span
+              style={{
+                display: 'inline-block',
+                visibility: behind === back ? 'visible' : 'hidden',
+                transform: `translate(${ORBIT.rx * Math.sin(phi)}px, ${-ORBIT.ry * (1 - Math.cos(phi))}px) scale(${lerp(0.5, 1, depth) * land})`,
+                opacity: op * lerp(0.55, 1, depth),
+                filter: depth < 0.5 ? `blur(${(0.5 - depth) * 5}px)` : undefined,
+                color: hl ? S.orangeHi : S.cream,
+                fontWeight: hl ? 900 : undefined,
+                fontSize: hl ? '1.14em' : undefined,
+                textShadow: hl ? S.glowHot : S.glow,
+              }}
+            >
+              {w.replace(/\*/g, '')}
+            </span>
+            {j < words.length - 1 ? ' ' : ''}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };
 
-/* ---------- the ring: words orbit the speaker's head ---------- */
+/* ---------- the ring: a belt of words turning around the speaker's head ---------- */
 
-const ringItems = (text: string) => {
-  const reps = text.split(' ').length > 2 ? 2 : 3;
-  return Array.from({length: reps}, () => text);
-};
-
-const Ring: React.FC<{t: number; head: {x: number; y: number}; front: boolean}> = ({t, head, front}) => {
-  const r = RINGS.find(([a, b]) => t >= a - 0.3 && t < b + 0.1);
+const RingBelt: React.FC<{s: number; c: Pt; back: boolean}> = ({s, c, back}) => {
+  const r = RINGS.find(([a, b]) => s >= a - 0.4 && s < b + 0.1);
   if (!r) return null;
-  const [a, b, text] = r;
-  const k = env(t, a - 0.3, b + 0.1, 0.7, 0.45);
-  const items = ringItems(text);
-  const long = text.length > 12;
-  const rx = lerp(200, long ? 330 : 380, k);
-  const ry = lerp(40, 95, k);
-  const cx = lerp(head.x, 540, 0.5);
-  const cy = head.y + 205;
-  const spin = (t - a) * 0.75;
+  const [a, b, phrases, step] = r;
+  const k = env(s, a - 0.4, b + 0.1, 0.8, 0.45);
+  const n = phrases.length > 1 ? 6 : phrases[0].length > 10 ? 4 : 5;
+  const rx = lerp(240, 455, k);
+  const ry = lerp(30, 120, k);
+  const spin = (s - a) * 0.85 + 1.2;
   return (
     <AbsoluteFill style={{direction: 'rtl'}}>
-      {items.map((txt, i) => {
-        const th = spin + (i / items.length) * Math.PI * 2;
-        const s = Math.sin(th);
-        const isFront = s > 0;
-        if (isFront !== front) return null;
-        const depth = (s + 1) / 2;
-        const x = cx + rx * Math.cos(th);
-        const y = cy + ry * s;
-        const scale = lerp(0.62, 1.12, depth);
+      {Array.from({length: n}, (_, j) => {
+        const th = spin + (j / n) * Math.PI * 2;
+        const sn = Math.sin(th);
+        if (sn > 0 === back) return null;
+        const word = phrases[j % phrases.length];
+        const shown = step ? prog(s, a + (j % phrases.length) * step, a + (j % phrases.length) * step + 0.6, easeOut) : 1;
+        const depth = (sn + 1) / 2;
         return (
           <div
-            key={i}
+            key={j}
             style={{
               position: 'absolute',
-              left: x,
-              top: y,
-              transform: `translate(-50%, -50%) scale(${scale})`,
+              left: c.x + rx * Math.cos(th),
+              top: c.y + ry * sn,
+              transform: `translate(-50%, -50%) scale(${lerp(0.62, 1.15, depth)}) scaleX(${lerp(0.35, 1, Math.abs(sn))})`,
               whiteSpace: 'nowrap',
-              fontFamily: SF.sans,
-              fontWeight: 800,
-              fontSize: long ? 60 : 80,
-              color: depth > 0.5 ? S.cream : S.orangeHi,
-              textShadow: S.shadow,
-              opacity: k * lerp(0.55, 1, depth),
-              filter: `blur(${(1 - depth) * 2.2}px)`,
+              fontFamily: phrases.length > 1 ? SF.ruqaa : SF.sans,
+              fontWeight: phrases.length > 1 ? 700 : 900,
+              fontSize: phrases.length > 1 ? 120 : word.length > 10 ? 86 : 118,
+              color: depth > 0.55 ? S.cream : S.orangeHi,
+              textShadow: depth > 0.55 ? S.glowHot : S.glow,
+              opacity: k * shown * lerp(0.45, 1, depth),
+              filter: depth < 0.45 ? `blur(${(0.45 - depth) * 5}px)` : undefined,
             }}
           >
-            {txt}
+            {word}
           </div>
         );
       })}
@@ -200,202 +327,52 @@ const Ring: React.FC<{t: number; head: {x: number; y: number}; front: boolean}> 
   );
 };
 
-/* ---------- pictures ---------- */
+/* ---------- the remedies carousel: four pictures orbiting the speaker ---------- */
 
-const TORN =
-  'polygon(0% 2%, 6% 0%, 13% 1.5%, 22% 0.2%, 31% 1.8%, 40% 0%, 52% 1.6%, 61% 0.3%, 72% 2%, 83% 0.4%, 92% 1.7%, 100% 0%, 98.6% 9%, 100% 21%, 98.8% 34%, 100% 47%, 98.5% 61%, 100% 74%, 98.7% 88%, 100% 100%, 91% 98.4%, 80% 100%, 69% 98.6%, 58% 100%, 47% 98.3%, 36% 100%, 25% 98.5%, 14% 100%, 5% 98.6%, 0% 100%, 1.4% 87%, 0% 73%, 1.6% 60%, 0% 46%, 1.3% 33%, 0% 19%, 1.5% 9%)';
-
-const SLOTS: Record<string, {x: number; y: number; w: number; r: number}> = {
-  L: {x: 30, y: 190, w: 370, r: -6},
-  R: {x: 680, y: 220, w: 370, r: 5},
-  T: {x: 355, y: 40, w: 370, r: -2},
-  R2: {x: 720, y: 640, w: 320, r: -4},
-  L2: {x: 30, y: 650, w: 320, r: 6},
-};
-
-/** Torn-paper photo cards pinned on the wall behind the speaker. */
-const BehindPics: React.FC<{t: number; frame: number}> = ({t, frame}) => (
-  <>
-    {PICS.filter((p) => p[3] === 'behind').map(([file, a, b, , slot], i) => {
-      if (t < a - 0.1 || t > b + 0.1) return null;
-      const s = SLOTS[slot];
-      const pop = sp(frame, a, {damping: 12, stiffness: 170, mass: 0.8}, FPS);
-      const out = prog(t, b - 0.4, b, easeIn);
-      const k = pop * (1 - out);
-      const hero = file === 'b2';
-      const fromX = 540 - s.w / 2;
-      return (
-        <div
-          key={i}
-          style={{
-            position: 'absolute',
-            left: lerp(fromX, s.x, k),
-            top: lerp(s.y + 160, s.y, k) + Math.sin(t * 0.8 + i) * 6,
-            width: s.w,
-            transform: `rotate(${lerp(0, s.r, k) + Math.sin(t * 0.5 + i) * 0.8}deg) scale(${lerp(0.55, 1, k)})`,
-            opacity: clamp01(k * 1.5),
-            filter: `drop-shadow(0 18px 28px rgba(0,0,0,0.55))${hero ? ` drop-shadow(0 0 ${30 * k}px rgba(243,147,37,0.9))` : ''}`,
-          }}
-        >
-          <div style={{background: hero ? S.orange : S.paper, padding: 14, clipPath: TORN}}>
-            <Img src={staticFile(`talk/img/${file}.jpg`)} style={{width: '100%', display: 'block', aspectRatio: '4 / 5', objectFit: 'cover'}} />
-          </div>
-        </div>
-      );
-    })}
-  </>
-);
-
-/** A wide brush stroke that paints the picture on, like an ink calligraphy pen. */
-const InkReveal: React.FC<{k: number; id: string; children: React.ReactNode}> = ({k, id, children}) => (
-  <svg width={SW} height={SH} style={{position: 'absolute', inset: 0}}>
-    <defs>
-      <filter id={`rough-${id}`}>
-        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves={3} seed={4} />
-        <feDisplacementMap in="SourceGraphic" scale={140} />
-      </filter>
-      <mask id={`ink-${id}`}>
-        <rect width={SW} height={SH} fill="black" />
-        <g filter={`url(#rough-${id})`}>
-          <path
-            d="M 1180 260 C 700 120, 300 420, -100 300 M -100 300 C 300 700, 800 600, 1180 900 M 1180 900 C 700 1100, 300 1300, -100 1250 M -100 1250 C 300 1600, 800 1500, 1180 1800"
-            fill="none"
-            stroke="white"
-            strokeWidth={560}
-            strokeLinecap="round"
-            pathLength={1}
-            strokeDasharray={1}
-            strokeDashoffset={1 - k}
-          />
-        </g>
-      </mask>
-    </defs>
-    <foreignObject width={SW} height={SH} mask={`url(#ink-${id})`}>
-      {children}
-    </foreignObject>
-  </svg>
-);
-
-// right to left, top to bottom: the reading order
-const CARDS = [
-  {x: 545, y: 200, w: 470, r: 4},
-  {x: 70, y: 260, w: 470, r: -5},
-  {x: 555, y: 820, w: 455, r: -4},
-  {x: 90, y: 860, w: 450, r: 3},
-];
-
-/** One full-frame moment: the four pictures of a collage pinned over the blurred room. */
-const CollageScene: React.FC<{t: number; frame: number}> = ({t, frame}) => {
-  const group = PICS.filter((p) => p[3] === 'collage');
-  if (!group.length) return null;
-  const a = group[0][1];
-  const b = group[0][2];
-  if (t < a - 0.05 || t > b + 0.7) return null;
-  const kin = prog(t, a - 0.05, a + 0.75, easeInOut);
-  const tear = prog(t, b, b + 0.65, easeIn);
-  const scene = (
-    <div style={{width: SW, height: SH, position: 'relative', overflow: 'hidden'}}>
-      <AbsoluteFill style={{background: 'rgba(22,18,14,0.62)', backdropFilter: 'blur(26px)'}} />
-      {group.map(([file], i) => {
-        const c = CARDS[i];
-        const k = sp(frame, a + 0.15 + i * 0.22, {damping: 13, stiffness: 150, mass: 0.9}, FPS);
+const Carousel: React.FC<{s: number; c: Pt; back: boolean}> = ({s, c, back}) => {
+  const C = T.carousel;
+  const k = env(s, C.in, C.out, 0.9, 0.5);
+  if (k <= 0) return null;
+  const n = C.cards.length;
+  const spin = (s - C.in) * 0.75 + 0.6;
+  return (
+    <AbsoluteFill>
+      {C.cards.map((file, j) => {
+        const th = spin + (j / n) * Math.PI * 2;
+        const sn = Math.sin(th);
+        if (sn > 0 === back) return null;
+        const depth = (sn + 1) / 2;
+        const w = 330;
         return (
           <div
             key={file}
             style={{
               position: 'absolute',
-              left: c.x + Math.sin(t * 0.6 + i) * 6,
-              top: lerp(c.y + 120, c.y, k) + Math.cos(t * 0.5 + i) * 6,
-              width: c.w,
-              transform: `rotate(${lerp(c.r * 3, c.r, k)}deg) scale(${lerp(0.7, 1, k)})`,
-              opacity: clamp01(k * 1.6),
-              filter: 'drop-shadow(0 22px 30px rgba(0,0,0,0.6))',
+              left: c.x + lerp(150, 400, k) * Math.cos(th),
+              top: c.y + 90 + lerp(20, 170, k) * sn,
+              width: w,
+              transform: `translate(-50%, -50%) scale(${lerp(0.55, 1.1, depth) * k}) scaleX(${lerp(0.3, 1, Math.abs(sn))})`,
+              opacity: lerp(0.55, 1, depth),
+              filter: `drop-shadow(0 18px 26px rgba(0,0,0,0.55)) ${depth < 0.45 ? `blur(${(0.45 - depth) * 4}px)` : ''}`,
             }}
           >
-            <div style={{background: S.paper, padding: 16, clipPath: TORN}}>
-              <Img src={staticFile(`talk/img/${file}.jpg`)} style={{width: '100%', display: 'block', aspectRatio: '4 / 5', objectFit: 'cover'}} />
+            <div style={{background: S.paper, padding: 10, borderRadius: 14}}>
+              <Img src={staticFile(`talk/img/${file}.jpg`)} style={{width: '100%', display: 'block', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: 8}} />
             </div>
           </div>
         );
       })}
-      <AbsoluteFill style={{background: 'linear-gradient(180deg, transparent 55%, rgba(22,18,14,0.85) 72%, rgba(22,18,14,0.9))'}} />
-    </div>
-  );
-  const half = (dx: number, clip: string) => (
-    <AbsoluteFill style={{clipPath: clip, transform: `translate(${dx}px, ${Math.abs(dx) * 0.25}px) rotate(${dx * 0.004}deg)`}}>{scene}</AbsoluteFill>
-  );
-  if (tear > 0)
-    return (
-      <>
-        {half(-tear * 900, 'polygon(0 0, 62% 0, 55% 18%, 60% 34%, 49% 52%, 56% 70%, 44% 86%, 50% 100%, 0 100%)')}
-        {half(tear * 900, 'polygon(62% 0, 100% 0, 100% 100%, 50% 100%, 44% 86%, 56% 70%, 49% 52%, 60% 34%, 55% 18%)')}
-      </>
-    );
-  return kin < 1 ? (
-    <InkReveal k={kin} id="collage">
-      {scene}
-    </InkReveal>
-  ) : (
-    <AbsoluteFill>{scene}</AbsoluteFill>
+    </AbsoluteFill>
   );
 };
 
-/** Captions that ride on a full-frame picture (the hadith, the names). */
-const OverPicText: React.FC<{t: number}> = ({t}) => {
-  const i = capAt(t);
-  if (i >= 0 && CAPS[i][3] === 'hb') {
-    const [a, b, text] = CAPS[i];
-    const next = CAPS[i + 1]?.[0] ?? b + 0.4;
-    const end = next - b < 0.45 ? next : b + 0.2;
-    const out = prog(t, end - 0.2, end, easeIn);
-    return (
-      <AbsoluteFill style={{alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 380, direction: 'rtl', opacity: 1 - out}}>
-        <div style={{textAlign: 'center', maxWidth: 940, padding: '0 40px'}}>
-          <div style={{fontFamily: SF.naskh, fontSize: 120, color: S.orangeHi, lineHeight: 0.6, textShadow: S.shadow}}>«</div>
-          <Words text={text} t={t} t0={a + 0.05} font={SF.naskh} size={84} weight={700} />
-        </div>
-      </AbsoluteFill>
-    );
-  }
-  const N = T.names;
-  const nk = env(t, N.in, N.out, 0.5, 0.4);
-  if (nk > 0) {
-    const names = ['الخالق', 'المبدع', 'المصوِّر'];
-    return (
-      <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', direction: 'rtl'}}>
-        <AbsoluteFill style={{background: 'rgba(22,18,14,0.55)', backdropFilter: `blur(${nk * 22}px)`, opacity: nk}} />
-        {names.map((w, j) => {
-          const kk = prog(t, N.first + j * N.step, N.first + j * N.step + 0.7, easeOut) * (1 - prog(t, N.out - 0.3, N.out, easeIn));
-          return (
-            <div
-              key={w}
-              style={{
-                fontFamily: SF.ruqaa,
-                fontWeight: 700,
-                fontSize: 150,
-                lineHeight: 1.25,
-                color: j === 1 ? S.orangeHi : S.cream,
-                textShadow: S.shadow,
-                opacity: kk,
-                transform: `translateY(${(1 - kk) * 50}px)`,
-                filter: `blur(${(1 - kk) * 10}px)`,
-              }}
-            >
-              {w}
-            </div>
-          );
-        })}
-      </AbsoluteFill>
-    );
-  }
-  return null;
-};
+/* ---------- overlays ---------- */
 
-/** Warm light leak washing across the frame on chapter changes. */
-const Leaks: React.FC<{t: number}> = ({t}) => (
+/** Warm light washing in as the talk comes back to the room. */
+const Leaks: React.FC<{s: number}> = ({s}) => (
   <>
-    {TRANS.filter(([, kind]) => kind === 'leak').map(([at], i) => {
-      const k = prog(t, at - 0.3, at + 0.9, (x) => x);
+    {BGS.filter(([, f]) => f === null).map(([at], i) => {
+      const k = prog(s, at - 0.2, at + 1.1, (x) => x);
       if (k <= 0 || k >= 1) return null;
       const a = Math.sin(k * Math.PI);
       return (
@@ -403,8 +380,8 @@ const Leaks: React.FC<{t: number}> = ({t}) => (
           key={i}
           style={{
             mixBlendMode: 'screen',
-            opacity: a * 0.85,
-            background: `radial-gradient(ellipse 55% 40% at ${lerp(115, -15, k)}% ${lerp(20, 70, k)}%, rgba(255,150,50,0.9), transparent 70%), radial-gradient(ellipse 45% 35% at ${lerp(-10, 110, k)}% ${lerp(80, 30, k)}%, rgba(47,163,223,0.55), transparent 70%)`,
+            opacity: a * 0.7,
+            background: `radial-gradient(ellipse 55% 40% at ${lerp(115, -15, k)}% ${lerp(20, 70, k)}%, rgba(255,150,50,0.85), transparent 70%), radial-gradient(ellipse 45% 35% at ${lerp(-10, 110, k)}% ${lerp(80, 30, k)}%, rgba(47,163,223,0.45), transparent 70%)`,
           }}
         />
       );
@@ -412,89 +389,42 @@ const Leaks: React.FC<{t: number}> = ({t}) => (
   </>
 );
 
-const RemedyTitle: React.FC<{t: number}> = ({t}) => {
-  const a = T.remedyTitle;
-  const k = env(t, a, 99.45, 0.5, 0.35);
-  if (k <= 0) return null;
-  return (
-    <div style={{position: 'absolute', top: 1040, left: 0, right: 0, textAlign: 'center', direction: 'rtl'}}>
-      <span
-        style={{
-          fontFamily: SF.ruqaa,
-          fontWeight: 700,
-          fontSize: 130,
-          color: S.cream,
-          textShadow: S.shadow,
-          opacity: k,
-          display: 'inline-block',
-          transform: `scale(${lerp(0.8, 1, k)})`,
-          backgroundImage: `linear-gradient(${S.orange}, ${S.orange})`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: `${k * 100}% 22%`,
-          backgroundPosition: '100% 88%',
-          padding: '0 20px',
-        }}
-      >
-        الطب النبوي
-      </span>
-    </div>
-  );
-};
-
-const Hook: React.FC<{t: number; frame: number}> = ({t, frame}) => {
-  const H = T.hook;
-  const k = sp(frame, H.answer, {damping: 11, stiffness: 210, mass: 0.7}, FPS) * (1 - prog(t, H.out - 0.4, H.out, easeIn));
-  if (k <= 0.001) return null;
-  return (
-    <div style={{position: 'absolute', top: 1400, left: 0, right: 0, display: 'flex', justifyContent: 'center'}}>
-      <div
-        style={{
-          direction: 'rtl',
-          padding: '12px 34px',
-          borderRadius: 999,
-          background: S.orange,
-          color: S.ink,
-          fontFamily: SF.sans,
-          fontWeight: 800,
-          fontSize: 44,
-          transform: `scale(${k})`,
-          boxShadow: '0 12px 30px rgba(0,0,0,0.45)',
-        }}
-      >
-        الإجابة في حديث شريف
-      </div>
-    </div>
-  );
-};
-
-const Watermark: React.FC<{t: number}> = ({t}) => {
-  const k = prog(t, 0.5, 1.3, easeOut) * (1 - prog(t, T.end.in - 0.4, T.end.in, easeIn)) * (1 - env(t, 86.6, 99.6, 0.3, 0.4));
+const Watermark: React.FC<{t: number; s: number}> = ({t, s}) => {
+  const k = prog(t, 0.6, 1.4, easeOut) * (1 - prog(s, T.end.in - 0.4, T.end.in, easeIn)) * (1 - env(s, T.carousel.in - 0.2, T.carousel.out + 0.2, 0.3, 0.4));
   return (
     <Img
       src={staticFile('talk/logo.png')}
-      style={{position: 'absolute', left: 48, top: 150, width: 120, opacity: 0.92 * k, filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))'}}
+      style={{position: 'absolute', left: 48, top: 150, width: 112, opacity: 0.92 * k, filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))'}}
     />
   );
 };
 
-const EndCard: React.FC<{t: number; frame: number; c: Client}> = ({t, frame, c}) => {
-  const E = T.end;
-  const bg = prog(t, E.in - 0.1, E.in + 0.6, easeInOut);
+const EndCard: React.FC<{s: number; frame: number; c: Client}> = ({s, frame, c}) => {
+  const at = T.end.in;
+  const bg = prog(s, at - 0.1, at + 0.6, easeInOut);
   if (bg <= 0) return null;
-  const logo = sp(frame, E.in + 0.2, {damping: 12, stiffness: 160}, FPS);
-  const name = prog(t, E.in + 0.7, E.in + 1.4, easeOut);
-  const phone = sp(frame, E.in + 1.2, {damping: 11, stiffness: 220, mass: 0.7}, FPS);
-  const addr = prog(t, E.in + 1.6, E.in + 2.2, easeOut);
-  const cta = sp(frame, E.in + 2.1, {damping: 10, stiffness: 210, mass: 0.7}, FPS);
+  const f0 = (at + OFF) * FPS;
+  const pop = (d: number, cfg = {damping: 11, stiffness: 220, mass: 0.7}) => sp(frame - f0, d, cfg, FPS);
+  const name = prog(s, at + 0.7, at + 1.4, easeOut);
+  const addr = prog(s, at + 1.6, at + 2.2, easeOut);
+  const shine = prog(s, at + 1.0, at + 2.0, easeInOut);
   return (
     <AbsoluteFill style={{direction: 'rtl'}}>
-      <AbsoluteFill style={{background: 'linear-gradient(180deg, rgba(22,18,14,0.55), rgba(22,18,14,0.85))', opacity: bg}} />
+      <AbsoluteFill style={{background: 'linear-gradient(180deg, rgba(22,18,14,0.55), rgba(22,18,14,0.88))', opacity: bg}} />
       <AbsoluteFill style={{alignItems: 'center', opacity: bg}}>
-        <Img
-          src={staticFile('talk/logo.png')}
-          style={{position: 'absolute', top: 330, width: 380, transform: `scale(${logo})`, filter: 'drop-shadow(0 24px 40px rgba(0,0,0,0.6))'}}
-        />
-        <div style={{position: 'absolute', top: 820, fontFamily: SF.ruqaa, fontWeight: 700, fontSize: 112, color: S.cream, textShadow: S.shadow, opacity: name, transform: `translateY(${(1 - name) * 30}px)`}}>
+        <div style={{position: 'absolute', top: 320, width: 380, transform: `scale(${pop(0.2, {damping: 12, stiffness: 160, mass: 0.8})})`}}>
+          <Img src={staticFile('talk/logo.png')} style={{width: 380, display: 'block', filter: 'drop-shadow(0 24px 40px rgba(0,0,0,0.6))'}} />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              WebkitMaskImage: `url(${staticFile('talk/logo.png')})`,
+              WebkitMaskSize: '100% 100%',
+              background: `linear-gradient(110deg, transparent ${lerp(-30, 110, shine) - 12}%, rgba(255,255,255,0.75) ${lerp(-30, 110, shine)}%, transparent ${lerp(-30, 110, shine) + 12}%)`,
+            }}
+          />
+        </div>
+        <div style={{position: 'absolute', top: 820, fontFamily: SF.ruqaa, fontWeight: 700, fontSize: 112, color: S.cream, textShadow: S.glow, opacity: name, transform: `translateY(${(1 - name) * 30}px)`}}>
           {c.name}
         </div>
         <div
@@ -509,7 +439,7 @@ const EndCard: React.FC<{t: number; frame: number; c: Client}> = ({t, frame, c})
             fontWeight: 800,
             fontSize: 84,
             direction: 'ltr',
-            transform: `scale(${phone})`,
+            transform: `scale(${pop(1.2)})`,
             boxShadow: '0 14px 40px rgba(0,0,0,0.45)',
           }}
         >
@@ -531,7 +461,7 @@ const EndCard: React.FC<{t: number; frame: number; c: Client}> = ({t, frame, c})
             fontFamily: SF.sans,
             fontWeight: 800,
             fontSize: 46,
-            transform: `scale(${cta})`,
+            transform: `scale(${pop(2.1, {damping: 10, stiffness: 210, mass: 0.7})})`,
           }}
         >
           احجز موعدك الآن
@@ -547,42 +477,65 @@ export const TalkVideo: React.FC<Client> = (c) => {
   const track = useAssets();
   const frame = useCurrentFrame();
   const t = frame / FPS;
-  const z = zoomAt(t);
-  const endBlur = prog(t, T.end.in - 0.1, T.end.in + 0.6, easeInOut);
-  const vf = Math.min(frame, Math.floor((T.voiceEnd - 0.1) * FPS));
+  const s = srcAt(t);
+  const rewinding = t >= HL && t < HL + RW;
+  const rw = rewinding ? Math.sin(prog(t, HL, HL + RW, (x) => x) * Math.PI) : 0;
+  const vf = Math.max(0, Math.min(Math.round(s * FPS), Math.floor((T.voiceEnd - 0.1) * FPS)));
   const tr = track ?? {x: [540], y: [430]};
   const hi = Math.min(vf, tr.x.length - 1);
   const head = {x: tr.x[hi], y: tr.y[hi]};
+  const neck = {x: lerp(head.x, 540, 0.4), y: head.y + 200};
+  const endBlur = prog(s, T.end.in - 0.1, T.end.in + 0.6, easeInOut);
+  const hookPush = lerp(1.14, 1, prog(t, 0, HL, easeOut));
+  const z = (t < HL ? hookPush : zoomAt(s)) * (1 + 0.1 * rw);
+  const sh = shakeAt(s);
+  const show = !rewinding;
 
   return (
     <AbsoluteFill style={{background: S.ink}}>
       <AbsoluteFill
         style={{
-          transform: `scale(${z})`,
-          transformOrigin: `${ORIGIN.x}px ${ORIGIN.y}px`,
-          filter: endBlur > 0 ? `blur(${endBlur * 20}px)` : undefined,
+          transform: `translate(${sh.dx}px, ${sh.dy}px) scale(${z})`,
+          transformOrigin: `${head.x}px ${head.y + 120}px`,
+          filter: endBlur > 0 || rw > 0 ? `blur(${endBlur * 20 + rw * 9}px) brightness(${1 - rw * 0.25})` : undefined,
         }}
       >
         <Freeze frame={vf}>
           <OffthreadVideo src={staticFile('talk/nat.mp4')} muted style={{width: SW, height: SH}} />
         </Freeze>
-        <BehindPics t={t} frame={frame} />
-        <BehindCaption t={t} />
-        <Ring t={t} head={head} front={false} />
+        {show ? <Backdrop s={s} c={{x: head.x, y: head.y + 120}} /> : null}
+        {show ? (
+          <>
+            <Carousel s={s} c={neck} back />
+            <RingBelt s={s} c={neck} back />
+            <OrbitCaption s={s} back />
+          </>
+        ) : null}
         <Freeze frame={vf}>
-          <OffthreadVideo src={staticFile('talk/person.webm')} transparent muted style={{position: 'absolute', inset: 0, width: SW, height: SH}} />
+          <OffthreadVideo src={staticFile('talk/fg.webm')} transparent muted style={{position: 'absolute', inset: 0, width: SW, height: SH}} />
         </Freeze>
-        <Ring t={t} head={head} front />
+        {show ? (
+          <>
+            <Carousel s={s} c={neck} back={false} />
+            <RingBelt s={s} c={neck} back={false} />
+            <OrbitCaption s={s} back={false} />
+          </>
+        ) : null}
       </AbsoluteFill>
 
       <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 65% at 50% 40%, transparent 55%, rgba(0,0,0,0.38))'}} />
-      <RemedyTitle t={t} />
-      <Hook t={t} frame={frame} />
-      <CollageScene t={t} frame={frame} />
-      <OverPicText t={t} />
-      <Leaks t={t} />
-      <Watermark t={t} />
-      <EndCard t={t} frame={frame} c={c} />
+      {rw > 0 ? (
+        <AbsoluteFill
+          style={{
+            mixBlendMode: 'screen',
+            opacity: rw * 0.55,
+            background: 'radial-gradient(circle at 50% 35%, rgba(255,190,110,0.7), transparent 60%)',
+          }}
+        />
+      ) : null}
+      {show ? <Leaks s={s} /> : null}
+      <Watermark t={t} s={s} />
+      <EndCard s={s} frame={frame} c={c} />
       <Grain frame={frame} opacity={0.05} />
       <Audio src={staticFile('talk/mix.wav')} />
     </AbsoluteFill>
