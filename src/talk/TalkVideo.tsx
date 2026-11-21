@@ -212,7 +212,7 @@ const BehindPics: React.FC<{t: number; frame: number}> = ({t, frame}) => (
       const pop = sp(frame, a, {damping: 12, stiffness: 170, mass: 0.8}, FPS);
       const out = prog(t, b - 0.4, b, easeIn);
       const k = pop * (1 - out);
-      const hero = file === '09' && a > 80;
+      const hero = file === 'b2';
       const fromX = 540 - s.w / 2;
       return (
         <div
@@ -266,38 +266,68 @@ const InkReveal: React.FC<{k: number; id: string; children: React.ReactNode}> = 
   </svg>
 );
 
-const FullPic: React.FC<{t: number}> = ({t}) => (
-  <>
-    {PICS.filter((p) => p[3] === 'full').map(([file, a, b], i) => {
-      if (t < a - 0.05 || t > b + 0.7) return null;
-      const kin = prog(t, a - 0.05, a + 0.75, easeInOut);
-      const tear = prog(t, b, b + 0.65, easeIn);
-      const kb = lerp(1.04, 1.14, prog(t, a, b + 0.7, (x) => x));
-      const pic = (dx: number, clip: string) => (
-        <AbsoluteFill style={{clipPath: clip, transform: `translate(${dx}px, ${Math.abs(dx) * 0.25}px) rotate(${dx * 0.004}deg)`}}>
-          <Img src={staticFile(`talk/img/${file}.jpg`)} style={{width: SW, height: SH, objectFit: 'cover', transform: `scale(${kb})`}} />
-          <AbsoluteFill style={{background: 'linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55))'}} />
-        </AbsoluteFill>
-      );
-      const body =
-        tear > 0 ? (
-          <>
-            {pic(-tear * 900, 'polygon(0 0, 62% 0, 55% 18%, 60% 34%, 49% 52%, 56% 70%, 44% 86%, 50% 100%, 0 100%)')}
-            {pic(tear * 900, 'polygon(62% 0, 100% 0, 100% 100%, 50% 100%, 44% 86%, 56% 70%, 49% 52%, 60% 34%, 55% 18%)')}
-          </>
-        ) : (
-          pic(0, 'none')
+const CARDS = [
+  {x: 70, y: 260, w: 470, r: -5},
+  {x: 545, y: 200, w: 470, r: 4},
+  {x: 90, y: 860, w: 450, r: 3},
+  {x: 555, y: 820, w: 455, r: -4},
+];
+
+/** One full-frame moment: the four pictures of a collage pinned over the blurred room. */
+const CollageScene: React.FC<{t: number; frame: number}> = ({t, frame}) => {
+  const group = PICS.filter((p) => p[3] === 'collage');
+  if (!group.length) return null;
+  const a = group[0][1];
+  const b = group[0][2];
+  if (t < a - 0.05 || t > b + 0.7) return null;
+  const kin = prog(t, a - 0.05, a + 0.75, easeInOut);
+  const tear = prog(t, b, b + 0.65, easeIn);
+  const scene = (
+    <div style={{width: SW, height: SH, position: 'relative', overflow: 'hidden'}}>
+      <AbsoluteFill style={{background: 'rgba(22,18,14,0.62)', backdropFilter: 'blur(26px)'}} />
+      {group.map(([file], i) => {
+        const c = CARDS[i];
+        const k = sp(frame, a + 0.15 + i * 0.22, {damping: 13, stiffness: 150, mass: 0.9}, FPS);
+        return (
+          <div
+            key={file}
+            style={{
+              position: 'absolute',
+              left: c.x + Math.sin(t * 0.6 + i) * 6,
+              top: lerp(c.y + 120, c.y, k) + Math.cos(t * 0.5 + i) * 6,
+              width: c.w,
+              transform: `rotate(${lerp(c.r * 3, c.r, k)}deg) scale(${lerp(0.7, 1, k)})`,
+              opacity: clamp01(k * 1.6),
+              filter: 'drop-shadow(0 22px 30px rgba(0,0,0,0.6))',
+            }}
+          >
+            <div style={{background: S.paper, padding: 16, clipPath: TORN}}>
+              <Img src={staticFile(`talk/img/${file}.jpg`)} style={{width: '100%', display: 'block', aspectRatio: '4 / 5', objectFit: 'cover'}} />
+            </div>
+          </div>
         );
-      return kin < 1 ? (
-        <InkReveal key={i} k={kin} id={`p${i}`}>
-          <div style={{width: SW, height: SH, position: 'relative'}}>{body}</div>
-        </InkReveal>
-      ) : (
-        <AbsoluteFill key={i}>{body}</AbsoluteFill>
-      );
-    })}
-  </>
-);
+      })}
+      <AbsoluteFill style={{background: 'linear-gradient(180deg, transparent 55%, rgba(22,18,14,0.85) 72%, rgba(22,18,14,0.9))'}} />
+    </div>
+  );
+  const half = (dx: number, clip: string) => (
+    <AbsoluteFill style={{clipPath: clip, transform: `translate(${dx}px, ${Math.abs(dx) * 0.25}px) rotate(${dx * 0.004}deg)`}}>{scene}</AbsoluteFill>
+  );
+  if (tear > 0)
+    return (
+      <>
+        {half(-tear * 900, 'polygon(0 0, 62% 0, 55% 18%, 60% 34%, 49% 52%, 56% 70%, 44% 86%, 50% 100%, 0 100%)')}
+        {half(tear * 900, 'polygon(62% 0, 100% 0, 100% 100%, 50% 100%, 44% 86%, 56% 70%, 49% 52%, 60% 34%, 55% 18%)')}
+      </>
+    );
+  return kin < 1 ? (
+    <InkReveal k={kin} id="collage">
+      {scene}
+    </InkReveal>
+  ) : (
+    <AbsoluteFill>{scene}</AbsoluteFill>
+  );
+};
 
 /** Captions that ride on a full-frame picture (the hadith, the names). */
 const OverPicText: React.FC<{t: number}> = ({t}) => {
@@ -308,22 +338,23 @@ const OverPicText: React.FC<{t: number}> = ({t}) => {
     const end = next - b < 0.45 ? next : b + 0.2;
     const out = prog(t, end - 0.2, end, easeIn);
     return (
-      <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', direction: 'rtl', opacity: 1 - out}}>
-        <div style={{textAlign: 'center', maxWidth: 900, padding: '0 40px'}}>
+      <AbsoluteFill style={{alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 380, direction: 'rtl', opacity: 1 - out}}>
+        <div style={{textAlign: 'center', maxWidth: 940, padding: '0 40px'}}>
           <div style={{fontFamily: SF.naskh, fontSize: 120, color: S.orangeHi, lineHeight: 0.6, textShadow: S.shadow}}>«</div>
           <Words text={text} t={t} t0={a + 0.05} font={SF.naskh} size={84} weight={700} />
         </div>
       </AbsoluteFill>
     );
   }
-  const n = PICS.find((p) => p[0] === '07' && p[3] === 'full');
-  if (n && t > n[1] + 2.8 && t < n[2]) {
+  const N = T.names;
+  const nk = env(t, N.in, N.out, 0.5, 0.4);
+  if (nk > 0) {
     const names = ['الخالق', 'المبدع', 'المصوِّر'];
-    const base = 63.35;
     return (
       <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', direction: 'rtl'}}>
+        <AbsoluteFill style={{background: 'rgba(22,18,14,0.55)', backdropFilter: `blur(${nk * 22}px)`, opacity: nk}} />
         {names.map((w, j) => {
-          const kk = prog(t, base + j * 0.95, base + j * 0.95 + 0.7, easeOut) * (1 - prog(t, n[2] - 0.3, n[2], easeIn));
+          const kk = prog(t, N.first + j * N.step, N.first + j * N.step + 0.7, easeOut) * (1 - prog(t, N.out - 0.3, N.out, easeIn));
           return (
             <div
               key={w}
@@ -536,7 +567,7 @@ export const TalkVideo: React.FC<Client> = (c) => {
       <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 65% at 50% 40%, transparent 55%, rgba(0,0,0,0.38))'}} />
       <RemedyTitle t={t} />
       <Hook t={t} frame={frame} />
-      <FullPic t={t} />
+      <CollageScene t={t} frame={frame} />
       <OverPicText t={t} />
       <Leaks t={t} />
       <Watermark t={t} />

@@ -7,7 +7,7 @@ import os
 import struct
 import wave
 
-from sfx.synth import blip, chime, impact, pop, whoosh
+from sfx.synth import blip, chime, envelope, impact, pop, whoosh
 
 TIMELINE = "src/talk/timeline.json"
 OUT = "public/talk/mix.wav"
@@ -42,7 +42,9 @@ def score(mix, tl):
     put(0, load("public/talk/voice48.wav"), 1.0)
     b = bed(tl["duration"])
     if b:
-        put(0, b, 0.11)
+        e = tl["end"]["in"]
+        lvl = envelope([(0, 0.16), (tl["hook"]["out"], 0.16), (tl["hook"]["out"] + 1.0, 0.12), (e - 0.3, 0.12), (e + 0.6, 0.4), (tl["duration"], 0.4)])
+        put(0, [v * lvl(i / 48000) for i, v in enumerate(b)], 1.0)
 
     put(0.0, impact(1.2), 0.09)
     put(0.0, whoosh(0.8, 2400, 300, peak=0.15), 0.08)
