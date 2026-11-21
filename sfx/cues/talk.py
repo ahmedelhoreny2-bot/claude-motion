@@ -61,18 +61,15 @@ def score(mix, tl):
                         (end - 0.3, 0.12), (end + 0.6, 0.4), (dur - 0.3, 0.4), (dur, 0)])
         put(0, [v * lvl(i / SR) for i, v in enumerate(hum)], 1.0)
 
-    # pictures as their own frames
-    cuts = tl["cuts"]
-    for i, (a, b, files) in enumerate(cuts):
-        put(o(a) - 0.05, whoosh(0.55, 2500, 6500, peak=0.45, q=0.5), 0.07, 0.4)
-        put(o(a), scratch(0.4), 0.06, 0.3)
-        if len(files) > 1:
-            for j in range(len(files)):
-                put(o(a) + 0.15 + j * 0.18, pop(800 + j * 140, 320 + j * 60), 0.05, -0.4 + j * 0.25)
-            put(o(a) + 0.5, chime([880.0, 1318.51, 1760.0], dur=1.6, tau=0.6), 0.05)
-        if i + 1 == len(cuts) or cuts[i + 1][0] != b:
-            put(o(b), whoosh(0.55, 6000, 2500, peak=0.45, q=0.5), 0.06, -0.4)
-            put(o(b) + 0.05, scratch(0.35), 0.05, -0.3)
+    # split screen: speaker slides into a card, pictures come in above
+    for a, b, shots in tl["splits"]:
+        put(o(a) - 0.15, whoosh(0.8, 300, 1700, peak=0.5, q=0.8), 0.06, 0.2)
+        for at, files in shots[1:]:
+            put(o(at) - 0.05, whoosh(0.6, 900, 2600, peak=0.45, q=0.6), 0.045, -0.3)
+            if len(files) > 1:
+                for j in range(len(files)):
+                    put(o(at) + 0.1 + j * 0.16, pop(800 + j * 140, 320 + j * 60), 0.05, -0.4 + j * 0.25)
+        put(o(b), whoosh(0.7, 1600, 300, peak=0.4, q=0.8), 0.05, -0.2)
     # word belts around the head
     for a, b, _, _ in tl["rings"]:
         put(o(a) - 0.4, whoosh(1.1, 300, 2000, peak=0.55, q=0.6), 0.05, -0.3)

@@ -12,17 +12,17 @@ import {
 } from 'remotion';
 import {Grain} from '../components/primitives';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, sp} from '../lib';
-import {Icon} from './Icons';
+import {Icon3D} from './Icons3D';
 import {S, SF, SH, SW, T} from './theme';
 
 const FPS = T.fps;
 const E = T.edit;
 type Cap = [number, number, string, string];
 type Ring = [number, number, string[], number];
-type Cut = [number, number, string[]];
+type Split = [number, number, [number, string[]][]];
 const CAPS = T.cap as Cap[];
 const RINGS = T.rings as Ring[];
-const CUTS = T.cuts as Cut[];
+const SPLITS = T.splits as Split[];
 
 /** Client details come in as props at render time (kept out of the repo). */
 export type Client = {name: string; phone: string; addr1: string; addr2: string};
@@ -154,113 +154,92 @@ const Rays: React.FC<{s: number; k: number}> = ({s, k}) => (
   />
 );
 
-/** How much of the frame a page covers right now (0..1). */
-const coverAt = (s: number) =>
-  CUTS.reduce((m, c, i) => (s < c[0] - 0.05 || s > c[1] + 0.7 ? m : Math.max(m, 1 - Math.min(1, Math.abs(pageAngle(c, s, i)) / 90))), 0);
+/* ---------- split screen: the speaker slides into a card, the picture comes in above ---------- */
 
-const BROWN = '#8A5A2B';
-const INKC = '#3B2A1A';
+const splitK = (s: number) =>
+  SPLITS.reduce((m, [a, b]) => Math.max(m, prog(s, a - 0.15, a + 0.6, easeInOut) * (1 - prog(s, b, b + 0.6, easeInOut))), 0);
 
-/** An old manuscript page: warm paper, fibre noise, burnt edges, a double ruled border. */
-const Parchment: React.FC = () => (
-  <AbsoluteFill style={{background: 'radial-gradient(ellipse at 50% 40%, #F8EEDA 0%, #EEDDBB 58%, #D8BC8E 100%)'}}>
-    <svg width={SW} height={SH} style={{position: 'absolute', inset: 0, opacity: 0.4, mixBlendMode: 'multiply'}}>
-      <filter id="paper">
-        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves={3} seed={7} />
-        <feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.32  0 0 0 0 0.18  0 0 0 0.5 0" />
-      </filter>
-      <rect width={SW} height={SH} filter="url(#paper)" />
-    </svg>
-    <AbsoluteFill style={{boxShadow: 'inset 0 0 180px rgba(110,65,20,0.5)'}} />
-    <div style={{position: 'absolute', inset: 44, border: `3px solid ${BROWN}`, borderRadius: 6}} />
-    <div style={{position: 'absolute', inset: 58, border: '1.5px solid #B8873F', borderRadius: 4}} />
-    {[
-      [44, 44],
-      [SW - 44, 44],
-      [44, SH - 44],
-      [SW - 44, SH - 44],
-    ].map(([x, y], i) => (
-      <div key={i} style={{position: 'absolute', left: x - 13, top: y - 13, width: 26, height: 26, background: '#B8873F', transform: 'rotate(45deg)', border: `2px solid ${BROWN}`}} />
-    ))}
-  </AbsoluteFill>
-);
+const activeSplit = (s: number) => SPLITS.find(([a, b]) => s >= a - 0.15 && s < b + 0.6);
 
-/** A picture that "develops" inside an ornate frame: sepia to colour, settling into place. */
-const Plate: React.FC<{file: string; s: number; a: number; w: number; delay?: number; hot?: boolean}> = ({file, s, a, w, delay = 0, hot}) => {
-  const k = prog(s, a + 0.25 + delay, a + 1.1 + delay, easeOut);
+/** The speaker's frame moves into a rounded card in the lower part of the screen. */
+const CARD = {top: 880, side: 119, bottom: 60, scale: 0.78, shift: 780};
+
+const SplitTile: React.FC<{files: string[]; s: number; since: number}> = ({files, s, since}) =>
+  files.length > 1 ? (
+    <div style={{position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: 10, padding: 10, direction: 'rtl', background: S.ink}}>
+      {files.map((f, j) => {
+        const k = sp(Math.round((s - since) * FPS), 0.1 + j * 0.16, {damping: 12, stiffness: 170, mass: 0.8}, FPS);
+        return (
+          <div key={f} style={{overflow: 'hidden', borderRadius: 18, transform: `scale(${lerp(0.7, 1, k)})`, opacity: clamp01(k * 1.6), border: f === 'b2' ? `3px solid ${S.orangeHi}` : undefined}}>
+            <Img src={staticFile(`talk/img/${f}.jpg`)} style={{width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${1.08 + 0.01 * (s - since)})`}} />
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <AbsoluteFill style={{overflow: 'hidden'}}>
+      <Img
+        src={staticFile(`talk/img/${files[0]}.jpg`)}
+        style={{width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${1.1 + 0.012 * (s - since)}) translateY(${-4 * (s - since)}px)`}}
+      />
+      <Rays s={s} k={0.8} />
+      <Dust s={s} k={0.8} />
+    </AbsoluteFill>
+  );
+
+/** The picture card above the speaker; pictures in a run slide through it like a carousel. */
+const SplitCard: React.FC<{s: number; k: number}> = ({s, k}) => {
+  const sp0 = activeSplit(s);
+  if (!sp0 || k <= 0) return null;
+  const [a, , shots] = sp0;
+  let cur = 0;
+  shots.forEach(([at], i) => {
+    if (s >= at) cur = i;
+  });
+  const sw = prog(s, shots[cur][0], shots[cur][0] + 0.6, easeInOut);
+  const land = prog(s, a - 0.15, a + 0.75, easeOut);
   return (
-    <div
-      style={{
-        width: w,
-        padding: 12,
-        background: '#F4E6C9',
-        border: `2px solid ${hot ? S.orange : BROWN}`,
-        boxShadow: `0 14px 30px rgba(80,50,20,0.35)${hot ? `, 0 0 ${30 * k}px rgba(243,147,37,0.6)` : ''}`,
-        opacity: clamp01(k * 2.5),
-        transform: `translateY(${(1 - k) * 40}px) rotate(${(1 - k) * -2.5}deg)`,
-      }}
-    >
-      <div style={{overflow: 'hidden', outline: '1px solid #B8873F', outlineOffset: -6}}>
-        <Img
-          src={staticFile(`talk/img/${file}.jpg`)}
-          style={{
-            width: '100%',
-            display: 'block',
-            aspectRatio: '4 / 5',
-            objectFit: 'cover',
-            transform: `scale(${1.14 - 0.06 * k + 0.01 * (s - a)})`,
-            filter: `sepia(${lerp(0.85, 0.08, k)}) contrast(${lerp(0.9, 1.04, k)})`,
-          }}
-        />
+    <div style={{position: 'absolute', left: 40, right: 40, top: 70, height: 780, perspective: 1600}}>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: 40,
+          overflow: 'hidden',
+          boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
+          border: '3px solid rgba(255,248,236,0.85)',
+          transform: `translateY(${(1 - k) * -900}px) rotateX(${(1 - land) * 18}deg) translateY(${Math.sin(s * 1.1) * 4}px)`,
+          transformOrigin: '50% 100%',
+          opacity: clamp01(k * 2),
+        }}
+      >
+        {cur > 0 && sw < 1 ? (
+          <AbsoluteFill style={{transform: `translateX(${sw * 1000}px)`}}>
+            <SplitTile files={shots[cur - 1][1]} s={s} since={shots[cur - 1][0]} />
+          </AbsoluteFill>
+        ) : null}
+        <AbsoluteFill style={{transform: cur > 0 ? `translateX(${(1 - sw) * -1000}px)` : undefined}}>
+          <SplitTile files={shots[cur][1]} s={s} since={shots[cur][0]} />
+        </AbsoluteFill>
       </div>
     </div>
   );
 };
 
-/** Page turning on a hinge at the right edge (Arabic books open to the left). */
-const PageTurn: React.FC<{ang: number; children: React.ReactNode}> = ({ang, children}) => (
-  <AbsoluteFill style={{perspective: 2600}}>
-    <AbsoluteFill style={{transformOrigin: '100% 50%', transform: `rotateY(${ang}deg)`, backfaceVisibility: 'hidden'}}>
-      {children}
-      <AbsoluteFill style={{background: `linear-gradient(90deg, rgba(40,20,5,${0.55 * Math.min(1, Math.abs(ang) / 90)}), transparent 75%)`}} />
+/** A blurred wash of the current picture behind both cards, so the split reads as one scene. */
+const SplitWash: React.FC<{s: number; k: number}> = ({s, k}) => {
+  const sp0 = activeSplit(s);
+  if (!sp0 || k <= 0) return null;
+  let file = sp0[2][0][1][0];
+  sp0[2].forEach(([at, f]) => {
+    if (s >= at) file = f[0];
+  });
+  return (
+    <AbsoluteFill style={{opacity: k}}>
+      <Img src={staticFile(`talk/img/${file}.jpg`)} style={{width: SW, height: SH, objectFit: 'cover', filter: 'blur(40px) brightness(0.55) saturate(1.2)', transform: 'scale(1.2)'}} />
     </AbsoluteFill>
-  </AbsoluteFill>
-);
-
-const pageAngle = (c: Cut, s: number, i: number) => {
-  const [a, b] = c;
-  const chained = CUTS[i + 1]?.[0] === b;
-  const pin = prog(s, a - 0.05, a + 0.65, easeInOut);
-  const pout = chained ? 0 : prog(s, b, b + 0.6, easeIn);
-  return lerp(-100, 0, pin) + lerp(0, 100, pout);
+  );
 };
-
-/** Pictures as pages of a manuscript that turn in over the talk and turn away again. */
-const Cutaway: React.FC<{s: number}> = ({s}) => (
-  <>
-    {CUTS.map((c, i) => {
-      const [a, b, files] = c;
-      const chained = CUTS[i + 1]?.[0] === b;
-      if (s < a - 0.05 || s > b + (chained ? 0.7 : 0.6)) return null;
-      return (
-        <PageTurn key={i} ang={pageAngle(c, s, i)}>
-          <Parchment />
-          {files.length > 1 ? (
-            <div style={{position: 'absolute', left: 150, right: 150, top: 150, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, direction: 'rtl'}}>
-              {files.map((f, j) => (
-                <Plate key={f} file={f} s={s} a={a} w={375} delay={j * 0.22} hot={f === 'b2'} />
-              ))}
-            </div>
-          ) : (
-            <div style={{position: 'absolute', left: 170, top: 150}}>
-              <Plate file={files[0]} s={s} a={a} w={740} />
-            </div>
-          )}
-        </PageTurn>
-      );
-    })}
-  </>
-);
 
 /* ---------- captions: every line arrives on an orbit around the speaker ---------- */
 
@@ -273,7 +252,7 @@ const capAt = (s: number) =>
 
 const ORBIT = {rx: 440, ry: 250, turn: 3.4};
 
-const OrbitCaption: React.FC<{s: number; layer: 'back' | 'front' | 'all'}> = ({s, layer}) => {
+const OrbitCaption: React.FC<{s: number; layer: 'back' | 'front' | 'all'; lift?: number}> = ({s, layer, lift = 0}) => {
   const ink = layer === 'all';
   const i = capAt(s);
   if (i < 0) return null;
@@ -290,7 +269,7 @@ const OrbitCaption: React.FC<{s: number; layer: 'back' | 'front' | 'all'}> = ({s
         position: 'absolute',
         left: 30,
         right: 30,
-        top: ink ? 1265 : 1215,
+        top: lerp(ink ? 1265 : 1215, 1060, lift),
         textAlign: 'center',
         direction: 'rtl',
         whiteSpace: 'nowrap',
@@ -318,7 +297,7 @@ const OrbitCaption: React.FC<{s: number; layer: 'back' | 'front' | 'all'}> = ({s
                 transform: `translate(${ORBIT.rx * Math.sin(phi)}px, ${-ORBIT.ry * (1 - Math.cos(phi))}px) scale(${lerp(0.5, 1, depth) * land})`,
                 opacity: op * lerp(0.55, 1, depth),
                 filter: depth < 0.5 ? `blur(${(0.5 - depth) * 5}px)` : undefined,
-                color: ink ? (hl ? '#C0561A' : INKC) : hl ? S.orangeHi : S.cream,
+                color: ink ? (hl ? '#C0561A' : '#3B2A1A') : hl ? S.orangeHi : S.cream,
                 fontWeight: hl ? 900 : undefined,
                 fontSize: hl ? '1.14em' : undefined,
                 textShadow: ink ? '0 1px 0 rgba(255,240,210,0.6)' : hl ? S.glowHot : S.glow,
@@ -380,7 +359,7 @@ const RingBelt: React.FC<{s: number; c: Pt; back: boolean}> = ({s, c, back}) => 
   );
 };
 
-/* ---------- little animated icons in the free corners of the frame ---------- */
+/* ---------- 2.5D colour icons, on their word, in the free corners ---------- */
 
 const ICONS = T.icons as [number, number, string, string][];
 
@@ -388,36 +367,54 @@ const IconBadges: React.FC<{s: number; frame: number}> = ({s, frame}) => (
   <>
     {ICONS.map(([a, b, name, side], i) => {
       if (s < a - 0.1 || s > b + 0.5) return null;
-      const f0 = (a + OFF) * FPS;
-      const pop = sp(frame - f0, 0, {damping: 10, stiffness: 200, mass: 0.7}, FPS);
+      const f0 = Math.round((a + OFF) * FPS);
+      const pop = sp(frame - f0, 0, {damping: 9, stiffness: 180, mass: 0.7}, FPS);
       const out = prog(s, b, b + 0.4, easeIn);
       const k = pop * (1 - out);
-      const draw = prog(s, a + 0.1, a + 0.9, easeOut);
-      const bob = Math.sin((s - a) * 2.4 + i) * 7;
-      const tilt = Math.sin((s - a) * 1.7 + i) * 4;
-      const spin = name === 'gear' ? (s - a) * 70 : 0;
+      const lt = s - a;
+      const float = Math.sin(lt * 2.2 + i) * 10;
+      const sway = Math.sin(lt * 1.5 + i) * 14;
+      const flip = (1 - pop) * (side === 'R' ? 80 : -80) + out * (side === 'R' ? -70 : 70);
+      const spin = name === 'gear' ? lt * 90 * (side === 'R' ? 1 : -1) : 0;
+      const bounce = name === 'car' ? Math.abs(Math.sin(lt * 9)) * -5 : 0;
       return (
-        <div
-          key={i}
-          style={{
-            position: 'absolute',
-            top: 380 + bob,
-            [side === 'R' ? 'right' : 'left']: 58,
-            width: 190,
-            height: 190,
-            borderRadius: 999,
-            background: 'rgba(255,248,236,0.16)',
-            border: '2px solid rgba(255,248,236,0.55)',
-            backdropFilter: 'blur(10px)',
-            boxShadow: '0 10px 28px rgba(0,0,0,0.35), inset 0 0 22px rgba(255,201,104,0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transform: `scale(${k}) rotate(${tilt}deg)`,
-            opacity: clamp01(k * 1.5),
-          }}
-        >
-          <Icon name={name} size={118} k={draw} color={S.orangeHi} weight={6} rotate={spin} />
+        <div key={i} style={{position: 'absolute', top: 330, [side === 'R' ? 'right' : 'left']: 30, width: 240, height: 290, perspective: 900}}>
+          <div
+            style={{
+              position: 'absolute',
+              left: 40,
+              right: 40,
+              top: 240,
+              height: 26,
+              borderRadius: '50%',
+              background: 'radial-gradient(ellipse, rgba(0,0,0,0.45), transparent 70%)',
+              transform: `scale(${k * (1 - float / 60)})`,
+              opacity: k,
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              left: 20,
+              top: 10,
+              width: 200,
+              height: 200,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(255,201,104,0.35), transparent 65%)',
+              transform: `scale(${k * 1.3})`,
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              left: 20,
+              top: 10,
+              transform: `translateY(${float + bounce - (1 - pop) * 60}px) rotateY(${sway + flip}deg) scale(${k})`,
+              filter: 'drop-shadow(0 12px 16px rgba(0,0,0,0.35))',
+            }}
+          >
+            <Icon3D name={name} size={200} spin={spin} id={`i${i}`} />
+          </div>
         </div>
       );
     })}
@@ -429,7 +426,7 @@ const IconBadges: React.FC<{s: number; frame: number}> = ({s, frame}) => (
 /** Warm light washing in as the talk comes back to the room. */
 const Leaks: React.FC<{s: number}> = ({s}) => (
   <>
-    {CUTS.filter(([, b], i) => CUTS[i + 1]?.[0] !== b).map(([, at], i) => {
+    {SPLITS.map(([, at], i) => {
       const k = prog(s, at - 0.2, at + 1.1, (x) => x);
       if (k <= 0 || k >= 1) return null;
       const a = Math.sin(k * Math.PI);
@@ -448,7 +445,7 @@ const Leaks: React.FC<{s: number}> = ({s}) => (
 );
 
 const Watermark: React.FC<{t: number; s: number}> = ({t, s}) => {
-  const k = prog(t, 0.6, 1.4, easeOut) * (1 - prog(s, T.end.in - 0.4, T.end.in, easeIn)) * (1 - coverAt(s));
+  const k = prog(t, 0.6, 1.4, easeOut) * (1 - prog(s, T.end.in - 0.4, T.end.in, easeIn)) * (1 - splitK(s));
   return (
     <Img
       src={staticFile('talk/logo.png')}
@@ -457,55 +454,126 @@ const Watermark: React.FC<{t: number; s: number}> = ({t, s}) => {
   );
 };
 
+/** Brand ending: the logo flips in, lands with a light wave and a burst, a shine runs over it. */
 const EndCard: React.FC<{s: number; frame: number; c: Client}> = ({s, frame, c}) => {
   const at = T.end.in;
-  const bg = prog(s, at - 0.1, at + 0.6, easeInOut);
+  const bg = prog(s, at - 0.1, at + 0.7, easeInOut);
   if (bg <= 0) return null;
-  const f0 = (at + OFF) * FPS;
+  const f0 = Math.round((at + OFF) * FPS);
   const pop = (d: number, cfg = {damping: 11, stiffness: 220, mass: 0.7}) => sp(frame - f0, d, cfg, FPS);
-  const name = prog(s, at + 0.7, at + 1.4, easeOut);
-  const addr = prog(s, at + 1.6, at + 2.2, easeOut);
-  const shine = prog(s, at + 1.0, at + 2.0, easeInOut);
-  const stamp = prog(s, at + 0.55, at + 0.8, easeIn);
+  const logo = pop(0.25, {damping: 10, stiffness: 140, mass: 0.9});
+  const land = at + 0.62;
+  const wave = prog(s, land, land + 1.1, easeOut);
+  const burst = prog(s, land, land + 1.2, easeOut);
+  const shine = prog(s, at + 1.25, at + 2.05, easeInOut);
+  const name = prog(s, at + 0.95, at + 1.6, easeOut);
+  const addr = prog(s, at + 1.8, at + 2.4, easeOut);
+  const lt = s - at;
+  const float = Math.sin(lt * 1.6) * 6;
+  const LY = 560;
   return (
     <AbsoluteFill style={{direction: 'rtl'}}>
-      <PageTurn ang={lerp(-100, 0, bg)}>
-      <Parchment />
-      <AbsoluteFill style={{alignItems: 'center'}}>
-        <div style={{position: 'absolute', top: 300, width: 380, opacity: stamp, transform: `scale(${lerp(1.7, 1, stamp)}) rotate(${lerp(-10, -3, stamp)}deg)`}}>
-          <Img src={staticFile('talk/logo.png')} style={{width: 380, display: 'block', filter: 'drop-shadow(0 10px 14px rgba(80,50,20,0.45))'}} />
+      <AbsoluteFill
+        style={{
+          opacity: bg * 0.96,
+          background: `radial-gradient(circle at 50% 30%, #2FA3DF 0%, #1D4F9A 35%, ${S.navy} 62%, #0B1233 100%)`,
+        }}
+      />
+      <AbsoluteFill
+        style={{
+          opacity: bg * 0.22,
+          mixBlendMode: 'screen',
+          background: `repeating-conic-gradient(from ${lt * 8}deg at 50% 29%, rgba(255,255,255,0.5) 0deg 6deg, transparent 6deg 22deg)`,
+          WebkitMaskImage: 'radial-gradient(circle at 50% 29%, #000 10%, transparent 60%)',
+        }}
+      />
+      <Dust s={s} k={bg * 0.7} />
+      {/* light wave */}
+      {wave > 0 && wave < 1 ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: 540 - lerp(150, 760, wave),
+            top: LY - lerp(150, 760, wave),
+            width: lerp(300, 1520, wave),
+            height: lerp(300, 1520, wave),
+            borderRadius: '50%',
+            border: `${lerp(14, 2, wave)}px solid rgba(255,201,104,${1 - wave})`,
+            boxShadow: `0 0 50px rgba(243,147,37,${0.7 * (1 - wave)})`,
+          }}
+        />
+      ) : null}
+      {/* particle burst */}
+      {burst > 0 && burst < 1
+        ? Array.from({length: 22}, (_, j) => {
+            const ang = (j / 22) * Math.PI * 2 + hash(j) * 0.3;
+            const dist = lerp(160, 420 + hash(j + 5) * 260, burst);
+            const size = 6 + hash(j + 9) * 12;
+            const col = [S.orangeHi, S.cream, '#7FD0F5'][j % 3];
+            return (
+              <div
+                key={j}
+                style={{
+                  position: 'absolute',
+                  left: 540 + Math.cos(ang) * dist - size / 2,
+                  top: LY + Math.sin(ang) * dist - size / 2,
+                  width: size,
+                  height: size,
+                  borderRadius: j % 2 ? '50%' : 3,
+                  background: col,
+                  opacity: 1 - burst,
+                  transform: `rotate(${burst * 300}deg) scale(${1 - burst * 0.5})`,
+                  boxShadow: `0 0 12px ${col}`,
+                }}
+              />
+            );
+          })
+        : null}
+      {/* the logo */}
+      <div style={{position: 'absolute', left: 540 - 200, top: LY - 232, width: 400, perspective: 1300}}>
+        <div
+          style={{
+            position: 'relative',
+            transform: `translateY(${float}px) rotateY(${(1 - logo) * 110}deg) scale(${lerp(0.35, 1, logo)})`,
+            filter: `blur(${(1 - clamp01(logo * 1.3)) * 10}px) drop-shadow(0 26px 40px rgba(0,0,0,0.55))`,
+            opacity: clamp01(logo * 2),
+          }}
+        >
+          <Img src={staticFile('talk/logo.png')} style={{width: 400, display: 'block'}} />
           <div
             style={{
               position: 'absolute',
               inset: 0,
               WebkitMaskImage: `url(${staticFile('talk/logo.png')})`,
               WebkitMaskSize: '100% 100%',
-              background: `linear-gradient(110deg, transparent ${lerp(-30, 110, shine) - 12}%, rgba(255,255,255,0.75) ${lerp(-30, 110, shine)}%, transparent ${lerp(-30, 110, shine) + 12}%)`,
+              background: `linear-gradient(110deg, transparent ${lerp(-30, 130, shine) - 14}%, rgba(255,255,255,0.85) ${lerp(-30, 130, shine)}%, transparent ${lerp(-30, 130, shine) + 14}%)`,
             }}
           />
         </div>
-        <div style={{position: 'absolute', top: 820, fontFamily: SF.ruqaa, fontWeight: 700, fontSize: 112, color: INKC, opacity: name, transform: `translateY(${(1 - name) * 30}px)`}}>
-          {c.name}
+      </div>
+      <AbsoluteFill style={{alignItems: 'center'}}>
+        <div style={{position: 'absolute', top: 880, overflow: 'hidden', padding: '0 20px'}}>
+          <div style={{fontFamily: SF.ruqaa, fontWeight: 700, fontSize: 112, color: S.cream, textShadow: S.glow, transform: `translateY(${(1 - name) * 110}%)`}}>{c.name}</div>
         </div>
         <div
           style={{
             position: 'absolute',
-            top: 1020,
+            top: 1065,
             padding: '12px 54px',
             borderRadius: 999,
-            background: S.orange,
+            background: `linear-gradient(180deg, ${S.orangeHi}, ${S.orange})`,
             color: S.ink,
             fontFamily: SF.sans,
             fontWeight: 800,
             fontSize: 84,
             direction: 'ltr',
-            transform: `scale(${pop(1.2)})`,
-            boxShadow: '0 10px 24px rgba(80,50,20,0.35)',
+            transform: `scale(${pop(1.4) * (1 + 0.025 * Math.sin(lt * 3))})`,
+            boxShadow: '0 14px 40px rgba(0,0,0,0.4), 0 0 30px rgba(243,147,37,0.4)',
           }}
         >
           {c.phone}
         </div>
-        <div style={{position: 'absolute', top: 1210, textAlign: 'center', fontFamily: SF.sans, fontWeight: 600, fontSize: 44, lineHeight: 1.5, color: INKC, opacity: addr}}>
+        <div style={{position: 'absolute', top: 1255, textAlign: 'center', fontFamily: SF.sans, fontWeight: 600, fontSize: 44, lineHeight: 1.5, color: S.cream, opacity: addr, transform: `translateY(${(1 - addr) * 20}px)`}}>
           {c.addr1}
           <br />
           {c.addr2}
@@ -513,21 +581,21 @@ const EndCard: React.FC<{s: number; frame: number; c: Client}> = ({s, frame, c})
         <div
           style={{
             position: 'absolute',
-            top: 1410,
+            top: 1450,
             padding: '12px 40px',
             borderRadius: 999,
-            border: `3px solid ${S.blue}`,
-            color: INKC,
+            border: `3px solid ${S.orangeHi}`,
+            color: S.cream,
             fontFamily: SF.sans,
             fontWeight: 800,
             fontSize: 46,
-            transform: `scale(${pop(2.1, {damping: 10, stiffness: 210, mass: 0.7})})`,
+            transform: `scale(${pop(2.2, {damping: 10, stiffness: 210, mass: 0.7})})`,
+            boxShadow: `0 0 ${20 + 14 * Math.sin(lt * 3)}px rgba(255,201,104,0.45)`,
           }}
         >
           احجز موعدك الآن
         </div>
       </AbsoluteFill>
-      </PageTurn>
     </AbsoluteFill>
   );
 };
@@ -551,41 +619,58 @@ export const TalkVideo: React.FC<Client> = (c) => {
   const z = (t < HL ? hookPush : zoomAt(s)) * (1 + 0.1 * rw);
   const sh = shakeAt(s);
   const show = !rewinding;
-  const cover = coverAt(s);
+  const k = show ? splitK(s) : 0;
+  const clip = `inset(${CARD.top * k}px ${CARD.side * k}px ${CARD.bottom * k}px ${CARD.side * k}px round ${44 * k}px)`;
 
   return (
     <AbsoluteFill style={{background: S.ink}}>
-      <AbsoluteFill
-        style={{
-          transform: `translate(${sh.dx}px, ${sh.dy}px) scale(${z})`,
-          transformOrigin: `${head.x}px ${head.y + 120}px`,
-          filter: endBlur > 0 || rw > 0 ? `blur(${endBlur * 20 + rw * 9}px) brightness(${1 - rw * 0.25})` : undefined,
-        }}
-      >
-        <Freeze frame={vf}>
-          <OffthreadVideo src={staticFile('talk/nat.mp4')} muted style={{width: SW, height: SH}} />
-        </Freeze>
-        {show && cover < 0.5 ? (
-          <>
-            <RingBelt s={s} c={neck} back />
-            <OrbitCaption s={s} layer="back" />
-          </>
-        ) : null}
-        <Freeze frame={vf}>
-          <OffthreadVideo src={staticFile('talk/fg.webm')} transparent muted style={{position: 'absolute', inset: 0, width: SW, height: SH}} />
-        </Freeze>
-        {show && cover < 0.5 ? (
-          <>
-            <RingBelt s={s} c={neck} back={false} />
-            <OrbitCaption s={s} layer="front" />
-          </>
-        ) : null}
-        {show ? <IconBadges s={s} frame={frame} /> : null}
-        {show ? <Cutaway s={s} /> : null}
-        {show && cover >= 0.5 ? <OrbitCaption s={s} layer="all" /> : null}
+      <SplitWash s={s} k={k} />
+      <AbsoluteFill style={{clipPath: k > 0 ? clip : undefined}}>
+        <AbsoluteFill style={{transform: `translateY(${CARD.shift * k}px) scale(${lerp(1, CARD.scale, k)})`, transformOrigin: '540px 120px'}}>
+          <AbsoluteFill
+            style={{
+              transform: `translate(${sh.dx}px, ${sh.dy}px) scale(${z})`,
+              transformOrigin: `${head.x}px ${head.y + 120}px`,
+              filter: endBlur > 0 || rw > 0 ? `blur(${endBlur * 20 + rw * 9}px) brightness(${1 - rw * 0.25})` : undefined,
+            }}
+          >
+            <Freeze frame={vf}>
+              <OffthreadVideo src={staticFile('talk/nat.mp4')} muted style={{width: SW, height: SH}} />
+            </Freeze>
+            {show ? (
+              <>
+                <RingBelt s={s} c={neck} back />
+                <OrbitCaption s={s} layer="back" lift={k} />
+              </>
+            ) : null}
+            <Freeze frame={vf}>
+              <OffthreadVideo src={staticFile('talk/fg.webm')} transparent muted style={{position: 'absolute', inset: 0, width: SW, height: SH}} />
+            </Freeze>
+            {show ? (
+              <>
+                <RingBelt s={s} c={neck} back={false} />
+                <OrbitCaption s={s} layer="front" lift={k} />
+              </>
+            ) : null}
+          </AbsoluteFill>
+          <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 65% at 50% 40%, transparent 55%, rgba(0,0,0,0.38))'}} />
+        </AbsoluteFill>
       </AbsoluteFill>
-
-      <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 65% at 50% 40%, transparent 55%, rgba(0,0,0,0.38))'}} />
+      {k > 0 ? (
+        <div
+          style={{
+            position: 'absolute',
+            top: CARD.top * k,
+            left: CARD.side * k,
+            right: CARD.side * k,
+            bottom: CARD.bottom * k,
+            borderRadius: 44 * k,
+            border: `${3 * k}px solid rgba(255,248,236,${0.85 * k})`,
+            boxShadow: `0 20px 50px rgba(0,0,0,${0.45 * k})`,
+          }}
+        />
+      ) : null}
+      <SplitCard s={s} k={k} />
       {rw > 0 ? (
         <AbsoluteFill
           style={{
@@ -595,6 +680,7 @@ export const TalkVideo: React.FC<Client> = (c) => {
           }}
         />
       ) : null}
+      {show ? <IconBadges s={s} frame={frame} /> : null}
       {show ? <Leaks s={s} /> : null}
       <Watermark t={t} s={s} />
       <EndCard s={s} frame={frame} c={c} />
