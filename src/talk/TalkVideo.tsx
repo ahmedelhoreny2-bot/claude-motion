@@ -12,7 +12,7 @@ import {
 } from 'remotion';
 import {Grain} from '../components/primitives';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, sp} from '../lib';
-import {Icon2D} from './Icons2D';
+import {Icon} from './Icons';
 import {S, SF, SH, SW, T} from './theme';
 
 const FPS = T.fps;
@@ -363,34 +363,42 @@ const RingBelt: React.FC<{s: number; c: Pt; back: boolean}> = ({s, c, back}) => 
 
 const ICONS = T.icons as [number, number, string, string][];
 
+const LINE_NAME: Record<string, string> = {helmet: 'maker'};
+
 const IconBadges: React.FC<{s: number; frame: number}> = ({s, frame}) => (
   <>
     {ICONS.map(([a, b, name, side], i) => {
-      if (s < a - 0.1 || s > b + 0.45) return null;
+      if (s < a - 0.1 || s > b + 0.5) return null;
       const f0 = Math.round((a - 0.06 + OFF) * FPS);
-      const pop = sp(frame - f0, 0, {damping: 9, stiffness: 210, mass: 0.6}, FPS);
+      const pop = sp(frame - f0, 0, {damping: 10, stiffness: 200, mass: 0.7}, FPS);
       const out = prog(s, b, b + 0.4, easeIn);
       const k = pop * (1 - out);
-      const lt = Math.max(0, s - a);
-      const R = side === 'R';
-      const bob = Math.sin(lt * 2.4 + i) * 8;
-      const tilt = (1 - pop) * (R ? 25 : -25) + Math.sin(lt * 1.8 + i) * 3;
+      const draw = prog(s, a, a + 0.8, easeOut);
+      const bob = Math.sin((s - a) * 2.4 + i) * 7;
+      const tilt = Math.sin((s - a) * 1.7 + i) * 4;
+      const spin = name === 'gear' ? (s - a) * 70 : 0;
       return (
         <div
           key={i}
           style={{
             position: 'absolute',
-            top: 300 + bob,
-            [R ? 'right' : 'left']: 24,
-            width: 300,
-            height: 300,
+            top: 340 + bob,
+            [side === 'R' ? 'right' : 'left']: 46,
+            width: 240,
+            height: 240,
+            borderRadius: 999,
+            background: 'rgba(255,248,236,0.16)',
+            border: '2.5px solid rgba(255,248,236,0.6)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 10px 28px rgba(0,0,0,0.35), inset 0 0 26px rgba(255,201,104,0.28)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             transform: `scale(${k}) rotate(${tilt}deg)`,
-            transformOrigin: R ? '70% 60%' : '30% 60%',
-            opacity: clamp01(k * 2),
-            filter: 'drop-shadow(0 0 0 #FFF8EC) drop-shadow(5px 0 0 #FFF8EC) drop-shadow(-5px 0 0 #FFF8EC) drop-shadow(0 5px 0 #FFF8EC) drop-shadow(0 -5px 0 #FFF8EC) drop-shadow(0 14px 16px rgba(0,0,0,0.4))',
+            opacity: clamp01(k * 1.5),
           }}
         >
-          <Icon2D name={name} size={300} lt={lt} />
+          <Icon name={LINE_NAME[name] ?? name} size={150} k={draw} color={S.orangeHi} weight={6} rotate={spin} />
         </div>
       );
     })}

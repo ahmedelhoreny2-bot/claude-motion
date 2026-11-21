@@ -3,6 +3,10 @@ import {S} from './theme';
 
 /** Line icons on a 100×100 grid. `k` 0→1 draws the strokes on. */
 const P: Record<string, string[]> = {
+  steth: ['M34 14 V42 Q34 64 52 64 Q70 64 70 42 V14', 'M52 64 V74 Q52 88 68 88 Q80 88 80 78', 'M80 70 a8 8 0 1 0 0.1 0'],
+  wrench: ['M74 16 a18 18 0 0 0 -22 22 L18 72 a8 8 0 0 0 12 12 L64 50 a18 18 0 0 0 22 -22 L76 38 L66 36 L64 26 Z'],
+  thermo: ['M42 20 a8 8 0 0 1 16 0 V60 a14 14 0 1 1 -16 0 Z', 'M50 40 V66', 'M66 26 h8 M66 38 h6 M66 50 h8'],
+  shield: ['M50 12 L82 24 V48 Q82 74 50 90 Q18 74 18 48 V24 Z', 'M34 50 L46 62 L68 40'],
   honey: [
     'M30 34 H70 V40 Q78 46 78 58 V78 Q78 88 68 88 H32 Q22 88 22 78 V58 Q22 46 30 40 Z',
     'M26 26 H74 V34 H26 Z',
