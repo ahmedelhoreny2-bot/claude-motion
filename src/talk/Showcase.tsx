@@ -178,6 +178,11 @@ export const Showcase: React.FC = () => {
             <Sequence from={Math.round(SHOW.intro * FPS)} durationInFrames={Math.round(SHOW.after * FPS)} layout="none">
               <OffthreadVideo src={staticFile('talk/after.mp4')} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
             </Sequence>
+            {ta >= SHOW.after - 1 / FPS ? (
+              <Freeze frame={Math.round(SHOW.after * FPS) - 2}>
+                <OffthreadVideo src={staticFile('talk/after.mp4')} muted style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+              </Freeze>
+            ) : null}
           </AbsoluteFill>
           {slide > 0 && slide < 1 ? (
             <div style={{position: 'absolute', top: 0, bottom: 0, left: `${(1 - slide) * 100}%`, width: 6, marginLeft: -3, background: B.orange, boxShadow: '0 0 20px rgba(255,90,32,0.8)'}}>
