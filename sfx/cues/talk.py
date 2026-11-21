@@ -8,7 +8,7 @@ import os
 import struct
 import wave
 
-from sfx.synth import blip, chime, envelope, impact, pop, whoosh
+from sfx.synth import blip, chime, envelope, impact, pop, scratch, whoosh
 
 TIMELINE = "src/talk/timeline.json"
 OUT = "public/talk/mix.wav"
@@ -64,13 +64,15 @@ def score(mix, tl):
     # pictures as their own frames
     cuts = tl["cuts"]
     for i, (a, b, files) in enumerate(cuts):
-        put(o(a) - 0.1, whoosh(0.9, 250, 1600, peak=0.5, q=0.8), 0.05, 0.2)
+        put(o(a) - 0.05, whoosh(0.55, 2500, 6500, peak=0.45, q=0.5), 0.07, 0.4)
+        put(o(a), scratch(0.4), 0.06, 0.3)
         if len(files) > 1:
             for j in range(len(files)):
                 put(o(a) + 0.15 + j * 0.18, pop(800 + j * 140, 320 + j * 60), 0.05, -0.4 + j * 0.25)
             put(o(a) + 0.5, chime([880.0, 1318.51, 1760.0], dur=1.6, tau=0.6), 0.05)
         if i + 1 == len(cuts) or cuts[i + 1][0] != b:
-            put(o(b), whoosh(0.6, 1400, 300, peak=0.4, q=0.8), 0.04, -0.2)
+            put(o(b), whoosh(0.55, 6000, 2500, peak=0.45, q=0.5), 0.06, -0.4)
+            put(o(b) + 0.05, scratch(0.35), 0.05, -0.3)
     # word belts around the head
     for a, b, _, _ in tl["rings"]:
         put(o(a) - 0.4, whoosh(1.1, 300, 2000, peak=0.55, q=0.6), 0.05, -0.3)
@@ -78,7 +80,11 @@ def score(mix, tl):
     for s in tl["shakes"]:
         put(o(s), impact(0.9), 0.04)
 
+    for i, (a, _, _, side) in enumerate(tl["icons"]):
+        put(o(a), pop(900 + (i % 4) * 120, 420), 0.06, 0.5 if side == "R" else -0.5)
+        put(o(a) + 0.03, blip(1174.66 + (i % 3) * 150, dur=0.35, tau=0.1), 0.03, 0.5 if side == "R" else -0.5)
     end = o(tl["end"]["in"])
+    put(end + 0.55, impact(0.7), 0.06)
     put(end - 0.1, whoosh(0.9, 200, 1600, peak=0.5), 0.07)
     put(end + 0.2, chime([440.0, 659.25, 880.0, 1108.73], dur=3.0, tau=1.1), 0.08)
     put(end + 1.2, pop(900, 380), 0.08)

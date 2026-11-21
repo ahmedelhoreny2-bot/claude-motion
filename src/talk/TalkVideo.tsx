@@ -12,6 +12,7 @@ import {
 } from 'remotion';
 import {Grain} from '../components/primitives';
 import {clamp01, easeIn, easeInOut, easeOut, lerp, prog, sp} from '../lib';
+import {Icon} from './Icons';
 import {S, SF, SH, SW, T} from './theme';
 
 const FPS = T.fps;
@@ -153,68 +154,109 @@ const Rays: React.FC<{s: number; k: number}> = ({s, k}) => (
   />
 );
 
-const cutK = ([a, b]: Cut, s: number) => prog(s, a - 0.05, a + 0.6, easeInOut) * (1 - prog(s, b, b + 0.45, easeIn));
-/** How much of the frame a picture covers right now (0..1). */
-const coverAt = (s: number) => CUTS.reduce((m, c) => Math.max(m, cutK(c, s)), 0);
+/** How much of the frame a page covers right now (0..1). */
+const coverAt = (s: number) =>
+  CUTS.reduce((m, c, i) => (s < c[0] - 0.05 || s > c[1] + 0.7 ? m : Math.max(m, 1 - Math.min(1, Math.abs(pageAngle(c, s, i)) / 90))), 0);
 
-const Grid: React.FC<{files: string[]; s: number; a: number}> = ({files, s, a}) => (
-  <AbsoluteFill style={{background: S.ink}}>
-    <BgImage file={files[1]} blur={26} s={s} since={a} />
-    <div style={{position: 'absolute', left: 95, right: 95, top: 70, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, direction: 'rtl'}}>
-      {files.map((f, i) => {
-        const k = prog(s, a + 0.15 + i * 0.18, a + 0.15 + i * 0.18 + 0.6, easeOut);
-        return (
-          <div
-            key={f}
-            style={{
-              borderRadius: 22,
-              overflow: 'hidden',
-              boxShadow: '0 18px 40px rgba(0,0,0,0.5)',
-              opacity: k,
-              transform: `scale(${lerp(0.86, 1, k)}) translateY(${(1 - k) * 40}px)`,
-              border: f === 'b2' ? `4px solid ${S.orangeHi}` : '4px solid rgba(255,248,236,0.85)',
-            }}
-          >
-            <Img src={staticFile(`talk/img/${f}.jpg`)} style={{width: '100%', aspectRatio: '4 / 5', objectFit: 'cover', display: 'block', transform: `scale(${1.04 + 0.01 * (s - a)})`}} />
-          </div>
-        );
-      })}
-    </div>
+const BROWN = '#8A5A2B';
+const INKC = '#3B2A1A';
+
+/** An old manuscript page: warm paper, fibre noise, burnt edges, a double ruled border. */
+const Parchment: React.FC = () => (
+  <AbsoluteFill style={{background: 'radial-gradient(ellipse at 50% 40%, #F8EEDA 0%, #EEDDBB 58%, #D8BC8E 100%)'}}>
+    <svg width={SW} height={SH} style={{position: 'absolute', inset: 0, opacity: 0.4, mixBlendMode: 'multiply'}}>
+      <filter id="paper">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves={3} seed={7} />
+        <feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.32  0 0 0 0 0.18  0 0 0 0.5 0" />
+      </filter>
+      <rect width={SW} height={SH} filter="url(#paper)" />
+    </svg>
+    <AbsoluteFill style={{boxShadow: 'inset 0 0 180px rgba(110,65,20,0.5)'}} />
+    <div style={{position: 'absolute', inset: 44, border: `3px solid ${BROWN}`, borderRadius: 6}} />
+    <div style={{position: 'absolute', inset: 58, border: '1.5px solid #B8873F', borderRadius: 4}} />
+    {[
+      [44, 44],
+      [SW - 44, 44],
+      [44, SH - 44],
+      [SW - 44, SH - 44],
+    ].map(([x, y], i) => (
+      <div key={i} style={{position: 'absolute', left: x - 13, top: y - 13, width: 26, height: 26, background: '#B8873F', transform: 'rotate(45deg)', border: `2px solid ${BROWN}`}} />
+    ))}
   </AbsoluteFill>
 );
 
-/** Pictures as their own frames: a soft iris opens from the centre, the picture drifts, then dissolves back. */
+/** A picture that "develops" inside an ornate frame: sepia to colour, settling into place. */
+const Plate: React.FC<{file: string; s: number; a: number; w: number; delay?: number; hot?: boolean}> = ({file, s, a, w, delay = 0, hot}) => {
+  const k = prog(s, a + 0.25 + delay, a + 1.1 + delay, easeOut);
+  return (
+    <div
+      style={{
+        width: w,
+        padding: 12,
+        background: '#F4E6C9',
+        border: `2px solid ${hot ? S.orange : BROWN}`,
+        boxShadow: `0 14px 30px rgba(80,50,20,0.35)${hot ? `, 0 0 ${30 * k}px rgba(243,147,37,0.6)` : ''}`,
+        opacity: clamp01(k * 2.5),
+        transform: `translateY(${(1 - k) * 40}px) rotate(${(1 - k) * -2.5}deg)`,
+      }}
+    >
+      <div style={{overflow: 'hidden', outline: '1px solid #B8873F', outlineOffset: -6}}>
+        <Img
+          src={staticFile(`talk/img/${file}.jpg`)}
+          style={{
+            width: '100%',
+            display: 'block',
+            aspectRatio: '4 / 5',
+            objectFit: 'cover',
+            transform: `scale(${1.14 - 0.06 * k + 0.01 * (s - a)})`,
+            filter: `sepia(${lerp(0.85, 0.08, k)}) contrast(${lerp(0.9, 1.04, k)})`,
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+/** Page turning on a hinge at the right edge (Arabic books open to the left). */
+const PageTurn: React.FC<{ang: number; children: React.ReactNode}> = ({ang, children}) => (
+  <AbsoluteFill style={{perspective: 2600}}>
+    <AbsoluteFill style={{transformOrigin: '100% 50%', transform: `rotateY(${ang}deg)`, backfaceVisibility: 'hidden'}}>
+      {children}
+      <AbsoluteFill style={{background: `linear-gradient(90deg, rgba(40,20,5,${0.55 * Math.min(1, Math.abs(ang) / 90)}), transparent 75%)`}} />
+    </AbsoluteFill>
+  </AbsoluteFill>
+);
+
+const pageAngle = (c: Cut, s: number, i: number) => {
+  const [a, b] = c;
+  const chained = CUTS[i + 1]?.[0] === b;
+  const pin = prog(s, a - 0.05, a + 0.65, easeInOut);
+  const pout = chained ? 0 : prog(s, b, b + 0.6, easeIn);
+  return lerp(-100, 0, pin) + lerp(0, 100, pout);
+};
+
+/** Pictures as pages of a manuscript that turn in over the talk and turn away again. */
 const Cutaway: React.FC<{s: number}> = ({s}) => (
   <>
     {CUTS.map((c, i) => {
       const [a, b, files] = c;
-      if (s < a - 0.05 || s > b + 0.45) return null;
-      const pin = prog(s, a - 0.05, a + 0.6, easeInOut);
-      const pout = prog(s, b, b + 0.45, easeIn);
-      const r = lerp(0, 1500, pin);
-      const mask = `radial-gradient(circle at 540px 760px, #000 ${r}px, transparent ${r + 180}px)`;
+      const chained = CUTS[i + 1]?.[0] === b;
+      if (s < a - 0.05 || s > b + (chained ? 0.7 : 0.6)) return null;
       return (
-        <AbsoluteFill
-          key={i}
-          style={{
-            WebkitMaskImage: pin < 1 ? mask : undefined,
-            maskImage: pin < 1 ? mask : undefined,
-            opacity: 1 - pout,
-            filter: pout > 0 ? `blur(${pout * 14}px)` : undefined,
-            transform: `scale(${lerp(1.06, 1, pin) * lerp(1, 1.04, pout)})`,
-          }}
-        >
+        <PageTurn key={i} ang={pageAngle(c, s, i)}>
+          <Parchment />
           {files.length > 1 ? (
-            <Grid files={files} s={s} a={a} />
+            <div style={{position: 'absolute', left: 150, right: 150, top: 150, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, direction: 'rtl'}}>
+              {files.map((f, j) => (
+                <Plate key={f} file={f} s={s} a={a} w={375} delay={j * 0.22} hot={f === 'b2'} />
+              ))}
+            </div>
           ) : (
-            <>
-              <BgImage file={files[0]} blur={0} s={s} since={a} />
-              <Rays s={s} k={1} />
-              <Dust s={s} k={1} />
-            </>
+            <div style={{position: 'absolute', left: 170, top: 150}}>
+              <Plate file={files[0]} s={s} a={a} w={740} />
+            </div>
           )}
-          <AbsoluteFill style={{background: 'linear-gradient(180deg, transparent 52%, rgba(10,8,6,0.55) 64%, rgba(10,8,6,0.75) 78%, transparent 100%)'}} />
-        </AbsoluteFill>
+        </PageTurn>
       );
     })}
   </>
@@ -232,6 +274,7 @@ const capAt = (s: number) =>
 const ORBIT = {rx: 440, ry: 250, turn: 3.4};
 
 const OrbitCaption: React.FC<{s: number; layer: 'back' | 'front' | 'all'}> = ({s, layer}) => {
+  const ink = layer === 'all';
   const i = capAt(s);
   if (i < 0) return null;
   const [a, b, text, style] = CAPS[i];
@@ -247,7 +290,7 @@ const OrbitCaption: React.FC<{s: number; layer: 'back' | 'front' | 'all'}> = ({s
         position: 'absolute',
         left: 30,
         right: 30,
-        top: 1215,
+        top: ink ? 1265 : 1215,
         textAlign: 'center',
         direction: 'rtl',
         whiteSpace: 'nowrap',
@@ -275,10 +318,10 @@ const OrbitCaption: React.FC<{s: number; layer: 'back' | 'front' | 'all'}> = ({s
                 transform: `translate(${ORBIT.rx * Math.sin(phi)}px, ${-ORBIT.ry * (1 - Math.cos(phi))}px) scale(${lerp(0.5, 1, depth) * land})`,
                 opacity: op * lerp(0.55, 1, depth),
                 filter: depth < 0.5 ? `blur(${(0.5 - depth) * 5}px)` : undefined,
-                color: hl ? S.orangeHi : S.cream,
+                color: ink ? (hl ? '#C0561A' : INKC) : hl ? S.orangeHi : S.cream,
                 fontWeight: hl ? 900 : undefined,
                 fontSize: hl ? '1.14em' : undefined,
-                textShadow: hl ? S.glowHot : S.glow,
+                textShadow: ink ? '0 1px 0 rgba(255,240,210,0.6)' : hl ? S.glowHot : S.glow,
               }}
             >
               {w.replace(/\*/g, '')}
@@ -337,6 +380,50 @@ const RingBelt: React.FC<{s: number; c: Pt; back: boolean}> = ({s, c, back}) => 
   );
 };
 
+/* ---------- little animated icons in the free corners of the frame ---------- */
+
+const ICONS = T.icons as [number, number, string, string][];
+
+const IconBadges: React.FC<{s: number; frame: number}> = ({s, frame}) => (
+  <>
+    {ICONS.map(([a, b, name, side], i) => {
+      if (s < a - 0.1 || s > b + 0.5) return null;
+      const f0 = (a + OFF) * FPS;
+      const pop = sp(frame - f0, 0, {damping: 10, stiffness: 200, mass: 0.7}, FPS);
+      const out = prog(s, b, b + 0.4, easeIn);
+      const k = pop * (1 - out);
+      const draw = prog(s, a + 0.1, a + 0.9, easeOut);
+      const bob = Math.sin((s - a) * 2.4 + i) * 7;
+      const tilt = Math.sin((s - a) * 1.7 + i) * 4;
+      const spin = name === 'gear' ? (s - a) * 70 : 0;
+      return (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            top: 380 + bob,
+            [side === 'R' ? 'right' : 'left']: 58,
+            width: 190,
+            height: 190,
+            borderRadius: 999,
+            background: 'rgba(255,248,236,0.16)',
+            border: '2px solid rgba(255,248,236,0.55)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 10px 28px rgba(0,0,0,0.35), inset 0 0 22px rgba(255,201,104,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transform: `scale(${k}) rotate(${tilt}deg)`,
+            opacity: clamp01(k * 1.5),
+          }}
+        >
+          <Icon name={name} size={118} k={draw} color={S.orangeHi} weight={6} rotate={spin} />
+        </div>
+      );
+    })}
+  </>
+);
+
 /* ---------- overlays ---------- */
 
 /** Warm light washing in as the talk comes back to the room. */
@@ -351,7 +438,7 @@ const Leaks: React.FC<{s: number}> = ({s}) => (
           key={i}
           style={{
             mixBlendMode: 'screen',
-            opacity: a * 0.7,
+            opacity: a * 0.35,
             background: `radial-gradient(ellipse 55% 40% at ${lerp(115, -15, k)}% ${lerp(20, 70, k)}%, rgba(255,150,50,0.85), transparent 70%), radial-gradient(ellipse 45% 35% at ${lerp(-10, 110, k)}% ${lerp(80, 30, k)}%, rgba(47,163,223,0.45), transparent 70%)`,
           }}
         />
@@ -379,12 +466,14 @@ const EndCard: React.FC<{s: number; frame: number; c: Client}> = ({s, frame, c})
   const name = prog(s, at + 0.7, at + 1.4, easeOut);
   const addr = prog(s, at + 1.6, at + 2.2, easeOut);
   const shine = prog(s, at + 1.0, at + 2.0, easeInOut);
+  const stamp = prog(s, at + 0.55, at + 0.8, easeIn);
   return (
     <AbsoluteFill style={{direction: 'rtl'}}>
-      <AbsoluteFill style={{background: 'linear-gradient(180deg, rgba(22,18,14,0.55), rgba(22,18,14,0.88))', opacity: bg}} />
-      <AbsoluteFill style={{alignItems: 'center', opacity: bg}}>
-        <div style={{position: 'absolute', top: 320, width: 380, transform: `scale(${pop(0.2, {damping: 12, stiffness: 160, mass: 0.8})})`}}>
-          <Img src={staticFile('talk/logo.png')} style={{width: 380, display: 'block', filter: 'drop-shadow(0 24px 40px rgba(0,0,0,0.6))'}} />
+      <PageTurn ang={lerp(-100, 0, bg)}>
+      <Parchment />
+      <AbsoluteFill style={{alignItems: 'center'}}>
+        <div style={{position: 'absolute', top: 300, width: 380, opacity: stamp, transform: `scale(${lerp(1.7, 1, stamp)}) rotate(${lerp(-10, -3, stamp)}deg)`}}>
+          <Img src={staticFile('talk/logo.png')} style={{width: 380, display: 'block', filter: 'drop-shadow(0 10px 14px rgba(80,50,20,0.45))'}} />
           <div
             style={{
               position: 'absolute',
@@ -395,7 +484,7 @@ const EndCard: React.FC<{s: number; frame: number; c: Client}> = ({s, frame, c})
             }}
           />
         </div>
-        <div style={{position: 'absolute', top: 820, fontFamily: SF.ruqaa, fontWeight: 700, fontSize: 112, color: S.cream, textShadow: S.glow, opacity: name, transform: `translateY(${(1 - name) * 30}px)`}}>
+        <div style={{position: 'absolute', top: 820, fontFamily: SF.ruqaa, fontWeight: 700, fontSize: 112, color: INKC, opacity: name, transform: `translateY(${(1 - name) * 30}px)`}}>
           {c.name}
         </div>
         <div
@@ -411,12 +500,12 @@ const EndCard: React.FC<{s: number; frame: number; c: Client}> = ({s, frame, c})
             fontSize: 84,
             direction: 'ltr',
             transform: `scale(${pop(1.2)})`,
-            boxShadow: '0 14px 40px rgba(0,0,0,0.45)',
+            boxShadow: '0 10px 24px rgba(80,50,20,0.35)',
           }}
         >
           {c.phone}
         </div>
-        <div style={{position: 'absolute', top: 1210, textAlign: 'center', fontFamily: SF.sans, fontWeight: 600, fontSize: 44, lineHeight: 1.5, color: S.cream, opacity: addr}}>
+        <div style={{position: 'absolute', top: 1210, textAlign: 'center', fontFamily: SF.sans, fontWeight: 600, fontSize: 44, lineHeight: 1.5, color: INKC, opacity: addr}}>
           {c.addr1}
           <br />
           {c.addr2}
@@ -428,7 +517,7 @@ const EndCard: React.FC<{s: number; frame: number; c: Client}> = ({s, frame, c})
             padding: '12px 40px',
             borderRadius: 999,
             border: `3px solid ${S.blue}`,
-            color: S.cream,
+            color: INKC,
             fontFamily: SF.sans,
             fontWeight: 800,
             fontSize: 46,
@@ -438,6 +527,7 @@ const EndCard: React.FC<{s: number; frame: number; c: Client}> = ({s, frame, c})
           احجز موعدك الآن
         </div>
       </AbsoluteFill>
+      </PageTurn>
     </AbsoluteFill>
   );
 };
@@ -490,6 +580,7 @@ export const TalkVideo: React.FC<Client> = (c) => {
             <OrbitCaption s={s} layer="front" />
           </>
         ) : null}
+        {show ? <IconBadges s={s} frame={frame} /> : null}
         {show ? <Cutaway s={s} /> : null}
         {show && cover >= 0.5 ? <OrbitCaption s={s} layer="all" /> : null}
       </AbsoluteFill>
