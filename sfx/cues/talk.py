@@ -61,19 +61,22 @@ def score(mix, tl):
                         (end - 0.3, 0.12), (end + 0.6, 0.4), (dur - 0.3, 0.4), (dur, 0)])
         put(0, [v * lvl(i / SR) for i, v in enumerate(hum)], 1.0)
 
-    # backgrounds opening behind the speaker
-    for at, f, _ in tl["bg"]:
-        put(o(at) - 0.1, whoosh(1.0, 250, 1500 if f else 900, peak=0.5, q=0.8), 0.05, 0.2 if f else -0.2)
+    # pictures as their own frames
+    cuts = tl["cuts"]
+    for i, (a, b, files) in enumerate(cuts):
+        put(o(a) - 0.1, whoosh(0.9, 250, 1600, peak=0.5, q=0.8), 0.05, 0.2)
+        if len(files) > 1:
+            for j in range(len(files)):
+                put(o(a) + 0.15 + j * 0.18, pop(800 + j * 140, 320 + j * 60), 0.05, -0.4 + j * 0.25)
+            put(o(a) + 0.5, chime([880.0, 1318.51, 1760.0], dur=1.6, tau=0.6), 0.05)
+        if i + 1 == len(cuts) or cuts[i + 1][0] != b:
+            put(o(b), whoosh(0.6, 1400, 300, peak=0.4, q=0.8), 0.04, -0.2)
     # word belts around the head
     for a, b, _, _ in tl["rings"]:
         put(o(a) - 0.4, whoosh(1.1, 300, 2000, peak=0.55, q=0.6), 0.05, -0.3)
         put(o(a) + 0.15, chime([880.0, 1318.51], dur=1.4, tau=0.5), 0.04)
     for s in tl["shakes"]:
         put(o(s), impact(0.9), 0.04)
-    c = tl["carousel"]
-    put(o(c["in"]) - 0.1, whoosh(1.2, 250, 1800, peak=0.5), 0.06)
-    for j in range(4):
-        put(o(c["in"]) + 0.2 + j * 0.15, pop(800 + j * 140, 320 + j * 60), 0.05, -0.4 + j * 0.25)
 
     end = o(tl["end"]["in"])
     put(end - 0.1, whoosh(0.9, 200, 1600, peak=0.5), 0.07)

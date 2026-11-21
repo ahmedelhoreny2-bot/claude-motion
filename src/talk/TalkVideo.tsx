@@ -18,10 +18,10 @@ const FPS = T.fps;
 const E = T.edit;
 type Cap = [number, number, string, string];
 type Ring = [number, number, string[], number];
-type Bg = [number, string | null, number];
+type Cut = [number, number, string[]];
 const CAPS = T.cap as Cap[];
 const RINGS = T.rings as Ring[];
-const BGS = T.bg as Bg[];
+const CUTS = T.cuts as Cut[];
 
 /** Client details come in as props at render time (kept out of the repo). */
 export type Client = {name: string; phone: string; addr1: string; addr2: string};
@@ -96,14 +96,6 @@ const hash = (n: number) => {
 
 /* ---------- backgrounds that open behind the speaker ---------- */
 
-const bgIndex = (s: number) => {
-  let i = -1;
-  BGS.forEach(([at], j) => {
-    if (s >= at) i = j;
-  });
-  return i;
-};
-
 const BgImage: React.FC<{file: string; blur: number; s: number; since: number}> = ({file, blur, s, since}) => (
   <AbsoluteFill style={{overflow: 'hidden'}}>
     <Img
@@ -161,54 +153,72 @@ const Rays: React.FC<{s: number; k: number}> = ({s, k}) => (
   />
 );
 
-const Backdrop: React.FC<{s: number; c: Pt}> = ({s, c}) => {
-  const i = bgIndex(s);
-  if (i < 0) return null;
-  const [at, file, blur] = BGS[i];
-  const prev = i > 0 ? BGS[i - 1] : null;
-  const p = prog(s, at, at + 0.9, easeInOut);
-  const r = lerp(0, 1700, p);
-  const feather = 140;
-  const ringK = Math.sin(p * Math.PI);
-  const holeOut = `radial-gradient(circle at ${c.x}px ${c.y}px, transparent ${r}px, #000 ${r + feather}px)`;
-  const reveal = `radial-gradient(circle at ${c.x}px ${c.y}px, #000 ${r}px, transparent ${r + feather}px)`;
-  const prevFile = prev?.[1] ?? null;
-  const imageK = file ? 1 : 1 - p;
-  return (
-    <AbsoluteFill>
-      {p < 1 && prevFile ? (
-        <AbsoluteFill style={file ? undefined : {WebkitMaskImage: holeOut, maskImage: holeOut}}>
-          <BgImage file={prevFile} blur={prev![2]} s={s} since={prev![0]} />
-        </AbsoluteFill>
-      ) : null}
-      {file ? (
-        <AbsoluteFill style={p < 1 ? {WebkitMaskImage: reveal, maskImage: reveal} : undefined}>
-          <BgImage file={file} blur={blur} s={s} since={at} />
-        </AbsoluteFill>
-      ) : null}
-      {imageK > 0 && (file || prevFile) ? (
-        <>
-          <Rays s={s} k={imageK} />
-          <Dust s={s} k={imageK} />
-        </>
-      ) : null}
-      {ringK > 0.01 ? (
-        <div
+const cutK = ([a, b]: Cut, s: number) => prog(s, a - 0.05, a + 0.6, easeInOut) * (1 - prog(s, b, b + 0.45, easeIn));
+/** How much of the frame a picture covers right now (0..1). */
+const coverAt = (s: number) => CUTS.reduce((m, c) => Math.max(m, cutK(c, s)), 0);
+
+const Grid: React.FC<{files: string[]; s: number; a: number}> = ({files, s, a}) => (
+  <AbsoluteFill style={{background: S.ink}}>
+    <BgImage file={files[1]} blur={26} s={s} since={a} />
+    <div style={{position: 'absolute', left: 95, right: 95, top: 70, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, direction: 'rtl'}}>
+      {files.map((f, i) => {
+        const k = prog(s, a + 0.15 + i * 0.18, a + 0.15 + i * 0.18 + 0.6, easeOut);
+        return (
+          <div
+            key={f}
+            style={{
+              borderRadius: 22,
+              overflow: 'hidden',
+              boxShadow: '0 18px 40px rgba(0,0,0,0.5)',
+              opacity: k,
+              transform: `scale(${lerp(0.86, 1, k)}) translateY(${(1 - k) * 40}px)`,
+              border: f === 'b2' ? `4px solid ${S.orangeHi}` : '4px solid rgba(255,248,236,0.85)',
+            }}
+          >
+            <Img src={staticFile(`talk/img/${f}.jpg`)} style={{width: '100%', aspectRatio: '4 / 5', objectFit: 'cover', display: 'block', transform: `scale(${1.04 + 0.01 * (s - a)})`}} />
+          </div>
+        );
+      })}
+    </div>
+  </AbsoluteFill>
+);
+
+/** Pictures as their own frames: a soft iris opens from the centre, the picture drifts, then dissolves back. */
+const Cutaway: React.FC<{s: number}> = ({s}) => (
+  <>
+    {CUTS.map((c, i) => {
+      const [a, b, files] = c;
+      if (s < a - 0.05 || s > b + 0.45) return null;
+      const pin = prog(s, a - 0.05, a + 0.6, easeInOut);
+      const pout = prog(s, b, b + 0.45, easeIn);
+      const r = lerp(0, 1500, pin);
+      const mask = `radial-gradient(circle at 540px 760px, #000 ${r}px, transparent ${r + 180}px)`;
+      return (
+        <AbsoluteFill
+          key={i}
           style={{
-            position: 'absolute',
-            left: c.x - r - feather / 2,
-            top: c.y - r - feather / 2,
-            width: (r + feather / 2) * 2,
-            height: (r + feather / 2) * 2,
-            borderRadius: '50%',
-            border: `3px solid rgba(255,201,104,${0.85 * ringK})`,
-            boxShadow: `0 0 40px rgba(243,147,37,${0.6 * ringK}), inset 0 0 40px rgba(243,147,37,${0.45 * ringK})`,
+            WebkitMaskImage: pin < 1 ? mask : undefined,
+            maskImage: pin < 1 ? mask : undefined,
+            opacity: 1 - pout,
+            filter: pout > 0 ? `blur(${pout * 14}px)` : undefined,
+            transform: `scale(${lerp(1.06, 1, pin) * lerp(1, 1.04, pout)})`,
           }}
-        />
-      ) : null}
-    </AbsoluteFill>
-  );
-};
+        >
+          {files.length > 1 ? (
+            <Grid files={files} s={s} a={a} />
+          ) : (
+            <>
+              <BgImage file={files[0]} blur={0} s={s} since={a} />
+              <Rays s={s} k={1} />
+              <Dust s={s} k={1} />
+            </>
+          )}
+          <AbsoluteFill style={{background: 'linear-gradient(180deg, transparent 52%, rgba(10,8,6,0.55) 64%, rgba(10,8,6,0.75) 78%, transparent 100%)'}} />
+        </AbsoluteFill>
+      );
+    })}
+  </>
+);
 
 /* ---------- captions: every line arrives on an orbit around the speaker ---------- */
 
@@ -221,7 +231,7 @@ const capAt = (s: number) =>
 
 const ORBIT = {rx: 440, ry: 250, turn: 3.4};
 
-const OrbitCaption: React.FC<{s: number; back: boolean}> = ({s, back}) => {
+const OrbitCaption: React.FC<{s: number; layer: 'back' | 'front' | 'all'}> = ({s, layer}) => {
   const i = capAt(s);
   if (i < 0) return null;
   const [a, b, text, style] = CAPS[i];
@@ -261,7 +271,7 @@ const OrbitCaption: React.FC<{s: number; back: boolean}> = ({s, back}) => {
             <span
               style={{
                 display: 'inline-block',
-                visibility: behind === back ? 'visible' : 'hidden',
+                visibility: layer === 'all' || behind === (layer === 'back') ? 'visible' : 'hidden',
                 transform: `translate(${ORBIT.rx * Math.sin(phi)}px, ${-ORBIT.ry * (1 - Math.cos(phi))}px) scale(${lerp(0.5, 1, depth) * land})`,
                 opacity: op * lerp(0.55, 1, depth),
                 filter: depth < 0.5 ? `blur(${(0.5 - depth) * 5}px)` : undefined,
@@ -327,51 +337,12 @@ const RingBelt: React.FC<{s: number; c: Pt; back: boolean}> = ({s, c, back}) => 
   );
 };
 
-/* ---------- the remedies carousel: four pictures orbiting the speaker ---------- */
-
-const Carousel: React.FC<{s: number; c: Pt; back: boolean}> = ({s, c, back}) => {
-  const C = T.carousel;
-  const k = env(s, C.in, C.out, 0.9, 0.5);
-  if (k <= 0) return null;
-  const n = C.cards.length;
-  const spin = (s - C.in) * 0.75 + 0.6;
-  return (
-    <AbsoluteFill>
-      {C.cards.map((file, j) => {
-        const th = spin + (j / n) * Math.PI * 2;
-        const sn = Math.sin(th);
-        if (sn > 0 === back) return null;
-        const depth = (sn + 1) / 2;
-        const w = 330;
-        return (
-          <div
-            key={file}
-            style={{
-              position: 'absolute',
-              left: c.x + lerp(150, 400, k) * Math.cos(th),
-              top: c.y + 90 + lerp(20, 170, k) * sn,
-              width: w,
-              transform: `translate(-50%, -50%) scale(${lerp(0.55, 1.1, depth) * k}) scaleX(${lerp(0.3, 1, Math.abs(sn))})`,
-              opacity: lerp(0.55, 1, depth),
-              filter: `drop-shadow(0 18px 26px rgba(0,0,0,0.55)) ${depth < 0.45 ? `blur(${(0.45 - depth) * 4}px)` : ''}`,
-            }}
-          >
-            <div style={{background: S.paper, padding: 10, borderRadius: 14}}>
-              <Img src={staticFile(`talk/img/${file}.jpg`)} style={{width: '100%', display: 'block', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: 8}} />
-            </div>
-          </div>
-        );
-      })}
-    </AbsoluteFill>
-  );
-};
-
 /* ---------- overlays ---------- */
 
 /** Warm light washing in as the talk comes back to the room. */
 const Leaks: React.FC<{s: number}> = ({s}) => (
   <>
-    {BGS.filter(([, f]) => f === null).map(([at], i) => {
+    {CUTS.filter(([, b], i) => CUTS[i + 1]?.[0] !== b).map(([, at], i) => {
       const k = prog(s, at - 0.2, at + 1.1, (x) => x);
       if (k <= 0 || k >= 1) return null;
       const a = Math.sin(k * Math.PI);
@@ -390,7 +361,7 @@ const Leaks: React.FC<{s: number}> = ({s}) => (
 );
 
 const Watermark: React.FC<{t: number; s: number}> = ({t, s}) => {
-  const k = prog(t, 0.6, 1.4, easeOut) * (1 - prog(s, T.end.in - 0.4, T.end.in, easeIn)) * (1 - env(s, T.carousel.in - 0.2, T.carousel.out + 0.2, 0.3, 0.4));
+  const k = prog(t, 0.6, 1.4, easeOut) * (1 - prog(s, T.end.in - 0.4, T.end.in, easeIn)) * (1 - coverAt(s));
   return (
     <Img
       src={staticFile('talk/logo.png')}
@@ -490,6 +461,7 @@ export const TalkVideo: React.FC<Client> = (c) => {
   const z = (t < HL ? hookPush : zoomAt(s)) * (1 + 0.1 * rw);
   const sh = shakeAt(s);
   const show = !rewinding;
+  const cover = coverAt(s);
 
   return (
     <AbsoluteFill style={{background: S.ink}}>
@@ -503,24 +475,23 @@ export const TalkVideo: React.FC<Client> = (c) => {
         <Freeze frame={vf}>
           <OffthreadVideo src={staticFile('talk/nat.mp4')} muted style={{width: SW, height: SH}} />
         </Freeze>
-        {show ? <Backdrop s={s} c={{x: head.x, y: head.y + 120}} /> : null}
-        {show ? (
+        {show && cover < 0.5 ? (
           <>
-            <Carousel s={s} c={neck} back />
             <RingBelt s={s} c={neck} back />
-            <OrbitCaption s={s} back />
+            <OrbitCaption s={s} layer="back" />
           </>
         ) : null}
         <Freeze frame={vf}>
           <OffthreadVideo src={staticFile('talk/fg.webm')} transparent muted style={{position: 'absolute', inset: 0, width: SW, height: SH}} />
         </Freeze>
-        {show ? (
+        {show && cover < 0.5 ? (
           <>
-            <Carousel s={s} c={neck} back={false} />
             <RingBelt s={s} c={neck} back={false} />
-            <OrbitCaption s={s} back={false} />
+            <OrbitCaption s={s} layer="front" />
           </>
         ) : null}
+        {show ? <Cutaway s={s} /> : null}
+        {show && cover >= 0.5 ? <OrbitCaption s={s} layer="all" /> : null}
       </AbsoluteFill>
 
       <AbsoluteFill style={{background: 'radial-gradient(ellipse 80% 65% at 50% 40%, transparent 55%, rgba(0,0,0,0.38))'}} />
