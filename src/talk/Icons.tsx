@@ -78,7 +78,7 @@ export const Icon: React.FC<{
   color?: string;
   weight?: number;
   rotate?: number;
-}> = ({name, size, k = 1, color = S.gold, weight = 5, rotate = 0}) => (
+}> = ({name, size, k = 1, color = S.orange, weight = 5, rotate = 0}) => (
   <svg width={size} height={size} viewBox="0 0 100 100" style={{display: 'block', overflow: 'visible'}}>
     <g transform={`rotate(${rotate} 50 50)`}>
       {P[name].map((d, i) => {
@@ -111,7 +111,7 @@ export const Star: React.FC<{
   fill?: string;
   weight?: number;
   rotate?: number;
-}> = ({size, k = 1, color = S.gold, fill = 'none', weight = 3, rotate = 0}) => (
+}> = ({size, k = 1, color = S.orange, fill = 'none', weight = 3, rotate = 0}) => (
   <svg width={size} height={size} viewBox="-50 -50 100 100" style={{display: 'block', overflow: 'visible'}}>
     <g transform={`rotate(${rotate})`}>
       {[0, 45].map((a) => (

@@ -4,17 +4,17 @@ export const T = timeline;
 export const SW = 1080;
 export const SH = 1920;
 
-/** Palette sampled from the client's info card. */
+/** Palette taken from the client's logo: warm orange, sky blue, navy, white. */
 export const S = {
-  green: '#0D372D',
-  greenDeep: '#052822',
-  glass: 'rgba(5,40,34,0.72)',
-  glassHi: 'rgba(13,55,45,0.86)',
-  gold: '#D3AB4C',
-  goldHi: '#F0D48A',
-  cream: '#FFFEE9',
-  creamDim: 'rgba(255,254,233,0.72)',
-  line: 'rgba(211,171,76,0.45)',
+  orange: '#F39325',
+  orangeHi: '#FFB35C',
+  blue: '#2FA3DF',
+  navy: '#1D2F7A',
+  cream: '#FFF8EC',
+  creamDim: 'rgba(255,248,236,0.78)',
+  ink: '#16120E',
+  paper: '#F6EFE2',
+  shadow: '0 6px 18px rgba(0,0,0,0.75), 0 2px 4px rgba(0,0,0,0.8)',
 };
 
 export const SF = {
