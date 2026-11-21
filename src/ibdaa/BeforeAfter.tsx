@@ -119,6 +119,19 @@ export const BeforeAfter: React.FC = () => {
         </div>
       </div>
 
+      {/* footer: small, under the phones */}
+      <div style={{position: 'absolute', left: 60, right: 60, top: 1610, textAlign: 'center', direction: 'rtl', fontFamily: F, opacity: clamp01(cards * 1.5) * prog(t, 1.6, 2.2, easeOut)}}>
+        <div style={{fontWeight: 900, fontSize: 44, color: I.ink}}>
+          نفس الفيديو… <span style={{color: I.orange}}>بلمسة إبداع</span>
+        </div>
+        <div style={{marginTop: 8, fontWeight: 700, fontSize: 26, color: I.inkDim, letterSpacing: '0.02em'}}>مونتاج · موشن جرافيك · كابشن · تلوين · صوت</div>
+        <div style={{marginTop: 22, display: 'flex', justifyContent: 'center', gap: 10}}>
+          {[I.teal, I.orange, I.teal].map((c, i) => (
+            <div key={i} style={{width: i === 1 ? 46 : 28, height: 8, borderRadius: 4, background: c}} />
+          ))}
+        </div>
+      </div>
+
       {/* finale line */}
       <div style={{position: 'absolute', left: 60, right: 60, top: 1130, textAlign: 'center', direction: 'rtl', fontFamily: F, fontWeight: 900, fontSize: 64, color: I.ink, opacity: clamp01(finale * 1.5), transform: `translateY(${(1 - finale) * 24}px)`}}>
         فيديوهاتك تستاهل <span style={{color: I.orange}}>تتحرك</span>
