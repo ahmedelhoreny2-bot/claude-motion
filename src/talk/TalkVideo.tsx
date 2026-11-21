@@ -39,6 +39,7 @@ const useAssets = () => {
   useEffect(() => {
     Promise.all([
       document.fonts.load('800 60px "Cairo"'),
+      document.fonts.load('900 60px "Cairo"'),
       document.fonts.load('600 60px "Cairo"'),
       document.fonts.load('700 60px "Amiri"'),
       document.fonts.load('700 60px "Aref Ruqaa"'),
@@ -90,7 +91,16 @@ const Words: React.FC<{text: string; t: number; t0: number; font: string; size: 
         return (
           <React.Fragment key={i}>
             <Mask k={k} tilt={0}>
-              <span style={{color: hl ? S.orangeHi : color, textShadow: S.shadow}}>{w.replace(/\*/g, '')}</span>
+              <span
+                style={{
+                  color: hl ? S.orangeHi : color,
+                  fontWeight: hl ? 900 : weight,
+                  fontSize: hl ? '1.14em' : undefined,
+                  textShadow: hl ? S.glowHot : S.glow,
+                }}
+              >
+                {w.replace(/\*/g, '')}
+              </span>
             </Mask>
             {i < words.length - 1 ? ' ' : ''}
           </React.Fragment>
