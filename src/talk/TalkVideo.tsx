@@ -276,11 +276,12 @@ const InkReveal: React.FC<{k: number; id: string; children: React.ReactNode}> = 
   </svg>
 );
 
+// right to left, top to bottom: the reading order
 const CARDS = [
-  {x: 70, y: 260, w: 470, r: -5},
   {x: 545, y: 200, w: 470, r: 4},
-  {x: 90, y: 860, w: 450, r: 3},
+  {x: 70, y: 260, w: 470, r: -5},
   {x: 555, y: 820, w: 455, r: -4},
+  {x: 90, y: 860, w: 450, r: 3},
 ];
 
 /** One full-frame moment: the four pictures of a collage pinned over the blurred room. */
@@ -467,7 +468,7 @@ const Hook: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 };
 
 const Watermark: React.FC<{t: number}> = ({t}) => {
-  const k = prog(t, 0.5, 1.3, easeOut) * (1 - prog(t, T.end.in - 0.4, T.end.in, easeIn));
+  const k = prog(t, 0.5, 1.3, easeOut) * (1 - prog(t, T.end.in - 0.4, T.end.in, easeIn)) * (1 - env(t, 86.6, 99.6, 0.3, 0.4));
   return (
     <Img
       src={staticFile('talk/logo.png')}
