@@ -237,21 +237,21 @@ export const Showcase: React.FC = () => {
       </svg>
 
       {/* footer */}
-      <div style={{position: 'absolute', left: 0, right: 0, top: 1665, textAlign: 'center', opacity: foot, transform: `translateY(${(1 - foot) * 30}px)`}}>
-        <div style={{fontFamily: AF, fontWeight: 900, fontSize: 70, color: B.ink, lineHeight: 1.2}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 1690, textAlign: 'center', opacity: foot, transform: `translateY(${(1 - foot) * 30}px)`}}>
+        <div style={{fontFamily: AF, fontWeight: 900, fontSize: 56, color: B.ink, lineHeight: 1.2}}>
           نفس الفيديو.. <span style={{color: B.orange}}>بلمسة إبداع</span>
         </div>
-        <div style={{display: 'flex', justifyContent: 'center', gap: 12, marginTop: 22}}>
+        <div style={{display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16}}>
           {['مونتاج', 'موشن جرافيك', 'كابشن', 'تلوين', 'صوت'].map((w, i) => (
             <div
               key={w}
               style={{
-                padding: '8px 22px',
+                padding: '6px 18px',
                 borderRadius: 999,
                 border: `2.5px solid ${i % 2 ? B.orange : B.teal}`,
                 fontFamily: AF,
                 fontWeight: 600,
-                fontSize: 30,
+                fontSize: 25,
                 color: B.ink,
                 background: B.white,
                 transform: `scale(${sp(frame, 2.2 + i * 0.08, {damping: 11, stiffness: 220, mass: 0.7}, FPS) * (1 - prog(t, outroAt, outroAt + 0.4, easeIn))})`,
@@ -264,7 +264,7 @@ export const Showcase: React.FC = () => {
       </div>
 
       {/* lockup: centre in the intro, header during playback, centre again in the outro */}
-      <div style={{position: 'absolute', left: 0, right: 0, top: lockTop, display: 'flex', justifyContent: 'center', transform: `translateX(${lerp(330, 0, center)}px)`}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: lockTop, display: 'flex', justifyContent: 'center', transform: `translateX(${lerp(-330, 0, center)}px)`}}>
         <Lockup scale={lockScale} k={mk} dash={dash} word={word} />
       </div>
       {/* outro call */}
